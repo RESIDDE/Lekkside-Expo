@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 // Force rebuild comment
 import { motion, useScroll, useTransform } from "framer-motion";
-import {
-  Calendar,
-  CalendarDays,
-  Sparkles,
-  MapPin,
-  ArrowRight,
-  ChevronRight,
-} from "lucide-react";
+import { Calendar, CalendarDays, MapPin, ArrowRight, ChevronRight, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { supabase } from "./lib/supabase";
 import { type Database } from "../../lekkside-admin/src/integrations/supabase/types";
 import { RegistrationModal } from "./components/RegistrationModal";
@@ -312,14 +305,18 @@ function App() {
 
       <footer className="py-12 px-8 border-t border-white/5 text-center relative z-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 bg-purple-500 rounded-lg" />
-            <span className="text-lg font-bold font-display tracking-tighter uppercase">
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lekkside-logo.png" 
+              alt="Lekkside Logo" 
+              className="h-8 w-auto object-contain brightness-0 invert opacity-80"
+            />
+            <span className="text-lg font-bold font-display tracking-tighter uppercase whitespace-nowrap">
               Lekkside
             </span>
           </div>
           <p className="text-white/20 text-[10px] font-bold tracking-[0.3em] uppercase">
-            © 2024 Lekkside Limited. All rights reserved.
+            © 2026 Lekkside Limited. All rights reserved.
           </p>
           <div className="flex gap-8">
             {["Instagram", "Twitter", "LinkedIn"].map((social) => (

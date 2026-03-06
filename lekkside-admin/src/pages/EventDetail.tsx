@@ -419,6 +419,7 @@ export default function EventDetail() {
                 percentage={stats.percentage} 
                 size={180} 
                 strokeWidth={14} 
+                showText={false}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-4xl font-heading font-black text-foreground">{Math.round(stats.percentage)}%</span>
