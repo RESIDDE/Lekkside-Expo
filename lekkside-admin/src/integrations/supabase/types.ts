@@ -136,6 +136,7 @@ export type Database = {
           date: string | null
           description: string | null
           id: string
+          image_url: string | null
           name: string
           updated_at: string
           venue: string | null
@@ -147,6 +148,7 @@ export type Database = {
           date?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
           updated_at?: string
           venue?: string | null
@@ -158,6 +160,7 @@ export type Database = {
           date?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           updated_at?: string
           venue?: string | null
@@ -278,6 +281,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      exec_sql: { Args: { query: string }; Returns: undefined }
       is_form_active: { Args: { form_id: string }; Returns: boolean }
     }
     Enums: {
