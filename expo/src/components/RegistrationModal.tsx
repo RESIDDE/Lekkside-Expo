@@ -332,13 +332,25 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       >
         {/* Header (Hidden when submitted to show ticket more clearly) */}
         {!submitted && (
-          <div className="relative p-8 md:p-10 border-b border-white/5">
-            <button 
-              onClick={handleClose}
-              className="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5 transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-6 w-6" />
-            </button>
+          <>
+            {event.image_url && (
+              <div className="relative w-full h-[200px] overflow-hidden">
+                <img 
+                  src={event.image_url} 
+                  alt={event.name} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+              </div>
+            )}
+            
+            <div className="relative p-8 md:p-10 border-b border-white/5">
+              <button 
+                onClick={handleClose}
+                className="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5 transition-colors text-muted-foreground hover:text-foreground z-10"
+              >
+                <X className="h-6 w-6" />
+              </button>
             
             <div className="inline-flex items-center rounded-full glass px-3 py-1 border border-white/10 mb-6">
               <span className="text-[10px] font-bold tracking-widest text-primary uppercase">Registration</span>
@@ -363,7 +375,8 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
               )}
             </div>
           </div>
-        )}
+        </>
+      )}
 
         {/* Content */}
         <div className={`flex-1 overflow-y-auto ${submitted ? 'p-4 md:p-8' : 'p-8 md:p-10'} custom-scrollbar print:overflow-visible print:p-0`}>
@@ -385,6 +398,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   eventName={event.name}
                   eventDate={event.date || undefined}
                   eventVenue={event.venue || undefined}
+                  image_url={event.image_url || undefined}
                   confirmationNumber={confirmationNumber}
                   registeredAt={registeredAt}
                 />

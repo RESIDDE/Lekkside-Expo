@@ -12,6 +12,7 @@ interface RegistrationTicketProps {
   eventName: string;
   eventDate?: string;
   eventVenue?: string;
+  image_url?: string;
   confirmationNumber: string;
   registeredAt: string;
 }
@@ -26,6 +27,7 @@ export default function RegistrationTicket({
   eventName,
   eventDate,
   eventVenue,
+  image_url,
   confirmationNumber,
   registeredAt,
 }: RegistrationTicketProps) {
@@ -35,10 +37,22 @@ export default function RegistrationTicket({
       className="w-full max-w-md mx-auto rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/30 bg-[#111111] shadow-2xl"
     >
       {/* Ticket Header */}
-      <div className="bg-primary p-6 text-center relative">
+      <div className="relative h-32 flex flex-col items-center justify-center text-center overflow-hidden">
+        {image_url ? (
+          <>
+            <img 
+              src={image_url} 
+              alt={eventName} 
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.4] grayscale-[0.3]" 
+            />
+            <div className="absolute inset-0 bg-primary/20" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-primary" />
+        )}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full mt-2" />
-        <h2 className="text-2xl font-bold text-primary-foreground font-display mt-2">{eventName}</h2>
-        <div className="inline-flex items-center gap-2 mt-3 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
+        <h2 className="relative text-2xl font-bold text-white font-display mt-2 px-4 line-clamp-2">{eventName}</h2>
+        <div className="relative inline-flex items-center gap-2 mt-3 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
           <CheckCircle2 className="h-3 w-3" />
           Confirmed
         </div>
