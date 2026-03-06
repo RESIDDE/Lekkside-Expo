@@ -22,7 +22,7 @@ export function SupportForm() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-support-email', {
+      const { error } = await supabase.functions.invoke('send-support-email', {
         body: formData
       });
 

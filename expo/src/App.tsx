@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 // Force rebuild comment
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Calendar, CalendarDays, MapPin, ArrowRight, ChevronRight, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { Calendar, CalendarDays, MapPin, ArrowRight, ChevronRight } from 'lucide-react';
 import { supabase } from "./lib/supabase";
 import { type Database } from "../../lekkside-admin/src/integrations/supabase/types";
 import { RegistrationModal } from "./components/RegistrationModal";
