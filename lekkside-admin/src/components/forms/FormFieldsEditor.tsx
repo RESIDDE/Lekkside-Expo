@@ -3,7 +3,6 @@ import {
   Plus, 
   Trash2, 
   GripVertical, 
-  Sparkles, 
   Check, 
   Info, 
   Settings2,
@@ -212,7 +211,9 @@ export const FormFieldsEditor = ({
 
                 {fields.length === 0 && !isAddingField && (
                   <div className="py-12 border-2 border-dashed border-border/40 rounded-3xl flex flex-col items-center justify-center text-center px-6">
-                    <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
+                    <div className="w-12 h-12 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
+                      <Settings2 className="w-6 h-6" />
+                    </div>
                     <p className="text-sm font-bold text-muted-foreground/60">No custom fields defined</p>
                   </div>
                 )}

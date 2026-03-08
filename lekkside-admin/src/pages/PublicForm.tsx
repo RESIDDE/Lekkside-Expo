@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Calendar, MapPin, Loader2, CheckCircle2, Mail, User, Phone, MessageSquare, ArrowRight, Sparkles, ExternalLink, ShieldCheck } from "lucide-react";
+import { Calendar, MapPin, Loader2, CheckCircle2, Mail, User, Phone, MessageSquare, ArrowRight, ExternalLink, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import lekkLogo from "@/assets/lekkside-logo.png";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -695,7 +695,7 @@ const PublicForm = () => {
                     ) : (
                       <>
                         Register Now
-                        <Sparkles className="w-5 h-5" />
+                        <ArrowRight className="w-5 h-5" />
                       </>
                     )}
                   </Button>

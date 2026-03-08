@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Download, QrCode, Monitor, Sparkles, Share2 } from "lucide-react";
+import { Download, QrCode, Monitor, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import {
@@ -120,7 +120,7 @@ export function StationQRCodeDialog({
                 />
               </div>
               <div className="absolute -bottom-3 -right-3 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-xl shadow-primary/40">
-                <Sparkles className="w-6 h-6" />
+                <QrCode className="w-6 h-6" />
               </div>
             </motion.div>
             

@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { CustomField } from "./FormFieldsEditor";
 import { motion } from "framer-motion";
-import { Smartphone, Eye, Sparkles } from "lucide-react";
+import { Smartphone, Eye, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FormPreviewDialogProps {
@@ -64,7 +64,7 @@ export const FormPreviewDialog = ({
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                    <Sparkles className="w-3 h-3 text-primary" />
+                    <CheckCircle2 className="w-3 h-3 text-primary" />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-foreground">Premium Interaction</p>

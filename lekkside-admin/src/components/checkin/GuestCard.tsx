@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, ChevronUp, MoreHorizontal, Sparkles, Printer } from 'lucide-react';
+import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, ChevronUp, MoreHorizontal, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tables } from '@/integrations/supabase/types';
@@ -258,7 +258,6 @@ export const GuestCard = memo(function GuestCard({
                 {/* Check-in Details */}
                 {guest.checked_in && guest.checked_in_at && (
                   <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-[hsl(var(--success))]/10 border border-[hsl(var(--success))]/10 w-fit">
-                    <Sparkles className="w-3.5 h-3.5 text-[hsl(var(--success))]" />
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-[hsl(var(--success))]">
                       Arrival: {format(new Date(guest.checked_in_at), 'MMM d, h:mm a')}
                     </span>

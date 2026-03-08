@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Download, QrCode, Share2, ClipboardCheck, Sparkles } from "lucide-react";
+import { Download, QrCode, Share2, ClipboardCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -112,7 +112,7 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
               </div>
               
               <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30">
-                <Sparkles className="w-5 h-5" />
+                <QrCode className="w-5 h-5" />
               </div>
             </motion.div>
             

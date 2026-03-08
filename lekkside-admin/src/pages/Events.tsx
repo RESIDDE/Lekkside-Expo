@@ -1,4 +1,4 @@
-import { Calendar, Sparkles, Filter, Search } from 'lucide-react';
+import { Calendar, Filter, Search } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { EventCard } from '@/components/events/EventCard';
 import { CreateEventDialog } from '@/components/events/CreateEventDialog';

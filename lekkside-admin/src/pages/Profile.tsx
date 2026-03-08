@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Save, ArrowLeft, Shield, Mail, Key, UserCircle, BadgeCheck, Sparkles, ChevronLeft } from 'lucide-react';
+import { User, Lock, Save, ArrowLeft, Shield, Mail, Key, UserCircle, BadgeCheck, ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -232,7 +232,7 @@ export default function Profile() {
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Full Name</Label>
                     <div className="relative group">
-                      <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
                         id="fullName"
                         type="text"

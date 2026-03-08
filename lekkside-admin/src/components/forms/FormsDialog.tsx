@@ -10,7 +10,6 @@ import {
   Settings2, 
   FileText, 
   QrCode,
-  Sparkles,
   ChevronRight,
   ClipboardCheck,
   MoreVertical,
@@ -187,7 +186,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                   ) : forms.length === 0 ? (
                     <div className="text-center py-12 px-6 rounded-3xl bg-muted/10 border-2 border-dashed border-border/40">
                       <div className="w-16 h-16 bg-muted/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Sparkles className="h-8 w-8 text-muted-foreground/50" />
+                        <FileText className="h-8 w-8 text-muted-foreground/50" />
                       </div>
                       <p className="text-sm font-bold text-muted-foreground">Start your first campaign</p>
                       <p className="text-xs text-muted-foreground/60 mt-1">Forms allow you to collect custom information from attendees.</p>

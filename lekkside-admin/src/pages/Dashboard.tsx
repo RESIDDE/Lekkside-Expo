@@ -1,4 +1,4 @@
-import { Users, Calendar, CheckCircle, Clock, Sparkles } from 'lucide-react';
+import { Users, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { EventCard } from '@/components/events/EventCard';
@@ -39,7 +39,6 @@ export default function Dashboard() {
             className="space-y-2"
           >
             <div className="flex items-center gap-2 text-primary mb-1">
-              <Sparkles className="w-4 h-4 fill-current" />
               <span className="text-[10px] font-extrabold uppercase tracking-[0.2em]">Platform Overview</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-heading font-extrabold text-foreground tracking-tight">

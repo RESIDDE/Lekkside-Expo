@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
-import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, Sparkles, ShieldCheck } from "lucide-react";
+import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -235,7 +235,7 @@ export default function CheckInOnly() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/10 text-[9px] font-black uppercase tracking-[0.2em]">
-                 <Sparkles className="w-3 h-3" /> System Ready
+                 <ShieldCheck className="w-3 h-3" /> System Ready
               </div>
               <h1 className="text-4xl font-heading font-black text-foreground leading-[1.1] tracking-tight">{event.name}</h1>
               <div className="flex flex-wrap gap-6 text-sm">
