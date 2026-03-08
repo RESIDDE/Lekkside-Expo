@@ -61,27 +61,43 @@ export const GuestCard = memo(function GuestCard({
 
   const handlePrint = () => {
     setIsPrinting(true);
+    // Increased timeout to ensure React portal is fully rendered and images are ready
     setTimeout(() => {
       window.print();
-      setIsPrinting(false);
-    }, 100);
+      // We don't immediately set isPrinting to false because some browsers 
+      // might unmount the portal before the print job is fully sent to the spooler
+      setTimeout(() => {
+        setIsPrinting(false);
+      }, 500);
+    }, 500);
   };
 
   const PrintPortal = ({ children }: { children: React.ReactNode }) => {
     return createPortal(
-      <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center p-8 print:p-0 print:static print:z-auto">
+      <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center p-8 print:p-0 print:static print:z-auto no-screen">
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            body * { visibility: hidden; }
-            .print-container, .print-container * { visibility: visible; }
-            .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+            body > *:not(.print-portal-container) { display: none !important; }
+            .print-portal-container { display: block !important; position: static !important; }
+            .no-print { display: none !important; }
           }
+          /* Hide the print preview from screen if needed, but here we want the admin to see it briefly */
+          .print-portal-container { background: white; }
         ` }} />
         <div className="print-container">
           {children}
         </div>
       </div>,
-      document.body
+      (() => {
+        let el = document.getElementById('print-portal-root');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'print-portal-root';
+          el.className = 'print-portal-container';
+          document.body.appendChild(el);
+        }
+        return el;
+      })()
     );
   };
 
