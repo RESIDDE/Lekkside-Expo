@@ -607,6 +607,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
           )}
         </div>
       </div>
+    </div>
     </>
   );
 }
