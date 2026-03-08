@@ -1,11 +1,19 @@
 import { memo, useState } from 'react';
-import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, ChevronUp, MoreHorizontal, Sparkles } from 'lucide-react';
+import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, ChevronUp, MoreHorizontal, Sparkles, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import RegistrationTicket from '../forms/RegistrationTicket';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Guest = Tables<'guests'>;
 
@@ -15,10 +23,23 @@ interface GuestCardProps {
   onUndoCheckIn: (guestId: string) => void;
   isLoading?: boolean;
   index?: number;
+  eventName?: string;
+  eventDate?: string;
+  eventVenue?: string;
 }
 
-export const GuestCard = memo(function GuestCard({ guest, onCheckIn, onUndoCheckIn, isLoading, index = 0 }: GuestCardProps) {
+export const GuestCard = memo(function GuestCard({ 
+  guest, 
+  onCheckIn, 
+  onUndoCheckIn, 
+  isLoading, 
+  index = 0,
+  eventName = "Event",
+  eventDate,
+  eventVenue
+}: GuestCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const fullName = [guest.first_name, guest.last_name].filter(Boolean).join(' ') || 'Anonymous Guest';
   
   const customFields = guest.custom_fields as Record<string, unknown> | null;
@@ -33,9 +54,35 @@ export const GuestCard = memo(function GuestCard({ guest, onCheckIn, onUndoCheck
       y: 0,
       transition: {
         duration: 0.4,
-        ease: "easeOut"
+        ease: "easeOut" as const
       }
     }
+  };
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 100);
+  };
+
+  const PrintPortal = ({ children }: { children: React.ReactNode }) => {
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center p-8 print:p-0 print:static print:z-auto">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            body * { visibility: hidden; }
+            .print-container, .print-container * { visibility: visible; }
+            .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+          }
+        ` }} />
+        <div className="print-container">
+          {children}
+        </div>
+      </div>,
+      document.body
+    );
   };
 
   return (
@@ -136,18 +183,51 @@ export const GuestCard = memo(function GuestCard({ guest, onCheckIn, onUndoCheck
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                 >
-                  <Button
-                    size="sm"
-                    onClick={() => onCheckIn(guest.id)}
-                    disabled={isLoading}
-                    className="h-10 px-5 rounded-xl text-xs font-bold bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white shadow-lg shadow-[hsl(var(--success))]/10 gap-2"
-                  >
-                    <Check className="w-3.5 h-3.5 stroke-[3px]" />
-                    <span className="hidden sm:inline">Check In</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        disabled={isLoading}
+                        className="h-10 px-4 rounded-xl text-xs font-bold bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white shadow-lg shadow-[hsl(var(--success))]/10 gap-2 pr-2"
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                        <span className="hidden sm:inline">Check In</span>
+                        <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-2xl shadow-premium border-border/40 p-2 min-w-[180px]">
+                      <DropdownMenuItem 
+                        onClick={() => onCheckIn(guest.id)}
+                        className="rounded-xl py-2.5 font-bold text-xs gap-3 cursor-pointer"
+                      >
+                        <Check className="w-4 h-4 text-[hsl(var(--success))]" />
+                        Check-in Only
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          onCheckIn(guest.id);
+                          handlePrint();
+                        }}
+                        className="rounded-xl py-2.5 font-bold text-xs gap-3 cursor-pointer"
+                      >
+                        <Printer className="w-4 h-4 text-primary" />
+                        Check-in & Print
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </motion.div>
               )}
             </AnimatePresence>
+            
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePrint}
+              className="h-10 w-10 rounded-xl border-border/40 text-muted-foreground hover:text-primary hover:border-primary/20"
+              title="Print Ticket"
+            >
+              <Printer className="w-4 h-4" />
+            </Button>
             
             {hasExpandableContent && (
               <Button
@@ -223,6 +303,24 @@ export const GuestCard = memo(function GuestCard({ guest, onCheckIn, onUndoCheck
           )}
         </AnimatePresence>
       </div>
+
+      {isPrinting && (
+        <PrintPortal>
+          <RegistrationTicket
+            firstName={guest.first_name}
+            lastName={guest.last_name}
+            email={guest.email || undefined}
+            phone={guest.phone || undefined}
+            notes={guest.notes || undefined}
+            customFields={customFields as Record<string, string | boolean> || undefined}
+            eventName={eventName}
+            eventDate={eventDate}
+            eventVenue={eventVenue}
+            confirmationNumber={`LEKK-${guest.id.slice(0, 8).toUpperCase()}`}
+            registeredAt={guest.created_at}
+          />
+        </PrintPortal>
+      )}
     </motion.div>
   );
 });

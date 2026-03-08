@@ -396,6 +396,9 @@ export default function CheckInOnly() {
                           onCheckIn={handleCheckIn}
                           onUndoCheckIn={handleUndoCheckIn}
                           isLoading={checkIn.isPending || undoCheckIn.isPending}
+                          eventName={event?.name}
+                          eventDate={event?.date}
+                          eventVenue={event?.venue}
                         />
                       </div>
                     );

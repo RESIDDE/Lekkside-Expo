@@ -573,6 +573,9 @@ export default function EventDetail() {
                         onUndoCheckIn={handleUndoCheckIn}
                         isLoading={checkIn.isPending || undoCheckIn.isPending}
                         index={idx}
+                        eventName={event?.name}
+                        eventDate={event?.date}
+                        eventVenue={event?.venue}
                       />
                     ))}
                     {filteredGuests.length > 50 && (

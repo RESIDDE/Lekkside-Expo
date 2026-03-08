@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { type Database } from '../../../lekkside-admin/src/integrations/supabase/types';
-import { X, Loader2, Calendar, MapPin, CheckCircle2, Send, Mail, Printer } from 'lucide-react';
+import { X, Loader2, Calendar, MapPin, CheckCircle2, Send, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import gsap from 'gsap';
 import RegistrationTicket from './RegistrationTicket';
@@ -43,9 +42,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   const [registeredAt, setRegisteredAt] = useState('');
   const [submittedCustomFields, setSubmittedCustomFields] = useState<Record<string, any>>({});
 
-  // Print state
-  const [isPrinting, setIsPrinting] = useState(false);
-
   // OTP Email verification state
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'verified' | 'error'>('idle');
   const [otpCode, setOtpCode] = useState('');
@@ -78,7 +74,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
     }
   }, [event]);
 
-  // Countdown timer for resend
   useEffect(() => {
     if (resendCountdown > 0) {
       const timer = setTimeout(() => setResendCountdown(r => r - 1), 1000);
@@ -207,23 +202,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
     }
   };
 
-  useEffect(() => {
-    const afterPrint = () => setIsPrinting(false);
-    window.addEventListener('afterprint', afterPrint);
-    return () => window.removeEventListener('afterprint', afterPrint);
-  }, []);
-
-  const handlePrint = () => {
-    setIsPrinting(true);
-    setTimeout(() => {
-      window.print();
-      // Fallback for browsers that don't fire afterprint reliably
-      setTimeout(() => {
-        setIsPrinting(false);
-      }, 1000);
-    }, 100);
-  };
-
   const handleClose = () => {
     gsap.to(modalRef.current, {
       opacity: 0,
@@ -310,8 +288,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       setSubmitting(false);
     }
   };
-
-  // ... React imports are at the top, we need createPortal from 'react-dom'
   
   if (!event) return null;
 
@@ -410,13 +386,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button 
-                      onClick={handlePrint}
-                      className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Print Ticket
-                    </button>
                     <button 
                       onClick={handleClose}
                       className="w-full sm:w-auto px-12 py-4 bg-primary text-primary-foreground rounded-full font-bold hover:opacity-90 transition-all shadow-xl shadow-primary/20"
@@ -638,53 +607,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
           )}
         </div>
       </div>
-    </div>
-
-    {/* Print Portal */}
-    {isPrinting && createPortal(
-      <div className="print-portal">
-        <style dangerouslySetInnerHTML={{ __html: `
-          @media print {
-            @page {
-              margin: 0;
-            }
-            body { 
-              background: #0A0A0A !important; 
-              margin: 0 !important; 
-              padding: 0 !important; 
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            #root { display: none !important; }
-            .print-portal {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              min-height: 100vh;
-              display: block;
-              background: #0A0A0A;
-              padding: 40px 20px;
-              box-sizing: border-box;
-            }
-          }
-        `}} />
-        <RegistrationTicket 
-          firstName={formData.firstName}
-          lastName={formData.lastName}
-          email={formData.email}
-          phone={formData.phone}
-          notes={formData.notes}
-          customFields={submittedCustomFields}
-          eventName={event.name}
-          eventDate={event.date || undefined}
-          eventVenue={event.venue || undefined}
-          confirmationNumber={confirmationNumber}
-          registeredAt={registeredAt}
-        />
-      </div>,
-      document.body
-    )}
     </>
   );
 }
