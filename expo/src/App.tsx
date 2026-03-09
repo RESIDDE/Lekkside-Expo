@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
-// Force rebuild comment
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Calendar, CalendarDays, MapPin, ArrowRight, ChevronRight } from 'lucide-react';
+import {
+  Calendar,
+  CalendarDays,
+  MapPin,
+  ArrowRight,
+  ChevronRight,
+} from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { type Database } from "../../lekkside-admin/src/integrations/supabase/types";
 import { RegistrationModal } from "./components/RegistrationModal";
 import { SupportForm } from "./components/SupportForm";
+import { HeroCarousel } from "./components/HeroCarousel";
+import { PartnersSection } from "./components/PartnersSection";
 import { format, isAfter, isBefore, startOfToday } from "date-fns";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
@@ -71,6 +78,9 @@ function App() {
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden px-8">
+        {/* Background Carousel */}
+        <HeroCarousel />
+
         <motion.div
           style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
           className="relative z-10 text-center max-w-5xl"
@@ -85,9 +95,9 @@ function App() {
             }}
             className="text-[12vw] md:text-[8vw] font-display font-bold leading-[0.9] tracking-tighter mb-8"
           >
-            EVENTS <br />
+            Lekkside <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400">
-              MANIFESTO
+              Education Fair
             </span>
           </motion.h1>
 
@@ -107,7 +117,7 @@ function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.5 }}
           transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-10"
         >
           <div className="w-[1px] h-20 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
           <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/40 rotate-90 origin-right">
@@ -300,15 +310,18 @@ function App() {
         </div>
       </section>
 
+      {/* Partners Section */}
+      <PartnersSection />
+
       {/* Contact Form Section */}
       <SupportForm />
 
       <footer className="py-12 px-8 border-t border-white/5 text-center relative z-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <img 
-              src="/lekkside-logo.png" 
-              alt="Lekkside Logo" 
+            <img
+              src="/lekkside-logo.png"
+              alt="Lekkside Logo"
               className="h-8 w-auto object-contain brightness-0 invert opacity-80"
             />
             <span className="text-lg font-bold font-display tracking-tighter uppercase whitespace-nowrap">
