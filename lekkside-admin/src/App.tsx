@@ -16,6 +16,8 @@ const EventDetail = lazy(() => import("./pages/EventDetail"));
 const CheckInOnly = lazy(() => import("./pages/CheckInOnly"));
 const PublicForm = lazy(() => import("./pages/PublicForm"));
 const Profile = lazy(() => import("./pages/Profile"));
+const ExhibitorSignup = lazy(() => import("./pages/ExhibitorSignup"));
+const ExhibitorDashboard = lazy(() => import("./pages/ExhibitorDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Optimized query client with caching
@@ -56,6 +58,11 @@ const App = () => (
               <Route path="/checkin/:stationId" element={<CheckInOnly />} />
               <Route path="/form/:formId" element={<PublicForm />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/exhibitor/signup" element={<ExhibitorSignup />} />
+              <Route
+                path="/exhibitor/dashboard/:boothId"
+                element={<ExhibitorDashboard />}
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

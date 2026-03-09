@@ -44,7 +44,7 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
   const deleteBooth = useDeleteBooth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const invitationUrl = `${window.location.origin}/booth/signup/${booth.invitation_token}`;
+  const invitationUrl = `${window.location.origin}/exhibitor/signup?token=${booth.invitation_token}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(invitationUrl);

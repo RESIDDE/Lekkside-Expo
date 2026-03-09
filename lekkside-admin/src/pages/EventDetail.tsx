@@ -828,7 +828,7 @@ export default function EventDetail() {
                           key={booth.id}
                           booth={booth}
                           onViewDetails={(boothId) => {
-                            console.log("View booth details:", boothId);
+                            navigate(`/exhibitor/dashboard/${boothId}`);
                           }}
                         />
                       ))}

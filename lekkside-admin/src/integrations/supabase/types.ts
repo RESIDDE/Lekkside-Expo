@@ -485,7 +485,7 @@ export type Database = {
         Row: {
           booth_lead_id: string;
           created_at: string;
-          exhibitor_id: string;
+          created_by: string | null;
           id: string;
           note: string;
           updated_at: string;
@@ -493,7 +493,7 @@ export type Database = {
         Insert: {
           booth_lead_id: string;
           created_at?: string;
-          exhibitor_id: string;
+          created_by?: string | null;
           id?: string;
           note: string;
           updated_at?: string;
@@ -501,7 +501,7 @@ export type Database = {
         Update: {
           booth_lead_id?: string;
           created_at?: string;
-          exhibitor_id?: string;
+          created_by?: string | null;
           id?: string;
           note?: string;
           updated_at?: string;
@@ -515,10 +515,10 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "lead_notes_exhibitor_id_fkey";
-            columns: ["exhibitor_id"];
+            foreignKeyName: "lead_notes_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: "exhibitors";
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
