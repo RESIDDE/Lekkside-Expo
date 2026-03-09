@@ -36,6 +36,8 @@ import { CheckInStationsDialog } from "@/components/share/CheckInStationsDialog"
 import { StationsStatsPanel } from "@/components/share/StationsStatsPanel";
 import { FormsButton } from "@/components/forms/FormsButton";
 import { BroadcastDialog } from "@/components/broadcast/BroadcastDialog";
+import { CreateBoothDialog } from "@/components/booths/CreateBoothDialog";
+import { BoothCard } from "@/components/booths/BoothCard";
 import { useEvent, useDeleteEvent, useUpdateEvent } from "@/hooks/useEvents";
 import {
   useGuests,
@@ -44,6 +46,7 @@ import {
   useUndoCheckIn,
   useDeleteAllGuests,
 } from "@/hooks/useGuests";
+import { useExhibitionBooths } from "@/hooks/useExhibitionBooths";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -103,6 +106,8 @@ export default function EventDetail() {
   const { data: event, isLoading: eventLoading } = useEvent(eventId);
   const { data: guests, isLoading: guestsLoading } = useGuests(eventId);
   const stats = useGuestStats(eventId);
+  const { data: booths, isLoading: boothsLoading } =
+    useExhibitionBooths(eventId);
 
   const checkIn = useCheckIn();
   const undoCheckIn = useUndoCheckIn();
@@ -622,7 +627,7 @@ export default function EventDetail() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="w-full sm:w-auto p-1.5 h-auto bg-muted/30 rounded-[1.5rem] border border-border/40 grid grid-cols-3 sm:flex gap-1">
+            <TabsList className="w-full sm:w-auto p-1.5 h-auto bg-muted/30 rounded-[1.5rem] border border-border/40 grid grid-cols-4 sm:flex gap-1">
               {[
                 { id: "all", label: "All Guests", color: "bg-primary" },
                 {
@@ -634,6 +639,11 @@ export default function EventDetail() {
                   id: "checked-in",
                   label: "Arrived",
                   color: "bg-[hsl(var(--success))]",
+                },
+                {
+                  id: "booths",
+                  label: "Exhibition Booths",
+                  color: "bg-purple-600",
                 },
               ].map((tab) => (
                 <TabsTrigger
@@ -647,6 +657,7 @@ export default function EventDetail() {
                       "data-[state=active]:bg-[hsl(var(--warning))]",
                     tab.id === "checked-in" &&
                       "data-[state=active]:bg-[hsl(var(--success))]",
+                    tab.id === "booths" && "data-[state=active]:bg-purple-600",
                   )}
                 >
                   <span className="relative z-10 flex items-center gap-2">
@@ -659,7 +670,9 @@ export default function EventDetail() {
                         ? stats.total
                         : tab.id === "pending"
                           ? stats.pending
-                          : stats.checkedIn}
+                          : tab.id === "checked-in"
+                            ? stats.checkedIn
+                            : booths?.length || 0}
                     </Badge>
                   </span>
                 </TabsTrigger>
@@ -773,6 +786,76 @@ export default function EventDetail() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </TabsContent>
+
+            <TabsContent
+              value="booths"
+              className="mt-8 focus-visible:outline-none focus-visible:ring-0"
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-heading font-bold text-foreground">
+                      Exhibition Booths
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage exhibitor booths and access
+                    </p>
+                  </div>
+                  <CreateBoothDialog eventId={event.id} />
+                </div>
+
+                <AnimatePresence mode="popLayout">
+                  {boothsLoading ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    >
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-48 rounded-3xl" />
+                      ))}
+                    </motion.div>
+                  ) : booths && booths.length > 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    >
+                      {booths.map((booth) => (
+                        <BoothCard
+                          key={booth.id}
+                          booth={booth}
+                          onViewDetails={(boothId) => {
+                            console.log("View booth details:", boothId);
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-24 px-4 bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-border/40 text-center"
+                    >
+                      <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mb-6">
+                        <LayoutGrid className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-xl font-heading font-bold text-foreground">
+                        No exhibition booths yet
+                      </h3>
+                      <p className="text-muted-foreground mt-2 max-w-sm">
+                        Create your first exhibition booth to start managing
+                        exhibitor access and leads.
+                      </p>
+                      <div className="mt-8">
+                        <CreateBoothDialog eventId={event.id} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </TabsContent>
           </Tabs>
         </motion.div>

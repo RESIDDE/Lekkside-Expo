@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -20,12 +21,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, code, password, fullName }: VerifyAdminOtpRequest = await req.json();
+    const { email, code, password, fullName }: VerifyAdminOtpRequest =
+      await req.json();
 
     if (!email || !code) {
       return new Response(
         JSON.stringify({ error: "Email and code are required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
@@ -49,7 +54,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (fetchError || !verification) {
       return new Response(
         JSON.stringify({ error: "Invalid or expired verification code" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
@@ -61,51 +69,58 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) {
       console.error("Failed to update verification:", updateError);
-      return new Response(
-        JSON.stringify({ error: "Failed to verify code" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "Failed to verify code" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // 3. Create the user if password/fullName provided
     if (password) {
       console.log(`Creating user for ${email}`);
-      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
-        email: email.toLowerCase(),
-        password: password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName }
-      });
+      const { data: userData, error: createError } =
+        await supabase.auth.admin.createUser({
+          email: email.toLowerCase(),
+          password: password,
+          email_confirm: true,
+          user_metadata: { full_name: fullName },
+        });
 
       if (createError) {
         console.error("Failed to create user:", createError);
-        return new Response(
-          JSON.stringify({ error: createError.message }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+        return new Response(JSON.stringify({ error: createError.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
       }
 
       // 4. Update profile role if needed (Default to 'administrator' or similar)
       const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ role: 'admin' }) // Set default role
-        .eq('user_id', userData.user.id);
-      
+        .from("profiles")
+        .update({ role: "admin" }) // Set default role
+        .eq("user_id", userData.user.id);
+
       if (profileError) {
         console.warn("Failed to set profile role:", profileError);
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Account created and verified successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({
+        success: true,
+        message: "Account created and verified successfully",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
     );
   } catch (error: any) {
     console.error("Error in verify-admin-otp function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 

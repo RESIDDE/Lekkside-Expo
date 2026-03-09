@@ -7,99 +7,98 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1";
   };
   public: {
     Tables: {
-      broadcasts: {
+      booth_leads: {
         Row: {
-          id: string;
-          event_id: string;
-          subject: string;
-          content: string;
-          status: string;
-          sent_count: number;
-          open_count: number;
-          click_count: number;
+          booth_id: string;
           created_at: string;
+          guest_id: string;
+          id: string;
+          is_relevant: boolean;
+          lead_score: number | null;
+          tags: string[] | null;
           updated_at: string;
         };
         Insert: {
-          id?: string;
-          event_id: string;
-          subject: string;
-          content: string;
-          status?: string;
-          sent_count?: number;
-          open_count?: number;
-          click_count?: number;
+          booth_id: string;
           created_at?: string;
+          guest_id: string;
+          id?: string;
+          is_relevant?: boolean;
+          lead_score?: number | null;
+          tags?: string[] | null;
           updated_at?: string;
         };
         Update: {
-          id?: string;
-          event_id?: string;
-          subject?: string;
-          content?: string;
-          status?: string;
-          sent_count?: number;
-          open_count?: number;
-          click_count?: number;
+          booth_id?: string;
           created_at?: string;
+          guest_id?: string;
+          id?: string;
+          is_relevant?: boolean;
+          lead_score?: number | null;
+          tags?: string[] | null;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "broadcasts_event_id_fkey";
-            columns: ["event_id"];
+            foreignKeyName: "booth_leads_booth_id_fkey";
+            columns: ["booth_id"];
             isOneToOne: false;
-            referencedRelation: "events";
+            referencedRelation: "exhibition_booths";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "booth_leads_guest_id_fkey";
+            columns: ["guest_id"];
+            isOneToOne: false;
+            referencedRelation: "guests";
             referencedColumns: ["id"];
           },
         ];
       };
       broadcast_logs: {
         Row: {
-          id: string;
           broadcast_id: string;
-          guest_id: string | null;
-          email: string;
-          status: string;
-          sent_at: string | null;
-          opened_at: string | null;
           clicked_at: string | null;
+          created_at: string | null;
+          email: string;
           error_message: string | null;
-          created_at: string;
-          updated_at: string;
+          guest_id: string | null;
+          id: string;
+          opened_at: string | null;
+          sent_at: string | null;
+          status: string;
+          updated_at: string | null;
         };
         Insert: {
-          id?: string;
           broadcast_id: string;
-          guest_id?: string | null;
-          email: string;
-          status?: string;
-          sent_at?: string | null;
-          opened_at?: string | null;
           clicked_at?: string | null;
+          created_at?: string | null;
+          email: string;
           error_message?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          guest_id?: string | null;
+          id?: string;
+          opened_at?: string | null;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string | null;
         };
         Update: {
-          id?: string;
           broadcast_id?: string;
-          guest_id?: string | null;
-          email?: string;
-          status?: string;
-          sent_at?: string | null;
-          opened_at?: string | null;
           clicked_at?: string | null;
+          created_at?: string | null;
+          email?: string;
           error_message?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          guest_id?: string | null;
+          id?: string;
+          opened_at?: string | null;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string | null;
         };
         Relationships: [
           {
@@ -114,6 +113,53 @@ export type Database = {
             columns: ["guest_id"];
             isOneToOne: false;
             referencedRelation: "guests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      broadcasts: {
+        Row: {
+          click_count: number | null;
+          content: string;
+          created_at: string | null;
+          event_id: string;
+          id: string;
+          open_count: number | null;
+          sent_count: number | null;
+          status: string;
+          subject: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          click_count?: number | null;
+          content: string;
+          created_at?: string | null;
+          event_id: string;
+          id?: string;
+          open_count?: number | null;
+          sent_count?: number | null;
+          status?: string;
+          subject: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          click_count?: number | null;
+          content?: string;
+          created_at?: string | null;
+          event_id?: string;
+          id?: string;
+          open_count?: number | null;
+          sent_count?: number | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "broadcasts_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
             referencedColumns: ["id"];
           },
         ];
@@ -271,6 +317,88 @@ export type Database = {
         };
         Relationships: [];
       };
+      exhibition_booths: {
+        Row: {
+          booth_name: string;
+          booth_number: string;
+          created_at: string;
+          event_id: string;
+          id: string;
+          invitation_token: string;
+          is_active: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          booth_name: string;
+          booth_number: string;
+          created_at?: string;
+          event_id: string;
+          id?: string;
+          invitation_token?: string;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          booth_name?: string;
+          booth_number?: string;
+          created_at?: string;
+          event_id?: string;
+          id?: string;
+          invitation_token?: string;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exhibition_booths_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exhibitors: {
+        Row: {
+          booth_id: string;
+          company_name: string | null;
+          created_at: string;
+          email: string;
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          booth_id: string;
+          company_name?: string | null;
+          created_at?: string;
+          email: string;
+          first_name?: string | null;
+          id?: string;
+          last_name?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          booth_id?: string;
+          company_name?: string | null;
+          created_at?: string;
+          email?: string;
+          first_name?: string | null;
+          id?: string;
+          last_name?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exhibitors_booth_id_fkey";
+            columns: ["booth_id"];
+            isOneToOne: false;
+            referencedRelation: "exhibition_booths";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       guests: {
         Row: {
           checked_in: boolean;
@@ -353,6 +481,48 @@ export type Database = {
           },
         ];
       };
+      lead_notes: {
+        Row: {
+          booth_lead_id: string;
+          created_at: string;
+          exhibitor_id: string;
+          id: string;
+          note: string;
+          updated_at: string;
+        };
+        Insert: {
+          booth_lead_id: string;
+          created_at?: string;
+          exhibitor_id: string;
+          id?: string;
+          note: string;
+          updated_at?: string;
+        };
+        Update: {
+          booth_lead_id?: string;
+          created_at?: string;
+          exhibitor_id?: string;
+          id?: string;
+          note?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_booth_lead_id_fkey";
+            columns: ["booth_lead_id"];
+            isOneToOne: false;
+            referencedRelation: "booth_leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_notes_exhibitor_id_fkey";
+            columns: ["exhibitor_id"];
+            isOneToOne: false;
+            referencedRelation: "exhibitors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -386,6 +556,27 @@ export type Database = {
     };
     Functions: {
       exec_sql: { Args: { query: string }; Returns: undefined };
+      get_booth_attendees: {
+        Args: { p_booth_id: string };
+        Returns: {
+          checked_in: boolean;
+          email: string;
+          first_name: string;
+          guest_id: string;
+          is_lead: boolean;
+          is_relevant: boolean;
+          last_name: string;
+          lead_score: number;
+          notes_count: number;
+          phone: string;
+          tags: string[];
+          ticket_type: string;
+        }[];
+      };
+      increment_broadcast_stats: {
+        Args: { field: string; row_id: string };
+        Returns: undefined;
+      };
       is_form_active: { Args: { form_id: string }; Returns: boolean };
     };
     Enums: {
@@ -501,24 +692,18 @@ export type Enums<
     : never;
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
+  DefaultSchemaCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends DefaultSchemaCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
+> = DefaultSchemaCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : DefaultSchemaCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][DefaultSchemaCompositeTypeNameOrOptions]
     : never;
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const;
