@@ -37,11 +37,8 @@ export default function Auth() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   
-  // Signup verification state
-  const [signupStep, setSignupStep] = useState<'form' | 'otp'>('form');
-  const [signupOtp, setSignupOtp] = useState('');
-  const [isSendingSignupOtp, setIsSendingSignupOtp] = useState(false);
-  const [isVerifyingSignupOtp, setIsVerifyingSignupOtp] = useState(false);
+  // Signup state
+  const [isSigningUp, setIsSigningUp] = useState(false);
   
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -111,94 +108,24 @@ export default function Auth() {
     e.preventDefault();
     if (!validateInputs(true)) return;
 
-    setIsSendingSignupOtp(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('send-admin-otp', {
-        body: { email },
-      });
+    setIsSigningUp(true);
+    const { error } = await signUp(email, password, fullName);
+    setIsSigningUp(false);
 
-      if (error) throw error;
-
-      if (data.error) {
-        toast({
-          title: 'Registration Blocked',
-          description: data.error,
-          variant: 'destructive',
-        });
-        return;
-      }
-
+    if (error) {
       toast({
-        title: 'Verification Required',
-        description: 'A security code has been sent to your email to verify your identity.',
-      });
-      setSignupStep('otp');
-    } catch (error: any) {
-      toast({
-        title: 'System Error',
-        description: error.message || 'Failed to initialize registration.',
+        title: 'Registration Failed',
+        description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setIsSendingSignupOtp(false);
+    } else {
+      toast({
+        title: 'Account Created',
+        description: 'Your administrative account has been created successfully. Please check your email for a confirmation link if required.',
+      });
     }
   };
 
-  const handleVerifySignupAndCreate = async () => {
-    if (signupOtp.length !== 6) {
-      toast({
-        title: 'Incomplete Code',
-        description: 'Please enter the full 6-digit code.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsVerifyingSignupOtp(true);
-    try {
-      // 1. Verify the OTP and Create User inside the Edge Function
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-admin-otp', {
-        body: { email, code: signupOtp, password, fullName },
-      });
-
-      if (verifyError) throw verifyError;
-
-      if (verifyData.error) {
-        toast({
-          title: 'Verification Failed',
-          description: verifyData.error,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // 2. Automatically Sign In now that the account is confirmed
-      const { error: signInError } = await signIn(email, password);
-
-      if (signInError) {
-        toast({
-          title: 'Sign In Failed',
-          description: 'Account created but failed to sign in automatically. Please sign in manually.',
-          variant: 'destructive',
-        });
-        setSignupStep('form'); // Reset for manual login
-        return;
-      }
-
-      toast({
-        title: 'Account Verified!',
-        description: 'Welcome to the Lekkside Admin Dashboard.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Critical Error',
-        description: error.message || 'An error occurred during account finalization.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsVerifyingSignupOtp(false);
-    }
-  };
 
   // Forgot Password Handlers
   const handleSendResetOtp = async () => {
@@ -674,122 +601,70 @@ export default function Auth() {
                 <CardDescription className="mb-8 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground">
                   Create your administrative account
                 </CardDescription>
-                <AnimatePresence mode="wait">
-                  {signupStep === 'form' ? (
-                    <motion.form 
-                      key="signup-form"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      onSubmit={handleSignUp} 
-                      className="space-y-5"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Full Name</Label>
-                        <div className="relative group">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                          <Input
-                            id="signup-name"
-                            type="text"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            placeholder="John Smith"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                            required
-                          />
-                        </div>
+                <form onSubmit={handleSignUp} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Full Name</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="John Smith"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Email Address</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="admin@lekkside.com"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Password</Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest shadow-xl shadow-foreground/20 gap-3 transition-all active:scale-95" 
+                    disabled={isSigningUp}
+                  >
+                    {isSigningUp ? (
+                      <div className="flex items-center gap-2">
+                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                         Creating...
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Email Address</Label>
-                        <div className="relative group">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                          <Input
-                            id="signup-email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="admin@lekkside.com"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Password</Label>
-                        <div className="relative group">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                          <Input
-                            id="signup-password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest shadow-xl shadow-foreground/20 gap-3 transition-all active:scale-95" 
-                        disabled={isSendingSignupOtp}
-                      >
-                        {isSendingSignupOtp ? 'Initializing...' : 'Create Account'}
-                        {!isSendingSignupOtp && <ArrowRight className="w-5 h-5" />}
-                      </Button>
-                    </motion.form>
-                  ) : (
-                    <motion.div 
-                      key="signup-otp"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-8"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 mb-2">
-                           <MailCheck className="w-4 h-4 text-primary" />
-                           <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Verify Email</Label>
-                         </div>
-                         <p className="text-sm text-muted-foreground font-medium px-1">
-                           We've sent a 6-digit verification code to: <br/>
-                           <span className="text-foreground font-bold">{email}</span>
-                         </p>
-                        <div className="flex justify-center pt-4">
-                          <InputOTP 
-                            maxLength={6} 
-                            value={signupOtp} 
-                            onChange={setSignupOtp}
-                          >
-                            <InputOTPGroup className="gap-2">
-                              {[0, 1, 2, 3, 4, 5].map(i => (
-                                <InputOTPSlot 
-                                  key={i} 
-                                  index={i} 
-                                  className="h-14 w-11 rounded-xl text-xl font-black border-2 border-border/40 focus:border-primary shadow-sm" 
-                                />
-                              ))}
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={handleVerifySignupAndCreate} 
-                        className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
-                        disabled={isVerifyingSignupOtp || signupOtp.length !== 6}
-                      >
-                        {isVerifyingSignupOtp ? 'Verifying...' : 'Verify & Continue'}
-                        {!isVerifyingSignupOtp && <Check className="w-5 h-5" />}
-                      </Button>
-                      <button 
-                        onClick={() => setSignupStep('form')}
-                        className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        Back to Edit Details
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    ) : (
+                      <>
+                        Create Account
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </Button>
+                </form>
               </TabsContent>
             </CardContent>
           </Tabs>
