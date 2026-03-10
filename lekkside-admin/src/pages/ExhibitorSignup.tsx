@@ -66,7 +66,7 @@ export default function ExhibitorSignup() {
         .from("exhibition_booths")
         .select("booth_name, booth_number, is_active")
         .eq("invitation_token", token)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         toast({
@@ -186,6 +186,7 @@ export default function ExhibitorSignup() {
               data: {
                 first_name: firstName,
                 last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
                 company_name: companyName,
                 user_type: "exhibitor",
               },
@@ -228,7 +229,7 @@ export default function ExhibitorSignup() {
           .from("exhibition_booths")
           .select("id")
           .eq("invitation_token", token)
-          .single();
+          .maybeSingle();
 
         if (!boothData) {
           throw new Error("Booth not found");
@@ -240,19 +241,19 @@ export default function ExhibitorSignup() {
           .select("id")
           .eq("booth_id", boothData.id)
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
 
         if (!existingExhibitor) {
-          const { error: exhibitorError } = await supabase
-            .from("exhibitors")
-            .insert({
-              booth_id: boothData.id,
-              user_id: userId,
-              email,
-              first_name: isLoginMode ? undefined : firstName,
-              last_name: isLoginMode ? undefined : lastName,
-              company_name: isLoginMode ? undefined : companyName,
-            });
+            const { error: exhibitorError } = await supabase
+              .from("exhibitors")
+              .insert({
+                booth_id: boothData.id,
+                user_id: userId,
+                email,
+                first_name: isLoginMode ? undefined : firstName,
+                last_name: isLoginMode ? undefined : lastName,
+                company_name: isLoginMode ? undefined : companyName,
+              });
 
           if (exhibitorError) throw exhibitorError;
         }
