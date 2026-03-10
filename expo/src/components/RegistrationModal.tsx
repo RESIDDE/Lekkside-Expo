@@ -25,6 +25,7 @@ interface CustomField {
 
 export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   const [form, setForm] = useState<EventForm | null>(null);
+  const [availableForms, setAvailableForms] = useState<EventForm[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -90,12 +91,15 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         .select('*')
         .eq('event_id', event.id)
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setForm(data);
+      
+      setAvailableForms(data || []);
+      
+      if (data && data.length === 1) {
+        setForm(data[0]);
+      }
     } catch (err) {
       console.error('Error fetching form:', err);
     } finally {
@@ -298,13 +302,13 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 opacity-0"
       >
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-xl"
+        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
         onClick={handleClose}
       />
       
       <div 
         ref={contentRef}
-        className="relative w-full max-w-2xl glass rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible print:bg-transparent print:border-none print:shadow-none"
+        className="relative w-full max-w-2xl bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible print:bg-transparent print:border-none print:shadow-none"
       >
         {/* Header (Hidden when submitted to show ticket more clearly) */}
         {!submitted && (
@@ -320,15 +324,15 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
               </div>
             )}
             
-            <div className="relative p-8 md:p-10 border-b border-white/5">
+            <div className="relative p-8 md:p-10 border-b border-gray-100 bg-white">
               <button 
                 onClick={handleClose}
-                className="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5 transition-colors text-muted-foreground hover:text-foreground z-10"
+                className="absolute top-8 right-8 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900 z-10"
               >
                 <X className="h-6 w-6" />
               </button>
             
-            <div className="inline-flex items-center rounded-full glass px-3 py-1 border border-white/10 mb-6">
+            <div className="inline-flex items-center rounded-full bg-primary/5 px-3 py-1 border border-primary/10 mb-6">
               <span className="text-[10px] font-bold tracking-widest text-primary uppercase">Registration</span>
             </div>
             
@@ -397,17 +401,64 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
               </div>
             </div>
           ) : !form ? (
-            <div className="py-20 text-center">
-              <p className="text-muted-foreground mb-6">Registration for this event is not yet available or has been closed.</p>
-              <button 
-                onClick={handleClose}
-                className="text-primary font-bold hover:underline"
-              >
-                Go back
-              </button>
-            </div>
+            availableForms.length === 0 ? (
+              <div className="py-20 text-center">
+                <p className="text-muted-foreground mb-6">Registration for this event is not yet available or has been closed.</p>
+                <button 
+                  onClick={handleClose}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Go back
+                </button>
+              </div>
+            ) : (
+              <div className="py-8 space-y-6">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold font-display mb-2">Select Registration Type</h3>
+                  <p className="text-muted-foreground">Please choose a form below</p>
+                </div>
+                
+                <div className="grid gap-4">
+                  {availableForms.map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setForm(f)}
+                      className="flex items-center justify-between p-6 rounded-2xl border border-gray-200 bg-gray-50 hover:bg-white hover:border-primary/50 hover:shadow-md transition-all group text-left w-full"
+                    >
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors">{f.name}</h4>
+                        <p className="text-sm text-gray-500 mt-1">Register as {f.name}</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all flex-shrink-0">
+                        <svg className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
           ) : (
             <form onSubmit={handleSubmit} className="space-y-8">
+              {availableForms.length > 1 && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setForm(null);
+                    setFormData({ firstName: '', lastName: '', email: '', phone: '', notes: '' });
+                    setCustomFieldValues({});
+                    setEmailStatus('idle');
+                    setOtpCode('');
+                  }}
+                  className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2 mb-6 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Form Selection
+                </button>
+              )}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">First Name</label>
@@ -416,7 +467,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                     type="text"
                     value={formData.firstName}
                     onChange={e => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/20"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400 focus:shadow-sm"
                     placeholder="John"
                   />
                 </div>
@@ -427,7 +478,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                     type="text"
                     value={formData.lastName}
                     onChange={e => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/20"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400 focus:shadow-sm"
                     placeholder="Doe"
                   />
                 </div>
@@ -443,8 +494,8 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                       value={formData.email}
                       onChange={handleEmailChange}
                       disabled={emailStatus === 'verified'}
-                      className={`w-full bg-white/5 border rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 transition-all placeholder:text-white/20 ${
-                        emailStatus === 'verified' ? 'border-primary/50 bg-primary/5' : 'border-white/10 focus:ring-primary/50'
+                      className={`w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all placeholder:text-gray-400 focus:shadow-sm ${
+                        emailStatus === 'verified' ? 'border-primary/50 bg-primary/5' : 'focus:ring-primary/50'
                       }`}
                       placeholder="john@example.com"
                     />
@@ -460,10 +511,10 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                       type="button"
                       onClick={sendOtp}
                       disabled={emailStatus === 'sending' || resendCountdown > 0}
-                      className="px-6 rounded-2xl bg-white/5 border border-white/10 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all disabled:opacity-50 min-w-[100px]"
+                      className="px-6 rounded-2xl bg-gray-100 border border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all disabled:opacity-50 min-w-[100px]"
                     >
                       {emailStatus === 'sending' ? (
-                        <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto text-gray-500" />
                       ) : resendCountdown > 0 ? (
                         `${resendCountdown}s`
                       ) : emailStatus === 'sent' ? (
@@ -524,7 +575,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   type="tel"
                   value={formData.phone}
                   onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/20"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400 focus:shadow-sm"
                   placeholder="+234 ..."
                 />
               </div>
@@ -542,11 +593,11 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                         required={field.required}
                         value={customFieldValues[field.id] || ''}
                         onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer focus:shadow-sm"
                       >
-                        <option value="" className="bg-background text-foreground">Select an option</option>
+                        <option value="" className="bg-white text-gray-900">Select an option</option>
                         {field.options?.map((opt: string) => (
-                          <option key={opt} value={opt} className="bg-background text-foreground">{opt}</option>
+                          <option key={opt} value={opt} className="bg-white text-gray-900">{opt}</option>
                         ))}
                       </select>
                       <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
@@ -559,16 +610,16 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                       rows={3}
                       value={customFieldValues[field.id] || ''}
                       onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/20 resize-none min-h-[120px]"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400 focus:shadow-sm resize-none min-h-[120px]"
                       placeholder={field.placeholder || `Enter your ${field.label.toLowerCase()}...`}
                     />
                   ) : field.type === 'checkbox' ? (
                     <div 
-                      className="flex items-center gap-4 group cursor-pointer bg-white/5 border border-white/10 rounded-2xl px-6 py-4 hover:border-primary/50 transition-all"
+                      className="flex items-center gap-4 group cursor-pointer bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 hover:border-primary/50 hover:bg-white hover:shadow-sm transition-all text-gray-900"
                       onClick={() => setCustomFieldValues(prev => ({ ...prev, [field.id]: !prev[field.id] }))}
                     >
                       <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        customFieldValues[field.id] ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-primary/30'
+                        customFieldValues[field.id] ? 'bg-primary border-primary' : 'border-gray-300 group-hover:border-primary/30'
                       }`}>
                         {customFieldValues[field.id] && <CheckCircle2 className="w-4 h-4 text-primary-foreground" />}
                       </div>
@@ -580,7 +631,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                       type="text"
                       value={customFieldValues[field.id] || ''}
                       onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/20"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400 focus:shadow-sm"
                       placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
                     />
                   )}

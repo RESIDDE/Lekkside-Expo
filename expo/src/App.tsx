@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calendar,
   CalendarDays,
@@ -11,23 +11,20 @@ import { supabase } from "./lib/supabase";
 import { type Database } from "../../lekkside-admin/src/integrations/supabase/types";
 import { RegistrationModal } from "./components/RegistrationModal";
 import { SupportForm } from "./components/SupportForm";
-import { HeroCarousel } from "./components/HeroCarousel";
+import { Navbar } from "./components/Navbar";
 import { PartnersSection } from "./components/PartnersSection";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { format, isAfter, isBefore, startOfToday } from "date-fns";
+import { AllEvents } from "./components/AllEvents";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
-function App() {
+function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const { scrollYProgress } = useScroll();
 
-  // Parallax values for hero
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 200]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
 
   useEffect(() => {
     async function fetchEvents() {
@@ -55,6 +52,9 @@ function App() {
       (e.date && isAfter(new Date(e.date), today)) ||
       (e.date && new Date(e.date).getTime() === today.getTime()),
   );
+  
+  const featuredUpcomingEvents = upcomingEvents.slice(0, 6);
+  const hasMoreEvents = upcomingEvents.length > 6;
   const pastEvents = events.filter(
     (e) => e.date && isBefore(new Date(e.date), today),
   );
@@ -64,7 +64,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden relative selection:bg-purple-500/30">
+    <div id="home" className="min-h-screen bg-background text-foreground overflow-x-hidden relative selection:bg-primary/30">
+      <Navbar />
       <RegistrationModal
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
@@ -72,74 +73,70 @@ function App() {
 
       {/* Background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden px-8">
-        {/* Background Carousel */}
-        <HeroCarousel />
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-32 pb-16">
+        {/* Full width background image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/hero4.jpg" 
+            alt="Education event"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-slate-900/75 mix-blend-multiply" />
+          {/* <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" /> */}
+        </div>
 
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
-          className="relative z-10 text-center max-w-5xl"
-        >
-          <motion.h1
+        <div className="max-w-4xl mx-auto w-full px-8 relative z-10 flex flex-col items-center text-center">
+          <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 1.2,
-              delay: 0.2,
-              ease: [0.215, 0.61, 0.355, 1],
-            }}
-            className="text-[12vw] md:text-[8vw] font-display font-bold leading-[0.9] tracking-tighter mb-8"
+            transition={{ duration: 1.2 }}
+            className="flex flex-col items-center"
           >
-            Lekkside <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400">
-              Education Fair
-            </span>
-          </motion.h1>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              Join the experience
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-[1.1] tracking-tight mb-6 text-white uppercase drop-shadow-sm">
+              LEKKSIDE INTERNATIONAL <br />
+              <span className="text-primary drop-shadow-md">EDUCATION FAIR</span>
+            </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, delay: 0.4 }}
-            className="text-white/40 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed"
-          >
-            Explore upcoming events and revisit cherished memories that shape
-            our community.
-          </motion.p>
-        </motion.div>
+            <h2 className="text-xl md:text-2xl font-display font-semibold text-slate-200 mb-4 leading-snug">
+              Where Global Institutions Meet Africa's Best Students
+            </h2>
 
-        {/* Decorative Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-10"
-        >
-          <div className="w-[1px] h-20 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-          <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/40 rotate-90 origin-right">
-            Scroll Down
-          </span>
-        </motion.div>
+            <p className="text-slate-300 text-base md:text-lg max-w-2xl mb-10 leading-relaxed font-light">
+              Showcase your institution to thousands of qualified students seeking global education opportunities across West Africa, East Africa, South Africa, North Africa, the Middle East, South Asia, Central Asia, Eurasia, and North/Central America. Secure your spot today!
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4">
+               <a href="#upcoming" className="px-10 py-4 rounded-full bg-primary text-white font-bold tracking-wider hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 uppercase text-sm">
+                 Explore Events
+               </a>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* Upcoming Events Section */}
       <section
         id="upcoming"
-        className="relative z-10 py-32 px-8 max-w-7xl mx-auto"
+        className="relative z-10 py-24 px-8 bg-zinc-50 border-t border-slate-100"
       >
-        <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="w-12 h-[1px] bg-purple-500" />
-              <span className="text-purple-400 text-xs font-bold uppercase tracking-[0.3em]">
+              <span className="w-12 h-[1px] bg-primary" />
+              <span className="text-primary text-xs font-bold uppercase tracking-[0.3em]">
                 The Horizon
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight">
+            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900">
               UPCOMING EVENTS
             </h2>
           </div>
@@ -150,20 +147,20 @@ function App() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-[500px] rounded-[2.5rem] bg-white/5 animate-pulse border border-white/10"
+                className="h-[500px] rounded-[2.5rem] bg-slate-100 animate-pulse border border-slate-200"
               />
             ))}
           </div>
         ) : upcomingEvents.length === 0 ? (
-          <div className="glass p-20 rounded-[3rem] text-center border border-white/5 bg-white/5 backdrop-blur-3xl">
-            <CalendarDays className="w-16 h-16 text-white/10 mx-auto mb-6" />
-            <p className="text-white/40 text-xl font-light italic">
+          <div className="glass p-20 rounded-[3rem] text-center border border-slate-200 bg-white shadow-xl">
+            <CalendarDays className="w-16 h-16 text-slate-300 mx-auto mb-6" />
+            <p className="text-slate-500 text-xl font-light italic">
               No upcoming events scheduled yet. Stay tuned!
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {upcomingEvents.map((event, index) => (
+            {featuredUpcomingEvents.map((event, index) => (
               <motion.div
                 key={event.id}
                 initial={{ opacity: 0, y: 50 }}
@@ -171,73 +168,78 @@ function App() {
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 onClick={() => handleRegister(event)}
-                className="group relative h-[500px] rounded-[2.5rem] overflow-hidden border border-white/10 hover:border-purple-500/30 transition-all duration-700 hover:-translate-y-2 shadow-2xl cursor-pointer"
+                className="group relative h-[500px] rounded-[2.5rem] overflow-hidden bg-white hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 cursor-pointer border border-slate-100 shadow-lg flex flex-col"
               >
-                {/* Background Image */}
-                <div className="absolute inset-0">
+                {/* Image top half */}
+                <div className="relative h-1/2 w-full overflow-hidden">
                   <img
                     src={
                       (event as any).image_url ||
                       "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
                     }
                     alt={event.name}
-                    className="w-full h-full object-cover grayscale-[0.2] brightness-[0.6] group-hover:scale-110 transition-transform duration-1000 group-hover:grayscale-0 group-hover:brightness-[0.4]"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-primary uppercase tracking-widest shadow-sm">
+                    Upcoming
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="relative h-full p-10 flex flex-col justify-end">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-300 uppercase tracking-widest backdrop-blur-md">
-                        Upcoming
-                      </div>
-                      <div className="flex items-center gap-2 text-white/60 text-xs tracking-tight">
-                        <Calendar className="w-3 h-3" />
-                        {event.date
-                          ? format(new Date(event.date), "MMM dd, yyyy")
-                          : "TBA"}
-                      </div>
+                {/* Content bottom half */}
+                <div className="relative h-1/2 p-8 flex flex-col justify-between bg-white">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wider">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      {event.date
+                        ? format(new Date(event.date), "MMM dd, yyyy")
+                        : "TBA"}
                     </div>
 
-                    <h3 className="text-3xl font-display font-bold leading-tight group-hover:text-purple-400 transition-colors uppercase tracking-tight">
+                    <h3 className="text-2xl font-display font-bold leading-tight group-hover:text-primary transition-colors tracking-tight text-slate-900">
                       {event.name}
                     </h3>
 
-                    <div className="flex items-center gap-2 text-white/40 text-xs">
-                      <MapPin className="w-4 h-4 text-purple-500" />
+                    <div className="flex items-center gap-2 text-slate-500 text-sm">
+                      <MapPin className="w-4 h-4 text-primary" />
                       {event.venue || "TBA"}
                     </div>
+                  </div>
 
-                    <p className="text-white/60 text-sm line-clamp-3 font-light leading-relaxed h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                      {event.description}
-                    </p>
-
-                    <div className="pt-4 flex items-center gap-2 text-white font-bold text-[10px] uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
-                      View Details{" "}
-                      <ArrowRight className="w-4 h-4 text-purple-500" />
-                    </div>
+                  <div className="pt-4 flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
+                    Register Now
+                    <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
-        )}
+            </div>
+          )}
+
+          {hasMoreEvents && (
+            <div className="mt-16 text-center">
+              <Link
+                to="/all-events"
+                className="inline-flex items-center gap-2 px-10 py-4 w-full md:w-auto justify-center rounded-full bg-primary text-white font-bold uppercase tracking-wider hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 text-sm"
+              >
+                View All Events
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Past Events Section */}
-      <section className="relative z-10 py-32 px-8 bg-white/[0.02] border-y border-white/5 overflow-hidden">
-        <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <section className="relative z-10 py-24 px-8 bg-slate-50/50 border-y border-slate-100 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-20">
+          <div className="mb-16">
             <div className="flex items-center gap-4 mb-4">
-              <span className="w-12 h-[1px] bg-orange-500" />
-              <span className="text-orange-400 text-xs font-bold uppercase tracking-[0.3em]">
+              <span className="w-12 h-[1px] bg-slate-300" />
+              <span className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">
                 The Archive
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight">
+            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900">
               PAST MEMORIES
             </h2>
           </div>
@@ -247,12 +249,12 @@ function App() {
               {[1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-[200px] rounded-2xl bg-white/5 animate-pulse border border-white/5"
+                  className="h-[200px] rounded-[2rem] bg-white animate-pulse border border-slate-100 shadow-sm"
                 />
               ))}
             </div>
           ) : pastEvents.length === 0 ? (
-            <div className="p-20 text-center opacity-40 italic font-light">
+            <div className="p-20 text-center opacity-60 italic font-light text-slate-500">
               No past events archived yet.
             </div>
           ) : (
@@ -265,44 +267,42 @@ function App() {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   onClick={() => handleRegister(event)}
-                  className="group flex flex-col sm:flex-row gap-6 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-orange-500/20 transition-all duration-500 cursor-pointer overflow-hidden relative"
+                  className="group flex flex-col sm:flex-row gap-6 p-4 rounded-[2rem] bg-white border border-slate-100 hover:border-primary/30 transition-all duration-500 cursor-pointer overflow-hidden relative shadow-sm hover:shadow-lg"
                 >
-                  <div className="w-full sm:w-[200px] h-[160px] rounded-2xl overflow-hidden shrink-0 relative bg-black">
+                  <div className="w-full sm:w-[200px] h-[160px] rounded-2xl overflow-hidden shrink-0 relative bg-slate-100">
                     <img
                       src={
                         (event as any).image_url ||
                         "https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
                       }
                       alt={event.name}
-                      className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors" />
                   </div>
 
-                  <div className="flex flex-col justify-center gap-3">
+                  <div className="flex flex-col justify-center gap-3 py-2 pr-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-white/20 text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-primary text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-primary/10 rounded-full">
                         {event.date
                           ? format(new Date(event.date), "MMMM yyyy")
                           : "TBA"}
                       </span>
                     </div>
-                    <h3 className="text-xl font-display font-bold text-white/80 group-hover:text-white transition-colors uppercase tracking-tight">
+                    <h3 className="text-xl font-display font-bold text-slate-800 group-hover:text-primary transition-colors tracking-tight">
                       {event.name}
                     </h3>
-                    <p className="text-white/40 text-sm line-clamp-2 font-light leading-relaxed">
+                    <p className="text-slate-500 text-sm line-clamp-2 font-light leading-relaxed">
                       {event.description ||
                         "A cherished memory from our past gatherings."}
                     </p>
-                    <div className="flex items-center gap-2 group/btn">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500/60 group-hover:text-orange-400 transition-colors">
-                        Relive Memory
+                    <div className="flex items-center gap-2 group/btn mt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-primary transition-colors">
+                        View Details
                       </span>
-                      <ChevronRight className="w-3 h-3 text-orange-500/60 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                      <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
-
-                  <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.div>
               ))}
             </div>
@@ -316,19 +316,19 @@ function App() {
       {/* Contact Form Section */}
       <SupportForm />
 
-      <footer className="py-12 px-8 border-t border-white/5 text-center relative z-10">
+      <footer className="py-12 px-8 border-t border-slate-200 text-center relative z-10 bg-white">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <img
               src="/lekkside-logo.png"
               alt="Lekkside Logo"
-              className="h-8 w-auto object-contain brightness-0 invert opacity-80"
+              className="h-8 w-auto object-contain"
             />
-            <span className="text-lg font-bold font-display tracking-tighter uppercase whitespace-nowrap">
+            <span className="text-lg font-bold font-display tracking-tighter uppercase whitespace-nowrap text-slate-900">
               Lekkside
             </span>
           </div>
-          <p className="text-white/20 text-[10px] font-bold tracking-[0.3em] uppercase">
+          <p className="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">
             © 2026 Lekkside Limited. All rights reserved.
           </p>
           <div className="flex gap-8">
@@ -336,7 +336,7 @@ function App() {
               <a
                 key={social}
                 href="#"
-                className="text-[10px] font-bold text-white/40 hover:text-purple-400 transition-colors uppercase tracking-[0.2em]"
+                className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-[0.2em]"
               >
                 {social}
               </a>
@@ -345,6 +345,17 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/all-events" element={<AllEvents />} />
+      </Routes>
+    </Router>
   );
 }
 

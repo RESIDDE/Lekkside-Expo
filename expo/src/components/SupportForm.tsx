@@ -49,24 +49,24 @@ export function SupportForm() {
   };
 
   return (
-    <section className="py-40 px-8 relative overflow-hidden" id="contact">
+    <section className="py-40 px-8 relative overflow-hidden bg-white" id="contact">
       <div className="max-w-4xl mx-auto space-y-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1 }}
-          className="p-8 md:p-16 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 relative overflow-hidden group shadow-2xl"
+          className="p-8 md:p-16 rounded-[3rem] bg-white border border-gray-100 shadow-xl relative overflow-hidden group"
         >
           {/* Decorative elements */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500/20 blur-[100px] rounded-full group-hover:bg-purple-500/30 transition-all duration-1000" />
-          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full group-hover:bg-orange-500/20 transition-all duration-1000" />
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 blur-[100px] rounded-full group-hover:bg-primary/10 transition-all duration-1000" />
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/5 blur-[100px] rounded-full group-hover:bg-primary/10 transition-all duration-1000" />
 
           <div className="relative z-10">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 tracking-tight text-white">
+              <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 tracking-tight text-gray-900">
                 GET IN TOUCH
               </h2>
-              <p className="text-white/40 text-lg max-w-xl mx-auto font-light leading-relaxed">
+              <p className="text-gray-600 text-lg max-w-xl mx-auto font-light leading-relaxed">
                 Have questions or feedback? Drop us a message and we'll get back to you shortly.
               </p>
             </div>
@@ -79,16 +79,16 @@ export function SupportForm() {
                   exit={{ opacity: 0, y: -20 }}
                   className="flex flex-col items-center justify-center py-12 text-center"
                 >
-                  <div className="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6 border border-green-500/30 shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                  <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border border-green-100 shadow-sm">
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Message Sent Successfully!</h3>
-                  <p className="text-white/50 max-w-md mx-auto">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent Successfully!</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
                     Thank you for reaching out. Our team will review your message and respond to {formData.email || 'your email'} soon.
                   </p>
                   <button 
                     onClick={() => setSuccess(false)}
-                    className="mt-8 px-8 py-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                    className="mt-8 px-8 py-3 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 transition-all"
                   >
                     Send another message
                   </button>
@@ -110,7 +110,7 @@ export function SupportForm() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-4">Name</label>
+                      <label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-4">Name</label>
                       <input
                         type="text"
                         id="name"
@@ -118,12 +118,12 @@ export function SupportForm() {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all text-white placeholder-white/20"
+                        className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all text-gray-900 placeholder-gray-400"
                         placeholder="John Doe"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-4">Email</label>
+                      <label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-4">Email</label>
                       <input
                         type="email"
                         id="email"
@@ -131,14 +131,14 @@ export function SupportForm() {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all text-white placeholder-white/20"
+                        className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all text-gray-900 placeholder-gray-400"
                         placeholder="john@example.com"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="subject" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-4">Subject</label>
+                    <label htmlFor="subject" className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-4">Subject</label>
                     <input
                       type="text"
                       id="subject"
@@ -146,13 +146,13 @@ export function SupportForm() {
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all text-white placeholder-white/20"
+                      className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all text-gray-900 placeholder-gray-400"
                       placeholder="How can we help you?"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="message" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-4">Message</label>
+                    <label htmlFor="message" className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-4">Message</label>
                     <textarea
                       id="message"
                       name="message"
@@ -160,7 +160,7 @@ export function SupportForm() {
                       rows={5}
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all text-white placeholder-white/20 resize-none"
+                      className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all text-gray-900 placeholder-gray-400 resize-none"
                       placeholder="Describe your issue or question..."
                     />
                   </div>
@@ -169,7 +169,7 @@ export function SupportForm() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-12 py-4 rounded-full bg-white text-black font-bold text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3 group"
+                      className="px-12 py-4 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/20 hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 group"
                     >
                       {loading ? (
                         <>

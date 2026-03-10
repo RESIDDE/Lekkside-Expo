@@ -69,7 +69,7 @@ export function EventCard({ event, className, onRegister }: EventCardProps) {
       onMouseLeave={handleMouseLeave}
       onClick={() => onRegister(event)}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-[2rem] glass p-8 transition-all duration-500 hover:border-primary/50 perspective-1000 cursor-pointer will-change-[transform,opacity,filter]",
+        "group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-white border border-gray-100 shadow-sm p-8 transition-all duration-500 hover:border-primary/30 hover:shadow-md perspective-1000 cursor-pointer will-change-[transform,opacity,filter]",
         className
       )}
       style={{ transformStyle: 'preserve-3d' }}
@@ -88,8 +88,8 @@ export function EventCard({ event, className, onRegister }: EventCardProps) {
               Upcoming
             </span>
           </div>
-          <div className="rounded-full p-2 bg-white/5 border border-white/10 group-hover:bg-primary group-hover:border-primary transition-all duration-500 group-hover:rotate-45">
-            <ArrowUpRight className="h-5 w-5 text-foreground group-hover:text-primary-foreground" />
+          <div className="rounded-full p-2 bg-gray-50 border border-gray-100 group-hover:bg-primary group-hover:border-primary transition-all duration-500 group-hover:rotate-45">
+            <ArrowUpRight className="h-5 w-5 text-gray-500 group-hover:text-primary-foreground" />
           </div>
         </div>
 
@@ -120,7 +120,7 @@ export function EventCard({ event, className, onRegister }: EventCardProps) {
       </div>
       
       <div className="relative z-10 mt-10 translate-z-10">
-        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6" />
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
         <div className="flex items-center justify-between">
           <div className="flex items-center text-sm font-medium text-muted-foreground">
             <Users className="mr-2 h-4 w-4" />
