@@ -197,7 +197,7 @@ export default function ExhibitorSignup() {
       });
 
       setTimeout(() => {
-        navigate(`/exhibitor/dashboard?booth=${boothData.id}`);
+        navigate(`/exhibitor/dashboard/${boothData.id}`);
       }, 2000);
     } catch (error: any) {
       toast({

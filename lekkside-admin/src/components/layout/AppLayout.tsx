@@ -1,12 +1,21 @@
-import { ReactNode } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, LogOut, Menu, X, ChevronRight, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import lekksideLogo from '@/assets/lekkside-logo.png';
+import { ReactNode } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Calendar,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
+  User,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import lekksideLogo from "@/assets/lekkside-logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -18,15 +27,38 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (user?.user_metadata?.user_type === "exhibitor") {
+        const { data } = await supabase
+          .from("exhibitors")
+          .select("booth_id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (data?.booth_id) {
+          navigate(`/exhibitor/dashboard/${data.booth_id}`);
+        } else {
+          // If exhibitor but no booth found, maybe sign out or show error?
+          // For now, let's sign out to be safe
+          await signOut();
+          navigate("/auth");
+        }
+      }
+    };
+
+    checkAccess();
+  }, [user, navigate, signOut]);
+
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate("/auth");
   };
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/events', label: 'Events', icon: Calendar },
-    { href: '/profile', label: 'Profile', icon: User },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/events", label: "Events", icon: Calendar },
+    { href: "/profile", label: "Profile", icon: User },
   ];
 
   return (
@@ -37,16 +69,19 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center justify-between h-20">
             {/* Logo Section */}
             <div className="flex items-center gap-8">
-              <Link to="/dashboard" className="flex items-center gap-3.5 group relative">
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-3.5 group relative"
+              >
                 <div className="relative">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="relative z-10 w-11 h-11 rounded-2xl overflow-hidden shadow-premium group-hover:shadow-premium-hover transition-all duration-500"
                   >
-                    <img 
-                      src={lekksideLogo} 
-                      alt="Lekkside Logo" 
+                    <img
+                      src={lekksideLogo}
+                      alt="Lekkside Logo"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   </motion.div>
@@ -72,10 +107,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                       key={item.href}
                       to={item.href}
                       className={cn(
-                        'relative flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group',
+                        "relative flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group",
                         isActive
-                          ? 'text-primary'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          ? "text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                       )}
                     >
                       {isActive && (
@@ -84,10 +119,21 @@ export function AppLayout({ children }: AppLayoutProps) {
                           className="absolute inset-0 bg-primary/10 rounded-full"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                          transition={{
+                            type: "spring",
+                            bounce: 0.25,
+                            duration: 0.5,
+                          }}
                         />
                       )}
-                      <Icon className={cn("w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110", isActive ? "text-primary" : "opacity-70 group-hover:opacity-100")} />
+                      <Icon
+                        className={cn(
+                          "w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110",
+                          isActive
+                            ? "text-primary"
+                            : "opacity-70 group-hover:opacity-100",
+                        )}
+                      />
                       <span className="relative z-10">{item.label}</span>
                     </Link>
                   );
@@ -99,7 +145,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center gap-3 sm:gap-6">
               <div className="hidden lg:flex flex-col items-end mr-2">
                 <span className="text-xs font-bold text-foreground/90 truncate max-w-[180px]">
-                  {user?.email?.split('@')[0]}
+                  {user?.email?.split("@")[0]}
                 </span>
                 <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
                   Administrator
@@ -107,9 +153,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSignOut}
                   className="hidden sm:flex h-10 px-4 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
                 >
@@ -126,11 +172,21 @@ export function AppLayout({ children }: AppLayoutProps) {
                 >
                   <AnimatePresence mode="wait">
                     {mobileMenuOpen ? (
-                      <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
+                      <motion.div
+                        key="close"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                      >
                         <X className="w-5 h-5" />
                       </motion.div>
                     ) : (
-                      <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
+                      <motion.div
+                        key="menu"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                      >
                         <Menu className="w-5 h-5" />
                       </motion.div>
                     )}
@@ -144,9 +200,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Mobile Navigation Drawer */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.nav 
+            <motion.nav
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] as const }}
               className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl overflow-hidden"
@@ -166,34 +222,43 @@ export function AppLayout({ children }: AppLayoutProps) {
                         to={item.href}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          'flex items-center justify-between px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300',
+                          "flex items-center justify-between px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300",
                           isActive
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]'
-                            : 'text-foreground hover:bg-muted/80'
+                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
+                            : "text-foreground hover:bg-muted/80",
                         )}
                       >
                         <div className="flex items-center gap-4">
                           <Icon className="w-5 h-5" />
                           <span>{item.label}</span>
                         </div>
-                        <ChevronRight className={cn("w-4 h-4 transition-transform", isActive ? "opacity-100 rotate-90" : "opacity-30")} />
+                        <ChevronRight
+                          className={cn(
+                            "w-4 h-4 transition-transform",
+                            isActive ? "opacity-100 rotate-90" : "opacity-30",
+                          )}
+                        />
                       </Link>
                     </motion.div>
                   );
                 })}
-                
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                   className="pt-4 mt-4 border-t border-border/40"
                 >
                   <div className="px-5 py-3 mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Signed in as</p>
-                    <p className="text-sm font-semibold truncate text-foreground">{user?.email}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                      Signed in as
+                    </p>
+                    <p className="text-sm font-semibold truncate text-foreground">
+                      {user?.email}
+                    </p>
                   </div>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={handleSignOut}
                     className="w-full justify-start px-5 py-4 h-auto text-base font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 rounded-2xl"
                   >

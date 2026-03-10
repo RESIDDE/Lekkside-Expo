@@ -362,32 +362,44 @@ export type Database = {
         Row: {
           booth_id: string;
           company_name: string | null;
+          company_position: string | null;
           created_at: string;
           email: string;
           first_name: string | null;
           id: string;
+          is_primary: boolean;
           last_name: string | null;
+          phone: string | null;
           updated_at: string;
+          user_id: string;
         };
         Insert: {
           booth_id: string;
           company_name?: string | null;
+          company_position?: string | null;
           created_at?: string;
           email: string;
           first_name?: string | null;
           id?: string;
+          is_primary?: boolean;
           last_name?: string | null;
+          phone?: string | null;
           updated_at?: string;
+          user_id: string;
         };
         Update: {
           booth_id?: string;
           company_name?: string | null;
+          company_position?: string | null;
           created_at?: string;
           email?: string;
           first_name?: string | null;
           id?: string;
+          is_primary?: boolean;
           last_name?: string | null;
+          phone?: string | null;
           updated_at?: string;
+          user_id?: string;
         };
         Relationships: [
           {
@@ -395,6 +407,13 @@ export type Database = {
             columns: ["booth_id"];
             isOneToOne: false;
             referencedRelation: "exhibition_booths";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exhibitors_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];

@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { Download, LogOut, Star, StarOff, StickyNote, Search, Filter, Building2, Users, TrendingUp } from "lucide-react";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import {
+  Download,
+  LogOut,
+  Star,
+  StarOff,
+  StickyNote,
+  Search,
+  Filter,
+  Building2,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +54,7 @@ interface BoothLead {
   tags: string[];
   lead_score: number;
   guest?: Guest;
+  lead_notes?: { count: number }[];
 }
 
 interface BoothInfo {
@@ -53,8 +65,7 @@ interface BoothInfo {
 }
 
 export default function ExhibitorDashboard() {
-  const [searchParams] = useSearchParams();
-  const boothId = searchParams.get("booth");
+  const { boothId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -62,7 +73,9 @@ export default function ExhibitorDashboard() {
   const [attendees, setAttendees] = useState<Guest[]>([]);
   const [leads, setLeads] = useState<BoothLead[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "relevant" | "not-relevant">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "relevant" | "not-relevant"
+  >("all");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<BoothLead | null>(null);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
@@ -107,10 +120,13 @@ export default function ExhibitorDashboard() {
 
       const { data: boothLeads, error: leadsError } = await supabase
         .from("booth_leads")
-        .select(`
+        .select(
+          `
           *,
-          guest:guests(*)
-        `)
+          guest:guests(*),
+          lead_notes(count)
+        `,
+        )
         .eq("booth_id", boothId);
 
       if (leadsError) throw leadsError;
@@ -126,7 +142,10 @@ export default function ExhibitorDashboard() {
     }
   };
 
-  const toggleLeadRelevance = async (guestId: string, currentStatus: boolean) => {
+  const toggleLeadRelevance = async (
+    guestId: string,
+    currentStatus: boolean,
+  ) => {
     if (!boothId) return;
 
     try {
@@ -140,13 +159,11 @@ export default function ExhibitorDashboard() {
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("booth_leads")
-          .insert({
-            booth_id: boothId,
-            guest_id: guestId,
-            is_relevant: true,
-          });
+        const { error } = await supabase.from("booth_leads").insert({
+          booth_id: boothId,
+          guest_id: guestId,
+          is_relevant: true,
+        });
 
         if (error) throw error;
       }
@@ -155,14 +172,56 @@ export default function ExhibitorDashboard() {
 
       toast({
         title: "Lead Updated",
-        description: existingLead && !currentStatus
-          ? "Lead marked as not relevant."
-          : "Lead marked as relevant.",
+        description:
+          existingLead && !currentStatus
+            ? "Lead marked as not relevant."
+            : "Lead marked as relevant.",
       });
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to update lead status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateLeadAndNotes = async (guest: Guest) => {
+    if (!boothId) return;
+
+    try {
+      const { data: newLead, error } = await supabase
+        .from("booth_leads")
+        .insert({
+          booth_id: boothId,
+          guest_id: guest.id,
+          is_relevant: false,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await loadBoothData();
+
+      const leadWithGuest: BoothLead = {
+        ...newLead,
+        guest: guest,
+        lead_notes: [],
+        tags: [],
+      };
+
+      setSelectedLead(leadWithGuest);
+      setNotesDialogOpen(true);
+
+      toast({
+        title: "Lead Created",
+        description: "You can now add notes for this attendee.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to initialize lead.",
         variant: "destructive",
       });
     }
@@ -179,11 +238,17 @@ export default function ExhibitorDashboard() {
     if (filter === "all") {
       dataToExport = attendees;
     } else if (filter === "relevant") {
-      const relevantGuestIds = leads.filter((l) => l.is_relevant).map((l) => l.guest_id);
+      const relevantGuestIds = leads
+        .filter((l) => l.is_relevant)
+        .map((l) => l.guest_id);
       dataToExport = attendees.filter((a) => relevantGuestIds.includes(a.id));
     } else {
-      const notRelevantGuestIds = leads.filter((l) => !l.is_relevant).map((l) => l.guest_id);
-      dataToExport = attendees.filter((a) => notRelevantGuestIds.includes(a.id));
+      const notRelevantGuestIds = leads
+        .filter((l) => !l.is_relevant)
+        .map((l) => l.guest_id);
+      dataToExport = attendees.filter((a) =>
+        notRelevantGuestIds.includes(a.id),
+      );
     }
 
     if (dataToExport.length === 0) {
@@ -195,7 +260,15 @@ export default function ExhibitorDashboard() {
       return;
     }
 
-    const headers = ["First Name", "Last Name", "Email", "Phone", "Ticket Type", "Checked In", "Check-in Time"];
+    const headers = [
+      "First Name",
+      "Last Name",
+      "Email",
+      "Phone",
+      "Ticket Type",
+      "Checked In",
+      "Check-in Time",
+    ];
     const rows = dataToExport.map((guest) => [
       guest.first_name || "",
       guest.last_name || "",
@@ -213,7 +286,10 @@ export default function ExhibitorDashboard() {
       return value;
     };
 
-    const csvContent = [headers.join(","), ...rows.map((row) => row.map(escapeCSV).join(","))].join("\n");
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -263,7 +339,9 @@ export default function ExhibitorDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm font-bold text-muted-foreground">Loading dashboard...</p>
+          <p className="text-sm font-bold text-muted-foreground">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -307,7 +385,9 @@ export default function ExhibitorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-foreground">{attendees.length}</p>
+              <p className="text-4xl font-heading font-black text-foreground">
+                {attendees.length}
+              </p>
             </CardContent>
           </Card>
 
@@ -319,7 +399,9 @@ export default function ExhibitorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-green-700">{relevantCount}</p>
+              <p className="text-4xl font-heading font-black text-green-700">
+                {relevantCount}
+              </p>
             </CardContent>
           </Card>
 
@@ -331,7 +413,9 @@ export default function ExhibitorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-orange-700">{notRelevantCount}</p>
+              <p className="text-4xl font-heading font-black text-orange-700">
+                {notRelevantCount}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -339,7 +423,9 @@ export default function ExhibitorDashboard() {
         <Card className="rounded-3xl border-border/40 shadow-xl">
           <CardHeader className="border-b border-border/40 pb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle className="text-2xl font-heading font-black">Event Attendees</CardTitle>
+              <CardTitle className="text-2xl font-heading font-black">
+                Event Attendees
+              </CardTitle>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -352,7 +438,10 @@ export default function ExhibitorDashboard() {
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2 rounded-2xl font-bold">
+                    <Button
+                      variant="outline"
+                      className="gap-2 rounded-2xl font-bold"
+                    >
                       <Download className="w-4 h-4" />
                       Export
                     </Button>
@@ -364,7 +453,9 @@ export default function ExhibitorDashboard() {
                     <DropdownMenuItem onClick={() => handleExport("relevant")}>
                       Relevant Leads ({relevantCount})
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport("not-relevant")}>
+                    <DropdownMenuItem
+                      onClick={() => handleExport("not-relevant")}
+                    >
                       Not Relevant ({notRelevantCount})
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -374,7 +465,10 @@ export default function ExhibitorDashboard() {
           </CardHeader>
 
           <CardContent className="p-6">
-            <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
+            <Tabs
+              value={filterStatus}
+              onValueChange={(v) => setFilterStatus(v as any)}
+            >
               <TabsList className="grid w-full grid-cols-3 mb-6 rounded-2xl">
                 <TabsTrigger value="all" className="rounded-xl font-bold">
                   All ({attendees.length})
@@ -382,7 +476,10 @@ export default function ExhibitorDashboard() {
                 <TabsTrigger value="relevant" className="rounded-xl font-bold">
                   Relevant ({relevantCount})
                 </TabsTrigger>
-                <TabsTrigger value="not-relevant" className="rounded-xl font-bold">
+                <TabsTrigger
+                  value="not-relevant"
+                  className="rounded-xl font-bold"
+                >
                   Not Relevant ({notRelevantCount})
                 </TabsTrigger>
               </TabsList>
@@ -392,49 +489,125 @@ export default function ExhibitorDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="font-black uppercase text-xs">Name</TableHead>
-                        <TableHead className="font-black uppercase text-xs">Email</TableHead>
-                        <TableHead className="font-black uppercase text-xs">Phone</TableHead>
-                        <TableHead className="font-black uppercase text-xs">Ticket Type</TableHead>
-                        <TableHead className="font-black uppercase text-xs">Status</TableHead>
-                        <TableHead className="font-black uppercase text-xs text-right">Actions</TableHead>
+                        <TableHead className="font-black uppercase text-xs">
+                          Name
+                        </TableHead>
+                        <TableHead className="font-black uppercase text-xs">
+                          Email
+                        </TableHead>
+                        <TableHead className="font-black uppercase text-xs">
+                          Phone
+                        </TableHead>
+                        <TableHead className="font-black uppercase text-xs">
+                          Ticket Type
+                        </TableHead>
+                        <TableHead className="font-black uppercase text-xs">
+                          Status
+                        </TableHead>
+                        <TableHead className="font-black uppercase text-xs text-right">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredAttendees.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                          <TableCell
+                            colSpan={6}
+                            className="text-center py-12 text-muted-foreground"
+                          >
                             No attendees found
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredAttendees.map((attendee) => {
-                          const lead = leads.find((l) => l.guest_id === attendee.id);
+                          const lead = leads.find(
+                            (l) => l.guest_id === attendee.id,
+                          );
                           return (
                             <TableRow key={attendee.id}>
                               <TableCell className="font-bold">
-                                {attendee.first_name} {attendee.last_name}
+                                <div className="flex flex-col">
+                                  <span>
+                                    {attendee.first_name} {attendee.last_name}
+                                  </span>
+                                  <div className="flex gap-1 mt-1 flex-wrap">
+                                    {lead?.is_relevant && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs py-0 h-5 bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 gap-1"
+                                      >
+                                        <Star className="w-3 h-3 fill-current" />
+                                        Relevant
+                                      </Badge>
+                                    )}
+                                    {lead?.lead_notes &&
+                                      lead.lead_notes[0]?.count > 0 && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs py-0 h-5 bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200 gap-1"
+                                        >
+                                          <StickyNote className="w-3 h-3" />
+                                          {lead.lead_notes[0].count} Note
+                                          {lead.lead_notes[0].count > 1
+                                            ? "s"
+                                            : ""}
+                                        </Badge>
+                                      )}
+                                    {lead?.tags &&
+                                      lead.tags.map((tag, i) => (
+                                        <Badge
+                                          key={i}
+                                          variant="outline"
+                                          className="text-xs py-0 h-5"
+                                        >
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                  </div>
+                                </div>
                               </TableCell>
-                              <TableCell className="text-muted-foreground">{attendee.email}</TableCell>
-                              <TableCell className="text-muted-foreground">{attendee.phone || "-"}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {attendee.email}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {attendee.phone || "-"}
+                              </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className="rounded-full">
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-full"
+                                >
                                   {attendee.ticket_type || "Standard"}
                                 </Badge>
                               </TableCell>
                               <TableCell>
                                 {attendee.checked_in ? (
-                                  <Badge className="rounded-full bg-green-500">Checked In</Badge>
+                                  <Badge className="rounded-full bg-green-500">
+                                    Checked In
+                                  </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="rounded-full">Pending</Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="rounded-full"
+                                  >
+                                    Pending
+                                  </Badge>
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
                                   <Button
                                     size="sm"
-                                    variant={lead?.is_relevant ? "default" : "outline"}
-                                    onClick={() => toggleLeadRelevance(attendee.id, lead?.is_relevant || false)}
+                                    variant={
+                                      lead?.is_relevant ? "default" : "outline"
+                                    }
+                                    onClick={() =>
+                                      toggleLeadRelevance(
+                                        attendee.id,
+                                        lead?.is_relevant || false,
+                                      )
+                                    }
                                     className="rounded-xl gap-1"
                                   >
                                     {lead?.is_relevant ? (
@@ -456,11 +629,7 @@ export default function ExhibitorDashboard() {
                                       if (lead) {
                                         handleAddNotes(lead);
                                       } else {
-                                        toast({
-                                          title: "Mark as Lead First",
-                                          description: "Please mark this attendee as relevant or not relevant before adding notes.",
-                                          variant: "destructive",
-                                        });
+                                        handleCreateLeadAndNotes(attendee);
                                       }
                                     }}
                                     className="rounded-xl gap-1"
