@@ -15,7 +15,7 @@ export const FormsButton = ({ eventId }: FormsButtonProps) => {
     <>
       <Button
         variant="outline"
-        className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-bold text-muted-foreground gap-2 transition-all shadow-sm"
+        className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 transition-all shadow-sm"
         onClick={() => setOpen(true)}
       >
         <FileText className="h-4 w-4" />

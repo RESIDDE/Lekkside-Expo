@@ -139,7 +139,7 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-bold text-muted-foreground gap-2 transition-all shadow-sm"
+          className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 transition-all shadow-sm"
         >
           <Upload className="w-4 h-4" />
           <span>Import</span>
@@ -158,7 +158,7 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                   <FileSpreadsheet className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-left">
-                  <DialogTitle className="text-2xl font-heading font-black text-foreground">
+                  <DialogTitle className="text-2xl font-heading font-semibold text-foreground">
                     {parsedData ? 'Analyze & Map' : 'Import Guests'}
                   </DialogTitle>
                   <p className="text-sm text-muted-foreground font-medium">
@@ -196,11 +196,11 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                 >
                   <Tabs defaultValue="file" className="w-full">
                     <TabsList className="grid w-full grid-cols-2 p-1.5 h-auto bg-muted/30 rounded-2xl border border-border/40">
-                      <TabsTrigger value="file" className="rounded-xl py-3 text-xs font-black uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                      <TabsTrigger value="file" className="rounded-xl py-3 text-xs font-semibold uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
                         <Upload className="w-3.5 h-3.5" />
                         File Upload
                       </TabsTrigger>
-                      <TabsTrigger value="paste" className="rounded-xl py-3 text-xs font-black uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                      <TabsTrigger value="paste" className="rounded-xl py-3 text-xs font-semibold uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
                         <ClipboardPaste className="w-3.5 h-3.5" />
                         Paste Data
                       </TabsTrigger>
@@ -231,10 +231,10 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                             <FileSpreadsheet className="w-10 h-10 text-primary transition-colors duration-500 group-hover:text-white" />
                           </div>
                           <div>
-                            <p className="text-xl font-heading font-black text-foreground">Drop your CSV here</p>
+                            <p className="text-xl font-heading font-semibold text-foreground">Drop your CSV here</p>
                             <p className="text-sm text-muted-foreground font-medium mt-1">or click to browse your computer</p>
                           </div>
-                          <div className="flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 pt-4">
+                          <div className="flex items-center justify-center gap-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 pt-4">
                             <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> UTF-8 Only</span>
                             <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> Max 10MB</span>
                           </div>
@@ -245,8 +245,8 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                     <TabsContent value="paste" className="mt-8 space-y-6 focus-visible:outline-none focus-visible:ring-0">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between px-1">
-                          <Label className="text-sm font-black text-foreground uppercase tracking-widest">Raw Content</Label>
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Supports CSV & TSV</span>
+                          <Label className="text-sm font-semibold text-foreground uppercase tracking-widest">Raw Content</Label>
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase opacity-60">Supports CSV & TSV</span>
                         </div>
                         <Textarea
                           value={pasteData}
@@ -257,7 +257,7 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                       </div>
                       <Button 
                         onClick={handlePaste} 
-                        className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 gap-3"
+                        className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-xl shadow-primary/20 gap-3"
                       >
                         Process Pasted Data
                         <ChevronRight className="w-4 h-4" />
@@ -270,7 +270,7 @@ export function ImportDialog({ eventId }: ImportDialogProps) {
                       <AlertCircle className="w-5 h-5 text-amber-600" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-bold text-amber-900">Important Note</p>
+                      <p className="text-sm font-semibold text-amber-900">Important Note</p>
                       <p className="text-xs text-amber-700 leading-relaxed font-medium">
                         Ensure your headers are clear. You will be able to map each column to the correct matching field in the next step.
                       </p>

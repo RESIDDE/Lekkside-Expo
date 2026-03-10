@@ -53,7 +53,7 @@ export function ProgressRing({
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="text-3xl font-heading font-black text-foreground leading-none"
+            className="text-3xl font-heading font-semibold text-foreground leading-none"
           >
             {Math.round(percentage)}%
           </motion.span>
@@ -61,7 +61,7 @@ export function ProgressRing({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1"
+              className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mt-1"
             >
               Completion
             </motion.span>

@@ -98,7 +98,7 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
         <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex gap-3">
           <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <p className="text-sm text-primary/80 font-medium leading-relaxed">
-            Match your file columns to Lekkside fields. Columns marked as <span className="font-bold">"Don't import"</span> will be saved as metadata for each guest.
+            Match your file columns to Lekkside fields. Columns marked as <span className="font-semibold">"Don't import"</span> will be saved as metadata for each guest.
           </p>
         </div>
         
@@ -114,8 +114,8 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
               )}
             >
               <div className="w-1/3 flex flex-col gap-0.5">
-                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest opacity-60">Source Column</span>
-                <p className="text-sm font-bold text-foreground truncate" title={header}>{header}</p>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest opacity-60">Source Column</span>
+                <p className="text-sm font-semibold text-foreground truncate" title={header}>{header}</p>
               </div>
 
               <div className="w-1/3">
@@ -123,12 +123,12 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
                   value={mapping[index]}
                   onValueChange={(value) => setMapping(prev => ({ ...prev, [index]: value }))}
                 >
-                  <SelectTrigger className="h-10 rounded-xl border-border/50 bg-white font-bold text-xs uppercase tracking-wider">
+                  <SelectTrigger className="h-10 rounded-xl border-border/50 bg-white font-semibold text-xs uppercase tracking-wider">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border/40 shadow-premium">
                     {FIELD_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value} className="text-xs font-bold uppercase tracking-wider py-3 rounded-lg">
+                      <SelectItem key={option.value} value={option.value} className="text-xs font-semibold uppercase tracking-wider py-3 rounded-lg">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -137,7 +137,7 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
               </div>
 
               <div className="w-1/3 flex flex-col gap-0.5">
-                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest opacity-60">Sample Data</span>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest opacity-60">Sample Data</span>
                 <p className="text-xs font-medium text-muted-foreground truncate italic" title={previewData[0]?.[index]}>
                   "{previewData[0]?.[index] || 'Empty field'}"
                 </p>
@@ -149,8 +149,8 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
 
       <div className="premium-card p-6 bg-muted/30 border-dashed">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Data Preview ({rows.length} records)</h4>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10">
+          <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">Data Preview ({rows.length} records)</h4>
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-primary px-2 py-0.5 rounded-full bg-primary/10">
             <Check className="w-3 h-3" />
             Live Sync
           </div>
@@ -162,7 +162,7 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
                 .filter(([, field]) => field !== 'skip')
                 .map(([index, field]) => (
                   <span key={index} className="flex items-center gap-1 border-r border-border/50 pr-2 last:border-0 last:pr-0">
-                    <span className="text-foreground font-black opacity-40">{FIELD_OPTIONS.find(f => f.value === field)?.label}:</span>
+                    <span className="text-foreground font-semibold opacity-40">{FIELD_OPTIONS.find(f => f.value === field)?.label}:</span>
                     <span className="text-foreground">{row[parseInt(index)] || '—'}</span>
                   </span>
                 ))}
@@ -175,7 +175,7 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="h-12 px-6 rounded-2xl font-bold text-muted-foreground hover:bg-muted gap-2"
+          className="h-12 px-6 rounded-2xl font-semibold text-muted-foreground hover:bg-muted gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
           Go Back
@@ -183,7 +183,7 @@ export function ColumnMapper({ headers, rows, onImport, onBack, isLoading }: Col
         <Button 
           onClick={handleImport} 
           disabled={isLoading}
-          className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
+          className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
         >
           {isLoading ? 'Processing...' : `Confirm Import`}
           {!isLoading && <ChevronRight className="w-4 h-4" />}

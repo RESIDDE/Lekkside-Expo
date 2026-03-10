@@ -335,7 +335,7 @@ export default function Auth() {
                 <KeyRound className="w-4 h-4" />
               </div>
             </motion.div>
-            <h1 className="text-3xl font-heading font-black text-foreground tracking-tight">
+            <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
               Account Recovery
             </h1>
             <p className="text-sm text-muted-foreground font-medium mt-3">
@@ -352,7 +352,7 @@ export default function Auth() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-10 rounded-xl px-4 font-bold text-muted-foreground hover:bg-muted gap-2"
+                className="h-10 rounded-xl px-4 font-semibold text-muted-foreground hover:bg-muted gap-2"
                 onClick={resetForgotPasswordState}
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -373,7 +373,7 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label
                         htmlFor="reset-email"
-                        className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                        className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                       >
                         Email Address
                       </Label>
@@ -385,14 +385,14 @@ export default function Auth() {
                           value={resetEmail}
                           onChange={(e) => setResetEmail(e.target.value)}
                           placeholder="admin@lekkside.com"
-                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                           autoFocus
                         />
                       </div>
                     </div>
                     <Button
                       onClick={handleSendResetOtp}
-                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
                       disabled={isSendingOtp}
                     >
                       {isSendingOtp ? "Sending..." : "Send Reset Code"}
@@ -412,13 +412,13 @@ export default function Auth() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-2">
                         <MailCheck className="w-4 h-4 text-primary" />
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-primary">
                           Security Verification
                         </Label>
                       </div>
                       <p className="text-sm text-muted-foreground font-medium px-1">
                         A 6-digit security code has been sent to:{" "}
-                        <span className="text-foreground font-bold">
+                        <span className="text-foreground font-semibold">
                           {resetEmail}
                         </span>
                       </p>
@@ -433,7 +433,7 @@ export default function Auth() {
                               <InputOTPSlot
                                 key={i}
                                 index={i}
-                                className="h-14 w-12 rounded-xl text-xl font-black border-2 border-border/40 focus:border-primary shadow-sm"
+                                className="h-14 w-12 rounded-xl text-xl font-semibold border-2 border-border/40 focus:border-primary shadow-sm"
                               />
                             ))}
                           </InputOTPGroup>
@@ -442,7 +442,7 @@ export default function Auth() {
                     </div>
                     <Button
                       onClick={handleVerifyOtp}
-                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
                       disabled={resetOtp.length !== 6}
                     >
                       <KeyRound className="h-4 w-4" />
@@ -450,7 +450,7 @@ export default function Auth() {
                     </Button>
                     <button
                       onClick={() => setForgotPasswordStep("email")}
-                      className="w-full text-xs font-bold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
+                      className="w-full text-xs font-semibold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
                     >
                       Incorrect email? Try another
                     </button>
@@ -469,7 +469,7 @@ export default function Auth() {
                       <div className="space-y-2">
                         <Label
                           htmlFor="new-password"
-                          className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                          className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                         >
                           New Password
                         </Label>
@@ -481,14 +481,14 @@ export default function Auth() {
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label
                           htmlFor="confirm-new-password"
-                          className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                          className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                         >
                           Confirm Password
                         </Label>
@@ -502,14 +502,14 @@ export default function Auth() {
                               setConfirmNewPassword(e.target.value)
                             }
                             placeholder="••••••••"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                           />
                         </div>
                       </div>
                     </div>
                     <Button
                       onClick={handleResetPassword}
-                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
                       disabled={
                         isResettingPassword ||
                         !newPassword ||
@@ -573,7 +573,7 @@ export default function Auth() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h1 className="text-3xl sm:text-4xl font-heading font-black text-foreground tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-foreground tracking-tight">
               Admin Login
             </h1>
             <p className="text-sm text-muted-foreground font-semibold mt-3 flex items-center justify-center gap-2">
@@ -588,13 +588,13 @@ export default function Auth() {
               <TabsList className="grid w-full grid-cols-2 h-16 rounded-[1.8rem] bg-muted/30 p-1.5">
                 <TabsTrigger
                   value="signin"
-                  className="rounded-[1.4rem] text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
+                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
                 >
                   Sign In
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="rounded-[1.4rem] text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
+                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
                 >
                   Create Account
                 </TabsTrigger>
@@ -606,14 +606,14 @@ export default function Auth() {
                 value="signin"
                 className="mt-0 focus-visible:outline-none"
               >
-                <CardDescription className="mb-8 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                <CardDescription className="mb-8 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                   Sign in to manage your events
                 </CardDescription>
                 <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-2">
                     <Label
                       htmlFor="signin-email"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                     >
                       Email Address
                     </Label>
@@ -625,7 +625,7 @@ export default function Auth() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="admin@lekkside.com"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
                     </div>
@@ -633,7 +633,7 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="signin-password"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                     >
                       Password
                     </Label>
@@ -645,14 +645,14 @@ export default function Auth() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
                     </div>
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95"
+                    className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -670,7 +670,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                    className="w-full text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
                   >
                     Forgot Password?
                   </button>
@@ -681,14 +681,14 @@ export default function Auth() {
                 value="signup"
                 className="mt-0 focus-visible:outline-none"
               >
-                <CardDescription className="mb-8 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                <CardDescription className="mb-8 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                   Create your administrative account
                 </CardDescription>
                 <form onSubmit={handleSignUp} className="space-y-5">
                   <div className="space-y-2">
                     <Label
                       htmlFor="signup-name"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                     >
                       Full Name
                     </Label>
@@ -700,7 +700,7 @@ export default function Auth() {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="John Smith"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
                     </div>
@@ -708,7 +708,7 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="signup-email"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                     >
                       Email Address
                     </Label>
@@ -720,7 +720,7 @@ export default function Auth() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="admin@lekkside.com"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
                     </div>
@@ -728,7 +728,7 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="signup-password"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                     >
                       Password
                     </Label>
@@ -740,14 +740,14 @@ export default function Auth() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
                     </div>
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest shadow-xl shadow-foreground/20 gap-3 transition-all active:scale-95"
+                    className="w-full h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-semibold uppercase tracking-widest shadow-xl shadow-foreground/20 gap-3 transition-all active:scale-95"
                     disabled={isSigningUp}
                   >
                     {isSigningUp ? (
@@ -772,7 +772,7 @@ export default function Auth() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           transition={{ delay: 1 }}
-          className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-[0.4em] mt-12"
+          className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.4em] mt-12"
         >
           Lekkside Event Management v8.4.2
         </motion.p>

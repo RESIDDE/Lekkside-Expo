@@ -39,9 +39,9 @@ export default function Dashboard() {
             className="space-y-2"
           >
             <div className="flex items-center gap-2 text-primary mb-1">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em]">Platform Overview</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Platform Overview</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-heading font-extrabold text-foreground tracking-tight">
+            <h1 className="text-4xl sm:text-5xl font-heading font-semibold text-foreground tracking-tight">
               Dashboard
             </h1>
             <p className="text-muted-foreground max-w-lg text-base sm:text-lg font-medium leading-relaxed">
@@ -95,9 +95,9 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <h2 className="text-2xl font-heading font-bold text-foreground flex items-center gap-3">
+              <h2 className="text-2xl font-heading font-semibold text-foreground flex items-center gap-3">
                 Recent Events
-                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] uppercase tracking-wider font-extrabold">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] uppercase tracking-wider font-semibold">
                   {events?.length || 0} Total
                 </span>
               </h2>
@@ -130,7 +130,7 @@ export default function Dashboard() {
               <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
                 <Calendar className="w-10 h-10 text-primary/40" />
               </div>
-              <h3 className="text-2xl font-heading font-bold text-foreground">No events yet</h3>
+              <h3 className="text-2xl font-heading font-semibold text-foreground">No events yet</h3>
               <p className="text-muted-foreground mt-2 mb-8 max-w-xs mx-auto font-medium">
                 Ready to start? Create your first event and manage your guest list with ease.
               </p>

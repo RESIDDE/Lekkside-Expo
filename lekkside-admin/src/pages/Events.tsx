@@ -33,9 +33,9 @@ export default function Events() {
           >
             <div className="flex items-center gap-2 text-primary mb-1">
               <Calendar className="w-4 h-4 fill-current" />
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em]">Management</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Management</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-heading font-extrabold text-foreground tracking-tight">
+            <h1 className="text-4xl sm:text-5xl font-heading font-semibold text-foreground tracking-tight">
               Events
             </h1>
             <p className="text-muted-foreground max-w-lg text-base sm:text-lg font-medium leading-relaxed">
@@ -82,7 +82,7 @@ export default function Events() {
             <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm">
               <Calendar className="w-12 h-12 text-primary/40" />
             </div>
-            <h3 className="text-3xl font-heading font-extrabold text-foreground tracking-tight">No events found</h3>
+            <h3 className="text-3xl font-heading font-semibold text-foreground tracking-tight">No events found</h3>
             <p className="text-muted-foreground mt-3 mb-10 max-w-sm mx-auto text-lg font-medium leading-relaxed">
               Your event list is currently empty. Begin your journey by creating a new event today.
             </p>

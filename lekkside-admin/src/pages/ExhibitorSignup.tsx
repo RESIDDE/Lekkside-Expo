@@ -44,17 +44,16 @@ export default function ExhibitorSignup() {
     booth_number: string;
   } | null>(null);
 
+  const [isLoginMode, setIsLoginMode] = useState(!token);
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!token) {
-      toast({
-        title: "Invalid Link",
-        description: "This signup link is invalid or missing a token.",
-        variant: "destructive",
-      });
-      navigate("/");
+      // If no token, we are in login mode (just accessing the page directly)
+      // We don't need to validate token or show error
+      setIsValidating(false);
       return;
     }
 
@@ -110,22 +109,24 @@ export default function ExhibitorSignup() {
       emailSchema.parse(email);
       passwordSchema.parse(password);
 
-      if (!firstName.trim()) {
-        toast({
-          title: "Validation Error",
-          description: "First name is required.",
-          variant: "destructive",
-        });
-        return false;
-      }
+      if (!isLoginMode) {
+        if (!firstName.trim()) {
+          toast({
+            title: "Validation Error",
+            description: "First name is required.",
+            variant: "destructive",
+          });
+          return false;
+        }
 
-      if (!lastName.trim()) {
-        toast({
-          title: "Validation Error",
-          description: "Last name is required.",
-          variant: "destructive",
-        });
-        return false;
+        if (!lastName.trim()) {
+          toast({
+            title: "Validation Error",
+            description: "Last name is required.",
+            variant: "destructive",
+          });
+          return false;
+        }
       }
 
       return true;
@@ -143,66 +144,158 @@ export default function ExhibitorSignup() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateInputs() || !token) return;
+
+    // If we have a token, we need to validate inputs (especially for signup)
+    // If no token, we just need email/password for login
+    if (!validateInputs()) return;
 
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            company_name: companyName,
-            user_type: "exhibitor",
+      let userId;
+
+      if (isLoginMode) {
+        // Sign In Flow
+        const { data: authData, error: authError } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Failed to sign in");
+        userId = authData.user.id;
+      } else {
+        // Sign Up Flow - ONLY allowed with token
+        if (!token) {
+          toast({
+            title: "Invitation Required",
+            description:
+              "You need an invitation link to create a new exhibitor account.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const { data: authData, error: authError } = await supabase.auth.signUp(
+          {
+            email,
+            password,
+            options: {
+              data: {
+                first_name: firstName,
+                last_name: lastName,
+                company_name: companyName,
+                user_type: "exhibitor",
+              },
+            },
           },
-        },
-      });
+        );
 
-      if (authError) throw authError;
+        if (authError) {
+          // If user already exists, suggest logging in
+          if (authError.message.includes("User already registered")) {
+            toast({
+              title: "Account Exists",
+              description:
+                "This email is already registered. Please sign in instead.",
+              action: (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsLoginMode(true)}
+                >
+                  Sign In
+                </Button>
+              ),
+            });
+            setIsLoading(false);
+            return;
+          }
+          throw authError;
+        }
 
-      if (!authData.user) {
-        throw new Error("Failed to create user account");
+        if (!authData.user) {
+          throw new Error("Failed to create user account");
+        }
+        userId = authData.user.id;
       }
 
-      const { data: boothData } = await supabase
-        .from("exhibition_booths")
-        .select("id")
-        .eq("invitation_token", token)
-        .single();
+      // If we have a token, link to that specific booth
+      if (token) {
+        const { data: boothData } = await supabase
+          .from("exhibition_booths")
+          .select("id")
+          .eq("invitation_token", token)
+          .single();
 
-      if (!boothData) {
-        throw new Error("Booth not found");
-      }
+        if (!boothData) {
+          throw new Error("Booth not found");
+        }
 
-      const { error: exhibitorError } = await supabase
-        .from("exhibitors")
-        .insert({
-          booth_id: boothData.id,
-          user_id: authData.user.id,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          company_name: companyName,
+        // Check if already an exhibitor for this booth
+        const { data: existingExhibitor } = await supabase
+          .from("exhibitors")
+          .select("id")
+          .eq("booth_id", boothData.id)
+          .eq("user_id", userId)
+          .single();
+
+        if (!existingExhibitor) {
+          const { error: exhibitorError } = await supabase
+            .from("exhibitors")
+            .insert({
+              booth_id: boothData.id,
+              user_id: userId,
+              email,
+              first_name: isLoginMode ? undefined : firstName,
+              last_name: isLoginMode ? undefined : lastName,
+              company_name: isLoginMode ? undefined : companyName,
+            });
+
+          if (exhibitorError) throw exhibitorError;
+        }
+
+        toast({
+          title: isLoginMode ? "Welcome Back" : "Account Created",
+          description: "Redirecting to your dashboard...",
         });
 
-      if (exhibitorError) throw exhibitorError;
+        setTimeout(() => {
+          navigate(`/exhibitor/dashboard/${boothData.id}`);
+        }, 2000);
+      } else {
+        // No token - Login Flow - Find their booth
+        const { data: exhibitorData, error: exhibitorError } = await supabase
+          .from("exhibitors")
+          .select("booth_id")
+          .eq("user_id", userId)
+          .single();
 
-      toast({
-        title: "Account Created",
-        description:
-          "Your exhibitor account has been created successfully. Redirecting to your dashboard...",
-      });
-
-      setTimeout(() => {
-        navigate(`/exhibitor/dashboard/${boothData.id}`);
-      }, 2000);
+        if (exhibitorError || !exhibitorData) {
+          toast({
+            title: "No Booth Found",
+            description:
+              "We couldn't find a booth associated with this account.",
+            variant: "destructive",
+          });
+          // Maybe sign them out or let them contact support?
+          await supabase.auth.signOut();
+        } else {
+          toast({
+            title: "Welcome Back",
+            description: "Redirecting to your dashboard...",
+          });
+          setTimeout(() => {
+            navigate(`/exhibitor/dashboard/${exhibitorData.booth_id}`);
+          }, 1000);
+        }
+      }
     } catch (error: any) {
       toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to create exhibitor account.",
+        title: isLoginMode ? "Login Failed" : "Registration Failed",
+        description: error.message || "Failed to process request.",
         variant: "destructive",
       });
     } finally {
@@ -215,7 +308,7 @@ export default function ExhibitorSignup() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm font-bold text-muted-foreground">
+          <p className="text-sm font-semibold text-muted-foreground">
             Validating invitation...
           </p>
         </div>
@@ -248,13 +341,13 @@ export default function ExhibitorSignup() {
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </motion.div>
-          <h1 className="text-3xl font-heading font-black text-foreground tracking-tight">
+          <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
             Exhibitor Registration
           </h1>
           {boothInfo && (
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <Building2 className="w-4 h-4 text-primary" />
-              <p className="text-sm font-bold text-primary">
+              <p className="text-sm font-semibold text-primary">
                 {boothInfo.booth_name} - Booth {boothInfo.booth_number}
               </p>
             </div>
@@ -263,60 +356,64 @@ export default function ExhibitorSignup() {
 
         <Card className="border-none shadow-premium bg-white/90 backdrop-blur-2xl rounded-[3rem] overflow-hidden">
           <CardHeader className="pb-4 px-8 pt-8">
-            <CardDescription className="text-center font-bold text-xs uppercase tracking-wider text-muted-foreground">
-              Create your exhibitor account
+            <CardDescription className="text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">
+              {isLoginMode
+                ? "Sign in to claim your booth"
+                : "Create your exhibitor account"}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="px-8 pb-10">
             <form onSubmit={handleSignUp} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="firstName"
-                    className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
-                  >
-                    First Name
-                  </Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input
-                      id="firstName"
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="John"
-                      className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                      required
-                    />
+              {!isLoginMode && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="firstName"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
+                    >
+                      First Name
+                    </Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="John"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="lastName"
+                      className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
+                    >
+                      Last Name
+                    </Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Doe"
+                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="lastName"
-                    className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
-                  >
-                    Last Name
-                  </Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Doe"
-                      className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+              )}
 
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                  className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                 >
                   Email Address
                 </Label>
@@ -328,36 +425,38 @@ export default function ExhibitorSignup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="john@company.com"
-                    className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                    className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="companyName"
-                  className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
-                >
-                  Company Name (Optional)
-                </Label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="companyName"
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Your Company"
-                    className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
-                  />
+              {!isLoginMode && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="company"
+                    className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
+                  >
+                    Company Name (Optional)
+                  </Label>
+                  <div className="relative group">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="company"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Acme Corp"
+                      className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
-                  className="text-[10px] font-black uppercase tracking-widest text-primary px-1"
+                  className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1"
                 >
                   Password
                 </Label>
@@ -369,7 +468,7 @@ export default function ExhibitorSignup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold"
+                    className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                     required
                   />
                 </div>
@@ -377,22 +476,36 @@ export default function ExhibitorSignup() {
 
               <Button
                 type="submit"
-                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95"
+                className="w-full h-14 rounded-2xl font-semibold text-lg shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating Account...
+                    <span>Processing...</span>
                   </div>
                 ) : (
-                  <>
-                    Create Account
+                  <div className="flex items-center gap-2">
+                    <span>
+                      {isLoginMode ? "Sign In & Claim Booth" : "Create Account"}
+                    </span>
                     <ArrowRight className="w-5 h-5" />
-                  </>
+                  </div>
                 )}
               </Button>
             </form>
+
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => setIsLoginMode(!isLoginMode)}
+                className="text-sm text-muted-foreground hover:text-primary font-semibold transition-colors"
+              >
+                {isLoginMode
+                  ? "Don't have an account? Sign up"
+                  : "Already have an account? Sign in"}
+              </button>
+            </div>
           </CardContent>
         </Card>
 
@@ -400,7 +513,7 @@ export default function ExhibitorSignup() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           transition={{ delay: 1 }}
-          className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-[0.4em]"
+          className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.4em]"
         >
           Lekkside Exhibitor Portal
         </motion.p>

@@ -145,11 +145,11 @@ export const GuestCard = memo(function GuestCard({
           {/* Core Info */}
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-heading font-bold text-foreground text-sm sm:text-base tracking-tight truncate">
+              <h3 className="font-heading font-semibold text-foreground text-sm sm:text-base tracking-tight truncate">
                 {fullName}
               </h3>
               {guest.ticket_type && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground text-[10px] font-extrabold uppercase tracking-wider">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
                   {guest.ticket_type}
                 </span>
               )}
@@ -186,7 +186,7 @@ export const GuestCard = memo(function GuestCard({
                     size="sm"
                     onClick={() => onUndoCheckIn(guest.id)}
                     disabled={isLoading}
-                    className="h-10 px-4 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground gap-2"
+                    className="h-10 px-4 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground gap-2"
                   >
                     <Undo2 className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Undo</span>
@@ -204,7 +204,7 @@ export const GuestCard = memo(function GuestCard({
                       <Button
                         size="sm"
                         disabled={isLoading}
-                        className="h-10 px-4 rounded-xl text-xs font-bold bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white shadow-lg shadow-[hsl(var(--success))]/10 gap-2 pr-2"
+                        className="h-10 px-4 rounded-xl text-xs font-semibold bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white shadow-lg shadow-[hsl(var(--success))]/10 gap-2 pr-2"
                       >
                         <Check className="w-3.5 h-3.5 stroke-[3px]" />
                         <span className="hidden sm:inline">Check In</span>
@@ -214,7 +214,7 @@ export const GuestCard = memo(function GuestCard({
                     <DropdownMenuContent align="end" className="rounded-2xl shadow-premium border-border/40 p-2 min-w-[180px]">
                       <DropdownMenuItem 
                         onClick={() => onCheckIn(guest.id)}
-                        className="rounded-xl py-2.5 font-bold text-xs gap-3 cursor-pointer"
+                        className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
                       >
                         <Check className="w-4 h-4 text-[hsl(var(--success))]" />
                         Check-in Only
@@ -224,7 +224,7 @@ export const GuestCard = memo(function GuestCard({
                           onCheckIn(guest.id);
                           handlePrint();
                         }}
-                        className="rounded-xl py-2.5 font-bold text-xs gap-3 cursor-pointer"
+                        className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
                       >
                         <Printer className="w-4 h-4 text-primary" />
                         Check-in & Print
@@ -274,7 +274,7 @@ export const GuestCard = memo(function GuestCard({
                 {/* Check-in Details */}
                 {guest.checked_in && guest.checked_in_at && (
                   <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-[hsl(var(--success))]/10 border border-[hsl(var(--success))]/10 w-fit">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[hsl(var(--success))]">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--success))]">
                       Arrival: {format(new Date(guest.checked_in_at), 'MMM d, h:mm a')}
                     </span>
                   </div>
@@ -285,15 +285,15 @@ export const GuestCard = memo(function GuestCard({
                   {/* Custom Fields */}
                   {hasCustomFields && (
                     <div className="space-y-2">
-                      <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest pl-1">Metadata</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest pl-1">Metadata</p>
                       <div className="space-y-1.5">
                         {Object.entries(customFields).map(([key, value]) => {
                           if (!value) return null;
                           const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
                           return (
                             <div key={key} className="flex items-center justify-between p-2 px-3 rounded-lg bg-muted/30 border border-transparent hover:border-border/30 transition-colors">
-                              <span className="text-[11px] font-bold text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                              <span className="text-[11px] font-bold text-foreground">{displayValue}</span>
+                              <span className="text-[11px] font-semibold text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
+                              <span className="text-[11px] font-semibold text-foreground">{displayValue}</span>
                             </div>
                           );
                         })}
@@ -304,7 +304,7 @@ export const GuestCard = memo(function GuestCard({
                   {/* Notes */}
                   {hasNotes && (
                     <div className="space-y-2">
-                       <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest pl-1">Notes</p>
+                       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest pl-1">Notes</p>
                        <div className="p-3 rounded-xl bg-muted/30 border border-border/30 min-h-[60px]">
                          <p className="text-[11px] font-medium leading-relaxed text-muted-foreground italic">
                            "{guest.notes}"

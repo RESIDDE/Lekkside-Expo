@@ -99,7 +99,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                     <FileText className="w-7 h-7 text-white" />
                   </div>
                   <div className="text-left">
-                    <DialogTitle className="text-2xl font-heading font-black text-foreground">
+                    <DialogTitle className="text-2xl font-heading font-semibold text-foreground">
                       Registration Forms
                     </DialogTitle>
                     <p className="text-sm text-muted-foreground font-medium">
@@ -121,7 +121,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                       className="space-y-4 p-6 border border-primary/20 rounded-[1.8rem] bg-primary/5"
                     >
                       <div className="space-y-2">
-                        <Label htmlFor="form-name" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">
+                        <Label htmlFor="form-name" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">
                           Form Identity
                         </Label>
                         <Input
@@ -129,7 +129,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                           value={newFormName}
                           onChange={(e) => setNewFormName(e.target.value)}
                           placeholder="e.g., Early Bird Registration"
-                          className="h-12 rounded-xl bg-white border-border/50 focus-visible:ring-primary/20 font-bold"
+                          className="h-12 rounded-xl bg-white border-border/50 focus-visible:ring-primary/20 font-semibold"
                           onKeyDown={(e) => e.key === "Enter" && handleCreateForm()}
                           autoFocus
                         />
@@ -138,7 +138,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                         <Button
                           onClick={handleCreateForm}
                           disabled={createForm.isPending}
-                          className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest flex-1 shadow-lg shadow-primary/10"
+                          className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest flex-1 shadow-lg shadow-primary/10"
                         >
                           {createForm.isPending ? 'Working...' : 'Create Form'}
                         </Button>
@@ -148,7 +148,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                             setIsCreating(false);
                             setNewFormName("");
                           }}
-                          className="h-11 rounded-xl font-bold text-muted-foreground"
+                          className="h-11 rounded-xl font-semibold text-muted-foreground"
                         >
                           Cancel
                         </Button>
@@ -162,7 +162,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                     >
                       <Button
                         variant="outline"
-                        className="w-full h-14 rounded-2xl border-dashed border-2 border-primary/30 hover:border-primary/60 hover:bg-primary/5 text-primary font-black uppercase tracking-widest gap-2 transition-all group"
+                        className="w-full h-14 rounded-2xl border-dashed border-2 border-primary/30 hover:border-primary/60 hover:bg-primary/5 text-primary font-semibold uppercase tracking-widest gap-2 transition-all group"
                         onClick={() => setIsCreating(true)}
                       >
                         <Plus className="h-4 w-4 group-hover:scale-125 transition-transform" />
@@ -175,7 +175,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                 {/* Forms list */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Gateways</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Active Gateways</span>
                     <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
                   </div>
                   
@@ -188,7 +188,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                       <div className="w-16 h-16 bg-muted/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <FileText className="h-8 w-8 text-muted-foreground/50" />
                       </div>
-                      <p className="text-sm font-bold text-muted-foreground">Start your first campaign</p>
+                      <p className="text-sm font-semibold text-muted-foreground">Start your first campaign</p>
                       <p className="text-xs text-muted-foreground/60 mt-1">Forms allow you to collect custom information from attendees.</p>
                     </div>
                   ) : (
@@ -280,13 +280,13 @@ const FormItem = ({ form, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onD
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <h4 className="font-heading font-bold text-foreground truncate">{form.name}</h4>
+            <h4 className="font-heading font-semibold text-foreground truncate">{form.name}</h4>
             <div className={cn(
               "w-2 h-2 rounded-full",
               form.is_active ? "bg-[hsl(var(--success))] animate-pulse" : "bg-muted"
             )} />
           </div>
-          <div className="flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/70">
+          <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               {registrationCount} Leads

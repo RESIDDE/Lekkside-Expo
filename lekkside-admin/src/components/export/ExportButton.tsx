@@ -144,7 +144,7 @@ export function ExportButton({ guests, eventName }: ExportButtonProps) {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="outline" 
-          className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-bold text-muted-foreground gap-2 transition-all shadow-sm"
+          className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 transition-all shadow-sm"
         >
           <Download className="w-4 h-4" />
           <span>Export</span>
@@ -153,7 +153,7 @@ export function ExportButton({ guests, eventName }: ExportButtonProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl shadow-premium border-border/40">
         <div className="px-3 py-2 border-b border-border/40 mb-1">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <FileType className="w-3 h-3" />
             CSV Export Options
           </p>
@@ -166,7 +166,7 @@ export function ExportButton({ guests, eventName }: ExportButtonProps) {
             <Users className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
             All Attendees
           </div>
-          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-bold">{guests.length}</span>
+          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-semibold">{guests.length}</span>
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => handleExport('checked-in')}
@@ -176,7 +176,7 @@ export function ExportButton({ guests, eventName }: ExportButtonProps) {
             <Check className="w-4 h-4 text-muted-foreground group-hover:text-[hsl(var(--success))] transition-colors" />
             Arrived Only
           </div>
-          <span className="text-[10px] bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] px-2 py-0.5 rounded-full font-bold">{checkedInCount}</span>
+          <span className="text-[10px] bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] px-2 py-0.5 rounded-full font-semibold">{checkedInCount}</span>
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => handleExport('pending')}
@@ -186,7 +186,7 @@ export function ExportButton({ guests, eventName }: ExportButtonProps) {
             <Clock className="w-4 h-4 text-muted-foreground group-hover:text-[hsl(var(--warning))] transition-colors" />
             Remaining Only
           </div>
-          <span className="text-[10px] bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] px-2 py-0.5 rounded-full font-bold">{pendingCount}</span>
+          <span className="text-[10px] bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] px-2 py-0.5 rounded-full font-semibold">{pendingCount}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -145,7 +145,7 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
         <DialogTrigger asChild>
           <Button 
             variant="outline" 
-            className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-bold text-muted-foreground gap-2 transition-all shadow-sm"
+            className="h-11 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 transition-all shadow-sm"
           >
             <Monitor className="h-4 w-4" />
             <span className="hidden sm:inline">Check-in Stations</span>
@@ -164,7 +164,7 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
                     <Monitor className="w-7 h-7" />
                   </div>
                   <div className="text-left">
-                    <DialogTitle className="text-2xl font-heading font-black text-foreground">
+                    <DialogTitle className="text-2xl font-heading font-semibold text-foreground">
                       Station Grid
                     </DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground font-medium">
@@ -181,7 +181,7 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
                   value={newStationName}
                   onChange={(e) => setNewStationName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                  className="h-14 pl-5 pr-16 rounded-2xl border-border/40 focus-visible:ring-primary/20 bg-muted/20 font-bold transition-all group-focus-within:bg-white group-focus-within:shadow-lg group-focus-within:shadow-primary/5"
+                  className="h-14 pl-5 pr-16 rounded-2xl border-border/40 focus-visible:ring-primary/20 bg-muted/20 font-semibold transition-all group-focus-within:bg-white group-focus-within:shadow-lg group-focus-within:shadow-primary/5"
                 />
                 <Button 
                   onClick={handleCreate} 
@@ -195,10 +195,10 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
               {/* Stations list */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Global Network</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none">Global Network</span>
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--success))] animate-pulse" />
-                    <span className="text-[10px] font-black text-[hsl(var(--success))] uppercase tracking-widest">Active nodes</span>
+                    <span className="text-[10px] font-semibold text-[hsl(var(--success))] uppercase tracking-widest">Active nodes</span>
                   </div>
                 </div>
 
@@ -210,7 +210,7 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
                   ) : stations?.length === 0 ? (
                     <div className="text-center py-12 px-6 rounded-[2rem] bg-muted/10 border-2 border-dashed border-border/40">
                       <Signal className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-                      <p className="text-sm font-bold text-muted-foreground">No active nodes detected</p>
+                      <p className="text-sm font-semibold text-muted-foreground">No active nodes detected</p>
                       <p className="text-xs text-muted-foreground/60 mt-1">Deploy a station to start accepting attendees.</p>
                     </div>
                   ) : (
@@ -234,13 +234,13 @@ export function CheckInStationsDialog({ eventId }: CheckInStationsDialogProps) {
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1.5">
-                                  <h4 className="font-heading font-black text-foreground truncate">{station.name}</h4>
+                                  <h4 className="font-heading font-semibold text-foreground truncate">{station.name}</h4>
                                   {!station.is_active && (
-                                    <span className="text-[9px] font-black uppercase tracking-widest bg-muted text-muted-foreground px-2 py-0.5 rounded">Offline</span>
+                                    <span className="text-[9px] font-semibold uppercase tracking-widest bg-muted text-muted-foreground px-2 py-0.5 rounded">Offline</span>
                                   )}
                                 </div>
                                 
-                                <div className="flex items-center gap-4 text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/70">
+                                <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                                   <span className="flex items-center gap-1.5">
                                     <Activity className="h-3 w-3 text-primary" />
                                     {stationStats?.check_in_count || 0} Processed

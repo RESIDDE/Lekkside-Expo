@@ -102,10 +102,18 @@ export function LeadNotesDialog({
 
     setIsLoading(true);
     try {
+      const { data: exhibitor, error: exhibitorError } = await supabase
+        .from("exhibitors")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+        
+      if (exhibitorError) throw exhibitorError;
+      
       const { error } = await supabase.from("lead_notes").insert({
         booth_lead_id: lead.id,
         note: newNoteText.trim(),
-        created_by: user.id,
+        exhibitor_id: exhibitor.id,
       });
 
       if (error) throw error;
@@ -210,17 +218,17 @@ export function LeadNotesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-heading font-black flex items-center gap-2">
+          <DialogTitle className="text-2xl font-heading font-semibold flex items-center gap-2">
             Notes for {lead.guest?.first_name} {lead.guest?.last_name}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground font-bold">
+          <p className="text-sm text-muted-foreground font-semibold">
             {lead.guest?.email}
           </p>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
           <div className="space-y-3">
-            <label className="text-xs font-black uppercase tracking-widest text-primary">
+            <label className="text-xs font-semibold uppercase tracking-widest text-primary">
               Add New Note
             </label>
             <Textarea
@@ -232,7 +240,7 @@ export function LeadNotesDialog({
             <Button
               onClick={handleAddNote}
               disabled={isLoading || !newNoteText.trim()}
-              className="w-full rounded-2xl font-bold gap-2"
+              className="w-full rounded-2xl font-semibold gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Note
@@ -240,7 +248,7 @@ export function LeadNotesDialog({
           </div>
 
           <div className="space-y-3">
-            <label className="text-xs font-black uppercase tracking-widest text-primary">
+            <label className="text-xs font-semibold uppercase tracking-widest text-primary">
               Previous Notes ({notes.length})
             </label>
             <AnimatePresence mode="popLayout">
@@ -298,7 +306,7 @@ export function LeadNotesDialog({
                             {note.note}
                           </p>
                           <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                            <p className="text-xs text-muted-foreground font-bold">
+                            <p className="text-xs text-muted-foreground font-semibold">
                               {new Date(note.created_at).toLocaleString()}
                             </p>
                             <div className="flex items-center gap-2">

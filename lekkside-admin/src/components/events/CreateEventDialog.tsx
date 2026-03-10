@@ -150,7 +150,7 @@ export function CreateEventDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-primary-foreground font-bold tracking-tight transition-all duration-300">
+          <Button className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 text-primary-foreground font-semibold tracking-tight transition-all duration-300">
             <Plus className="w-5 h-5 mr-2 stroke-[3px]" />
             Create Event
           </Button>
@@ -160,16 +160,16 @@ export function CreateEventDialog() {
         <div className="bg-gradient-to-br from-primary/5 to-transparent p-8 sm:p-10">
           <DialogHeader className="mb-6">
             <div className="flex items-center gap-3 text-primary mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em]">New Venture</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">New Venture</span>
             </div>
-            <DialogTitle className="text-3xl font-heading font-extrabold tracking-tight">Create New Event</DialogTitle>
+            <DialogTitle className="text-3xl font-heading font-semibold tracking-tight">Create New Event</DialogTitle>
             <p className="text-muted-foreground font-medium text-sm mt-1">Set the stage for your next memorable gathering.</p>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload Area */}
             <div className="space-y-2.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+              <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                 <ImageIcon className="w-3 h-3 text-primary" /> Event Cover Image
               </Label>
               <div 
@@ -185,7 +185,7 @@ export function CreateEventDialog() {
                         type="button" 
                         variant="secondary" 
                         size="sm" 
-                        className="rounded-xl font-bold"
+                        className="rounded-xl font-semibold"
                         onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
                       >
                         Change
@@ -194,7 +194,7 @@ export function CreateEventDialog() {
                         type="button" 
                         variant="destructive" 
                         size="sm" 
-                        className="rounded-xl font-bold"
+                        className="rounded-xl font-semibold"
                         onClick={(e) => { e.stopPropagation(); removeImage(); }}
                       >
                         Remove
@@ -207,7 +207,7 @@ export function CreateEventDialog() {
                       <Upload className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-foreground">Upload cover photo</p>
+                      <p className="text-sm font-semibold text-foreground">Upload cover photo</p>
                       <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 2MB</p>
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export function CreateEventDialog() {
             </div>
 
             <div className="space-y-2.5">
-              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+              <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                 Event Name *
               </Label>
               <Input
@@ -237,7 +237,7 @@ export function CreateEventDialog() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2.5">
-                <Label htmlFor="date" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                <Label htmlFor="date" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                   <Calendar className="w-3 h-3 text-primary" /> Date & Time
                 </Label>
                 <Input
@@ -249,7 +249,7 @@ export function CreateEventDialog() {
                 />
               </div>
               <div className="space-y-2.5">
-                <Label htmlFor="capacity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                <Label htmlFor="capacity" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                   <Users className="w-3 h-3 text-primary" /> Capacity
                 </Label>
                 <Input
@@ -264,7 +264,7 @@ export function CreateEventDialog() {
             </div>
 
             <div className="space-y-2.5">
-              <Label htmlFor="venue" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+              <Label htmlFor="venue" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                 <MapPin className="w-3 h-3 text-primary" /> Venue
               </Label>
               <Input
@@ -277,7 +277,7 @@ export function CreateEventDialog() {
             </div>
 
             <div className="space-y-2.5">
-              <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+              <Label htmlFor="description" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
                 <AlignLeft className="w-3 h-3 text-primary" /> Description
               </Label>
               <Textarea
@@ -295,7 +295,7 @@ export function CreateEventDialog() {
                 type="button" 
                 variant="ghost" 
                 onClick={() => setOpen(false)}
-                className="h-14 px-8 rounded-2xl font-bold text-muted-foreground hover:bg-muted"
+                className="h-14 px-8 rounded-2xl font-semibold text-muted-foreground hover:bg-muted"
                 disabled={isUploading}
               >
                 Discard
@@ -303,7 +303,7 @@ export function CreateEventDialog() {
               <Button 
                 type="submit" 
                 disabled={createEvent.isPending || isUploading}
-                className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {(createEvent.isPending || isUploading) ? (
                   <>

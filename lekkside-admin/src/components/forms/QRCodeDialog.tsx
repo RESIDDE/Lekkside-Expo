@@ -84,7 +84,7 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
             <div className="w-16 h-16 rounded-2xl bg-white shadow-premium flex items-center justify-center text-primary mb-4 border border-primary/5">
               <QrCode className="w-8 h-8" />
             </div>
-            <DialogTitle className="text-2xl font-heading font-black text-foreground">
+            <DialogTitle className="text-2xl font-heading font-semibold text-foreground">
               Gateway Identity
             </DialogTitle>
             <p className="text-sm text-muted-foreground font-medium max-w-[280px]">
@@ -119,8 +119,8 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
             <div className="w-full space-y-3">
               <div className="p-4 bg-muted/30 rounded-2xl border border-border/40 flex items-center justify-between group cursor-pointer hover:bg-muted/50 transition-colors" onClick={copyUrl}>
                 <div className="flex-1 min-w-0 mr-4">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">Direct Access URL</p>
-                  <p className="text-xs font-bold text-foreground truncate">{formUrl}</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-1.5">Direct Access URL</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{formUrl}</p>
                 </div>
                 <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                   <ClipboardCheck className="w-4 h-4" />
@@ -130,7 +130,7 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   onClick={handleDownload}
-                  className="h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-foreground/20 gap-2.5"
+                  className="h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-semibold uppercase tracking-widest text-[10px] shadow-lg shadow-foreground/20 gap-2.5"
                 >
                   <Download className="w-4 h-4" />
                   Save Identity
@@ -138,7 +138,7 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
                 <Button 
                   variant="outline"
                   onClick={copyUrl}
-                  className="h-14 rounded-2xl border-border/50 font-black uppercase tracking-widest text-[10px] gap-2.5 hover:bg-muted"
+                  className="h-14 rounded-2xl border-border/50 font-semibold uppercase tracking-widest text-[10px] gap-2.5 hover:bg-muted"
                 >
                   <Share2 className="w-4 h-4" />
                   Share Link
@@ -146,7 +146,7 @@ export const QRCodeDialog = ({ open, onOpenChange, formUrl, formName }: QRCodeDi
               </div>
             </div>
 
-            <p className="text-[10px] text-center text-muted-foreground font-bold uppercase tracking-[0.2em] opacity-40">
+            <p className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.2em] opacity-40">
               Lekkside Visual Engine v2.0
             </p>
           </div>

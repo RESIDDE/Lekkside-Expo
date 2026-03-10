@@ -145,7 +145,7 @@ export default function Profile() {
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Loading Account Data</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Loading Account Data</p>
         </div>
       </AppLayout>
     );
@@ -165,19 +165,19 @@ export default function Profile() {
             <motion.button 
               whileHover={{ x: -4 }}
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors bg-white px-4 py-2 rounded-full border border-border/40 shadow-sm"
+              className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors bg-white px-4 py-2 rounded-full border border-border/40 shadow-sm"
             >
               <ChevronLeft className="h-3 w-3" />
               Return
             </motion.button>
             <div>
-              <h1 className="text-4xl sm:text-5xl font-heading font-black text-foreground tracking-tight leading-none mb-4">Account Settings</h1>
+              <h1 className="text-4xl sm:text-5xl font-heading font-semibold text-foreground tracking-tight leading-none mb-4">Account Settings</h1>
               <div className="flex items-center gap-3">
-                <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/5 text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+                <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/5 text-[10px] font-semibold uppercase tracking-widest text-primary flex items-center gap-1.5">
                    <Shield className="w-3 h-3" />
                    Security Enabled
                 </div>
-                <div className="px-3 py-1 rounded-full bg-muted/50 border border-border/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <div className="px-3 py-1 rounded-full bg-muted/50 border border-border/20 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                    Domain: {user?.email?.split('@')[1]}
                 </div>
               </div>
@@ -208,15 +208,15 @@ export default function Profile() {
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-heading font-black text-foreground">Profile Details</CardTitle>
-                    <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Update your account information</CardDescription>
+                    <CardTitle className="text-xl font-heading font-semibold text-foreground">Profile Details</CardTitle>
+                    <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Update your account information</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-8 pt-4 space-y-6">
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Email Address</Label>
+                    <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Email Address</Label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -224,13 +224,13 @@ export default function Profile() {
                         type="email"
                         value={user?.email || ''}
                         disabled
-                        className="h-14 pl-12 rounded-2xl bg-muted/50 border-border/40 font-bold opacity-60 grayscale-[0.5]"
+                        className="h-14 pl-12 rounded-2xl bg-muted/50 border-border/40 font-semibold opacity-60 grayscale-[0.5]"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Full Name</Label>
                     <div className="relative group">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
@@ -239,7 +239,7 @@ export default function Profile() {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Your Name"
-                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-bold transition-all"
+                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-semibold transition-all"
                       />
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function Profile() {
                   <Button
                     onClick={handleSaveProfile}
                     disabled={isSavingProfile}
-                    className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
+                    className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 gap-3"
                   >
                     {isSavingProfile ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -272,15 +272,15 @@ export default function Profile() {
                     <Lock className="h-6 w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-heading font-black text-foreground">Security Settings</CardTitle>
-                    <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Change your account password</CardDescription>
+                    <CardTitle className="text-xl font-heading font-semibold text-foreground">Security Settings</CardTitle>
+                    <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change your account password</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-8 pt-4 space-y-8">
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-[10px] font-black uppercase tracking-widest text-[#f97316] px-1">New Passphrase</Label>
+                    <Label htmlFor="newPassword" className="text-[10px] font-semibold uppercase tracking-widest text-[#f97316] px-1">New Passphrase</Label>
                     <div className="relative group">
                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
                       <Input
@@ -289,13 +289,13 @@ export default function Profile() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-orange-500/20 font-bold transition-all"
+                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-orange-500/20 font-semibold transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-[#f97316] px-1">Verify Entry</Label>
+                    <Label htmlFor="confirmPassword" className="text-[10px] font-semibold uppercase tracking-widest text-[#f97316] px-1">Verify Entry</Label>
                     <div className="relative group">
                       <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
                       <Input
@@ -304,20 +304,20 @@ export default function Profile() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-orange-500/20 font-bold transition-all"
+                        className="h-14 pl-12 rounded-2xl bg-white border-border/40 focus-visible:ring-orange-500/20 font-semibold transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 pt-4">
-                  <p className="hidden sm:block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest max-w-[240px]">
+                  <p className="hidden sm:block text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest max-w-[240px]">
                     Security best practice: Update your password regularly.
                   </p>
                   <Button
                     onClick={handleChangePassword}
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="h-14 px-8 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest shadow-lg shadow-foreground/20 gap-3 w-full sm:w-auto"
+                    className="h-14 px-8 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-foreground/20 gap-3 w-full sm:w-auto"
                   >
                     <Lock className="h-4 w-4" />
                     {isChangingPassword ? 'Updating...' : 'Update Password'}
@@ -332,7 +332,7 @@ export default function Profile() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           transition={{ delay: 1 }}
-          className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-[0.4em]"
+          className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.4em]"
         >
           Administrative Panel v4.0.1 (Stable)
         </motion.p>

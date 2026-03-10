@@ -45,7 +45,7 @@ export const FormPreviewDialog = ({
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                 <Eye className="w-6 h-6" />
               </div>
-              <h2 className="text-2xl font-heading font-black text-foreground leading-tight mb-2">
+              <h2 className="text-2xl font-heading font-semibold text-foreground leading-tight mb-2">
                 Viewport Preview
               </h2>
               <p className="text-sm text-muted-foreground font-medium mb-8">
@@ -58,7 +58,7 @@ export const FormPreviewDialog = ({
                     <Smartphone className="w-3 h-3 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Mobile Optimized</p>
+                    <p className="text-xs font-semibold text-foreground">Mobile Optimized</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Fluid layouts for all screens</p>
                   </div>
                 </div>
@@ -67,7 +67,7 @@ export const FormPreviewDialog = ({
                     <CheckCircle2 className="w-3 h-3 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Premium Interaction</p>
+                    <p className="text-xs font-semibold text-foreground">Premium Interaction</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Lekkside smooth-motion engine</p>
                   </div>
                 </div>
@@ -78,7 +78,7 @@ export const FormPreviewDialog = ({
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
-                className="w-full h-11 rounded-xl font-bold bg-white/50 border-border/40"
+                className="w-full h-11 rounded-xl font-semibold bg-white/50 border-border/40"
               >
                 Close Preview
               </Button>
@@ -96,30 +96,30 @@ export const FormPreviewDialog = ({
               
               <div className="p-6 space-y-6">
                 <header className="text-center space-y-1">
-                  <h3 className="text-lg font-heading font-black text-foreground">{formName}</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Registration Portal</p>
+                  <h3 className="text-lg font-heading font-semibold text-foreground">{formName}</h3>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">Registration Portal</p>
                 </header>
 
                 <div className="space-y-4 pointer-events-none">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase tracking-wider opacity-60">First Name</Label>
+                      <Label className="text-[10px] font-semibold uppercase tracking-wider opacity-60">First Name</Label>
                       <Input placeholder="John" className="h-10 rounded-xl bg-muted/20 border-none text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase tracking-wider opacity-60">Last Name</Label>
+                      <Label className="text-[10px] font-semibold uppercase tracking-wider opacity-60">Last Name</Label>
                       <Input placeholder="Doe" className="h-10 rounded-xl bg-muted/20 border-none text-xs" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase tracking-wider opacity-60">Email Access</Label>
+                    <Label className="text-[10px] font-semibold uppercase tracking-wider opacity-60">Email Access</Label>
                     <Input placeholder="john@example.com" className="h-10 rounded-xl bg-muted/20 border-none text-xs" />
                   </div>
 
                   {customFields.map((field) => (
                     <div key={field.id} className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase tracking-wider opacity-60">
+                      <Label className="text-[10px] font-semibold uppercase tracking-wider opacity-60">
                         {field.label} {field.required && <span className="text-primary">*</span>}
                       </Label>
                       {field.type === "text" && (
@@ -151,7 +151,7 @@ export const FormPreviewDialog = ({
                   ))}
 
                   <div className="pt-4">
-                    <Button className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+                    <Button className="w-full h-12 rounded-2xl bg-primary text-white font-semibold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
                       Complete Registration
                     </Button>
                     <p className="text-[9px] text-center text-muted-foreground font-medium mt-4 px-2">

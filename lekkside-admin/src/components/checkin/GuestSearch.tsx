@@ -43,13 +43,13 @@ export function GuestSearch({ value, onChange }: GuestSearchProps) {
               setLocalValue('');
               onChange('');
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
           >
             Clear
           </button>
         )}
       </div>
-      <Button variant="outline" className="h-14 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-bold text-muted-foreground gap-2 hidden sm:flex">
+      <Button variant="outline" className="h-14 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 hidden sm:flex">
         <SlidersHorizontal className="w-4 h-4" />
         Filters
       </Button>

@@ -96,11 +96,11 @@ export function StationQRCodeDialog({
             <div className="w-16 h-16 rounded-2xl bg-white shadow-premium flex items-center justify-center text-primary mb-4 border border-primary/5">
               <Monitor className="w-8 h-8" />
             </div>
-            <DialogTitle className="text-2xl font-heading font-black text-foreground">
+            <DialogTitle className="text-2xl font-heading font-semibold text-foreground">
               Station Passport
             </DialogTitle>
             <p className="text-sm text-muted-foreground font-medium max-w-[280px]">
-              Point-of-entry authorization for <span className="text-primary font-bold">{stationName}</span>.
+              Point-of-entry authorization for <span className="text-primary font-semibold">{stationName}</span>.
             </p>
           </DialogHeader>
           
@@ -126,14 +126,14 @@ export function StationQRCodeDialog({
             
             <div className="w-full space-y-4">
               <div className="p-4 bg-muted/30 rounded-2xl border border-border/40 text-center">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">Gateway Reference</p>
-                <p className="text-xs font-bold text-foreground truncate">{stationUrl}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-1.5">Gateway Reference</p>
+                <p className="text-xs font-semibold text-foreground truncate">{stationUrl}</p>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   onClick={handleDownload} 
-                  className="h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-foreground/20 gap-2.5"
+                  className="h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-semibold uppercase tracking-widest text-[10px] shadow-lg shadow-foreground/20 gap-2.5"
                 >
                   <Download className="h-4 w-4" />
                   Save Passport
@@ -144,7 +144,7 @@ export function StationQRCodeDialog({
                     navigator.clipboard.writeText(stationUrl);
                     toast({ title: "Portal ID Copied" });
                   }}
-                  className="h-14 rounded-2xl border-border/50 font-black uppercase tracking-widest text-[10px] gap-2.5 hover:bg-muted"
+                  className="h-14 rounded-2xl border-border/50 font-semibold uppercase tracking-widest text-[10px] gap-2.5 hover:bg-muted"
                 >
                   <Share2 className="h-4 w-4" />
                   Copy Link
@@ -152,7 +152,7 @@ export function StationQRCodeDialog({
               </div>
             </div>
 
-            <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-[0.3em] opacity-30">
+            <p className="text-[9px] text-center text-muted-foreground font-semibold uppercase tracking-[0.3em] opacity-30">
               Lekkside Operational Protocol v4.0
             </p>
           </div>

@@ -141,7 +141,7 @@ export default function CheckInOnly() {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
         <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         <div className="text-center space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Initializing Station</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-primary">Initializing Station</p>
           <p className="text-xs text-muted-foreground font-medium">Synchronizing attendee database...</p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function CheckInOnly() {
             <LayoutGrid className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-heading font-black text-foreground">Terminal Offline</h1>
+            <h1 className="text-2xl font-heading font-semibold text-foreground">Terminal Offline</h1>
             <p className="text-sm text-muted-foreground font-medium leading-relaxed">
               This check-in point endpoint is inaccessible or the event has been terminated.
             </p>
@@ -182,7 +182,7 @@ export default function CheckInOnly() {
             <ShieldCheck className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-heading font-black text-foreground">Station Locked</h1>
+            <h1 className="text-2xl font-heading font-semibold text-foreground">Station Locked</h1>
             <p className="text-sm text-muted-foreground font-medium leading-relaxed">
               The organizer has suspended operations at this terminal. Please contact HQ.
             </p>
@@ -205,17 +205,17 @@ export default function CheckInOnly() {
             <div className="h-8 w-px bg-border/40 hidden sm:block" />
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">Check-in Station</span>
+                 <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">Check-in Station</span>
                  <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--success))] animate-pulse" />
               </div>
-              <span className="text-lg font-heading font-black text-foreground tracking-tight">{station.name}</span>
+              <span className="text-lg font-heading font-semibold text-foreground tracking-tight">{station.name}</span>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 border border-border/40 rounded-2xl">
                 <ShieldCheck className="w-4 h-4 text-[hsl(var(--success))]" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Verified Station</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest">Verified Station</span>
              </div>
           </div>
         </div>
@@ -234,10 +234,10 @@ export default function CheckInOnly() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/10 text-[9px] font-black uppercase tracking-[0.2em]">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/10 text-[9px] font-semibold uppercase tracking-[0.2em]">
                  <ShieldCheck className="w-3 h-3" /> System Ready
               </div>
-              <h1 className="text-4xl font-heading font-black text-foreground leading-[1.1] tracking-tight">{event.name}</h1>
+              <h1 className="text-4xl font-heading font-semibold text-foreground leading-[1.1] tracking-tight">{event.name}</h1>
               <div className="flex flex-wrap gap-6 text-sm">
                 {event.date && (
                   <div className="flex items-center gap-3 px-1">
@@ -245,8 +245,8 @@ export default function CheckInOnly() {
                        <Calendar className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                       <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Schedule</span>
-                       <span className="font-bold text-foreground">{format(new Date(event.date), "PPP")}</span>
+                       <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Schedule</span>
+                       <span className="font-semibold text-foreground">{format(new Date(event.date), "PPP")}</span>
                     </div>
                   </div>
                 )}
@@ -256,8 +256,8 @@ export default function CheckInOnly() {
                        <MapPin className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                       <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Location</span>
-                       <span className="font-bold text-foreground">{event.venue}</span>
+                       <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Location</span>
+                       <span className="font-semibold text-foreground">{event.venue}</span>
                     </div>
                   </div>
                 )}
@@ -271,23 +271,23 @@ export default function CheckInOnly() {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                     <Users className="h-3 w-3" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Registrations</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-widest">Registrations</span>
                   </div>
-                  <div className="text-2xl font-black text-foreground tracking-tighter">{stats.total}</div>
+                  <div className="text-2xl font-semibold text-foreground tracking-tighter">{stats.total}</div>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5 text-[hsl(var(--success))] mb-1">
                     <UserCheck className="h-3 w-3" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Arrived</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-widest">Arrived</span>
                   </div>
-                  <div className="text-2xl font-black text-[hsl(var(--success))] tracking-tighter">{stats.checkedIn}</div>
+                  <div className="text-2xl font-semibold text-[hsl(var(--success))] tracking-tighter">{stats.checkedIn}</div>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5 text-amber-500 mb-1">
                     <Clock className="h-3 w-3" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Pending</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-widest">Pending</span>
                   </div>
-                  <div className="text-2xl font-black text-amber-500 tracking-tighter">{stats.pending}</div>
+                  <div className="text-2xl font-semibold text-amber-500 tracking-tighter">{stats.pending}</div>
                 </div>
               </div>
             </div>
@@ -302,10 +302,10 @@ export default function CheckInOnly() {
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-16 pl-14 pr-6 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-bold text-lg focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+              className="h-16 pl-14 pr-6 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-semibold text-lg focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
             />
             {filteredGuests.length > 0 && searchQuery && (
-               <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-md">
+               <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-md">
                  {filteredGuests.length} Results
                </div>
             )}
@@ -315,19 +315,19 @@ export default function CheckInOnly() {
             <TabsList className="h-16 bg-white border border-border/40 p-2 rounded-[1.5rem] shadow-sm flex items-stretch">
               <TabsTrigger 
                 value="all" 
-                className="flex-1 md:px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
+                className="flex-1 md:px-8 rounded-xl font-semibold uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
               >
                 All
               </TabsTrigger>
               <TabsTrigger 
                 value="pending" 
-                className="flex-1 md:px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
+                className="flex-1 md:px-8 rounded-xl font-semibold uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
               >
                 Pending
               </TabsTrigger>
               <TabsTrigger 
                 value="checked-in" 
-                className="flex-1 md:px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
+                className="flex-1 md:px-8 rounded-xl font-semibold uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20 transition-all"
               >
                 Checked In
               </TabsTrigger>
@@ -349,7 +349,7 @@ export default function CheckInOnly() {
                  <Users className="h-10 w-10" />
               </div>
               <div className="space-y-1">
-                <p className="font-heading font-black text-foreground text-xl">No Guests Found</p>
+                <p className="font-heading font-semibold text-foreground text-xl">No Guests Found</p>
                 <p className="text-sm text-muted-foreground font-medium max-w-[280px] mx-auto">
                   {searchQuery
                     ? "Your search returned no matches."
@@ -409,9 +409,9 @@ export default function CheckInOnly() {
               <div className="bg-slate-50/80 p-4 border-t border-border/40 flex items-center justify-between px-10">
                  <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary/40 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Connected</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Connected</span>
                  </div>
-                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Lekkside Check-in System v3.2.0</span>
+                 <span className="text-[9px] font-semibold uppercase tracking-[0.3em] text-muted-foreground/40">Lekkside Check-in System v3.2.0</span>
               </div>
             </motion.div>
           )}

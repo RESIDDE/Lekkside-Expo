@@ -36,7 +36,7 @@ const RegistrationTicket = ({
       {/* Ticket Header */}
       <div className="bg-primary text-primary-foreground p-4 text-center">
         <img src={lekkLogo} alt="Lekkside" className="h-8 mx-auto mb-2 brightness-0 invert" />
-        <h2 className="text-xl font-bold">{eventName}</h2>
+        <h2 className="text-xl font-semibold">{eventName}</h2>
         <Badge variant="secondary" className="mt-2 bg-white/20 text-white hover:bg-white/30">
           ✓ Registration Confirmed
         </Badge>
@@ -47,7 +47,7 @@ const RegistrationTicket = ({
         {/* Attendee Name - Prominent */}
         <div className="text-center pb-4 border-b border-dashed">
           <p className="text-sm text-muted-foreground mb-1">Attendee</p>
-          <h3 className="text-2xl font-bold">{firstName} {lastName}</h3>
+          <h3 className="text-2xl font-semibold">{firstName} {lastName}</h3>
         </div>
 
         {/* Event Details */}
@@ -125,7 +125,7 @@ const RegistrationTicket = ({
         <div className="pt-4 border-t border-dashed">
           <div className="bg-muted/50 rounded-xl p-4 text-center space-y-2">
             <p className="text-xs text-muted-foreground">Confirmation Number</p>
-            <p className="text-lg font-mono font-bold tracking-wider text-primary">
+            <p className="text-lg font-mono font-semibold tracking-wider text-primary">
               {confirmationNumber}
             </p>
             <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">

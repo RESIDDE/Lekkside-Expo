@@ -317,7 +317,7 @@ export default function EventDetail() {
           <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mb-6">
             <Calendar className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">
+          <h2 className="text-2xl font-heading font-semibold text-foreground">
             Event not found
           </h2>
           <p className="text-muted-foreground mt-2 max-w-md">
@@ -325,7 +325,7 @@ export default function EventDetail() {
           </p>
           <Button
             variant="outline"
-            className="mt-8 h-12 px-8 rounded-2xl border-border/50 font-bold"
+            className="mt-8 h-12 px-8 rounded-2xl border-border/50 font-semibold"
             onClick={() => navigate("/events")}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -352,13 +352,13 @@ export default function EventDetail() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/events")}
-                className="group -ml-2 text-muted-foreground hover:text-foreground font-bold text-xs uppercase tracking-widest gap-2"
+                className="group -ml-2 text-muted-foreground hover:text-foreground font-semibold text-xs uppercase tracking-widest gap-2"
               >
                 <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
                 Back to Events
               </Button>
               <div className="flex flex-col gap-2">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-foreground tracking-tight text-balance">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-foreground tracking-tight text-balance">
                   {event.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground">
@@ -447,7 +447,7 @@ export default function EventDetail() {
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 gap-4">
                 <ImageIcon className="w-20 h-20" />
-                <p className="font-heading font-bold text-xl uppercase tracking-widest">
+                <p className="font-heading font-semibold text-xl uppercase tracking-widest">
                   No cover image
                 </p>
               </div>
@@ -457,7 +457,7 @@ export default function EventDetail() {
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="rounded-2xl h-12 px-6 bg-white/90 hover:bg-white text-black font-bold shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+                className="rounded-2xl h-12 px-6 bg-white/90 hover:bg-white text-black font-semibold shadow-xl transition-all hover:scale-105 flex items-center gap-2"
               >
                 {isUploading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -496,10 +496,10 @@ export default function EventDetail() {
                 showText={false}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-4xl font-heading font-black text-foreground">
+                <span className="text-4xl font-heading font-semibold text-foreground">
                   {Math.round(stats.percentage)}%
                 </span>
-                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest mt-1">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">
                   Completion
                 </span>
               </div>
@@ -507,26 +507,26 @@ export default function EventDetail() {
 
             <div className="mt-8 grid grid-cols-3 gap-8 w-full">
               <div className="text-center space-y-1">
-                <p className="text-2xl font-heading font-black text-foreground">
+                <p className="text-2xl font-heading font-semibold text-foreground">
                   {stats.total}
                 </p>
-                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                   Total Guests
                 </p>
               </div>
               <div className="text-center space-y-1">
-                <p className="text-2xl font-heading font-black text-[hsl(var(--success))]">
+                <p className="text-2xl font-heading font-semibold text-[hsl(var(--success))]">
                   {stats.checkedIn}
                 </p>
-                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                   Arrived
                 </p>
               </div>
               <div className="text-center space-y-1">
-                <p className="text-2xl font-heading font-black text-[hsl(var(--warning))]">
+                <p className="text-2xl font-heading font-semibold text-[hsl(var(--warning))]">
                   {stats.pending}
                 </p>
-                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                   Remaining
                 </p>
               </div>
@@ -536,13 +536,13 @@ export default function EventDetail() {
           {/* Detailed Breakdown Card */}
           <div className="lg:col-span-7 premium-card p-8 space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-foreground flex items-center gap-2">
+              <h3 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
                 <LayoutGrid className="w-5 h-5 text-primary" />
                 Ticket Distribution
               </h3>
               <Badge
                 variant="outline"
-                className="rounded-lg bg-muted/30 border-border/50 font-bold px-3 py-1"
+                className="rounded-lg bg-muted/30 border-border/50 font-semibold px-3 py-1"
               >
                 {Object.keys(stats.ticketTypes || {}).length} Types
               </Badge>
@@ -557,15 +557,15 @@ export default function EventDetail() {
                   return (
                     <div key={type} className="space-y-2 group">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-bold text-foreground group-hover:text-primary transition-colors">
+                        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
                           {type}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-muted-foreground">
+                          <span className="text-xs font-semibold text-muted-foreground">
                             {data.checkedIn}{" "}
                             <span className="opacity-50">/</span> {data.total}
                           </span>
-                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-black">
+                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-semibold">
                             {Math.round(percent)}%
                           </span>
                         </div>
@@ -608,7 +608,7 @@ export default function EventDetail() {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-heading font-black text-foreground">
+                <h2 className="text-2xl font-heading font-semibold text-foreground">
                   Guest Management
                 </h2>
                 <p className="text-sm text-muted-foreground font-medium">
@@ -650,7 +650,7 @@ export default function EventDetail() {
                   key={tab.id}
                   value={tab.id}
                   className={cn(
-                    "rounded-xl px-6 py-3 text-xs font-black uppercase tracking-widest transition-all duration-300",
+                    "rounded-xl px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-all duration-300",
                     "data-[state=active]:shadow-lg data-[state=active]:text-white",
                     tab.id === "all" && "data-[state=active]:bg-primary",
                     tab.id === "pending" &&
@@ -664,7 +664,7 @@ export default function EventDetail() {
                     {tab.label}
                     <Badge
                       variant="secondary"
-                      className="bg-white/20 text-white border-0 text-[10px] font-black h-5 px-1.5 min-w-[20px] rounded-md"
+                      className="bg-white/20 text-white border-0 text-[10px] font-semibold h-5 px-1.5 min-w-[20px] rounded-md"
                     >
                       {tab.id === "all"
                         ? stats.total
@@ -717,12 +717,12 @@ export default function EventDetail() {
                     {filteredGuests.length > 50 && (
                       <div className="col-span-full pt-8 flex flex-col items-center gap-4">
                         <div className="h-px w-24 bg-border/50" />
-                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
                           Showing 50 of {filteredGuests.length} guests
                         </p>
                         <Button
                           variant="outline"
-                          className="rounded-2xl h-12 px-8 border-border/50 text-xs font-black uppercase tracking-widest gap-2"
+                          className="rounded-2xl h-12 px-8 border-border/50 text-xs font-semibold uppercase tracking-widest gap-2"
                         >
                           <Search className="w-3.5 h-3.5" />
                           Load More
@@ -741,7 +741,7 @@ export default function EventDetail() {
                     </div>
                     {searchQuery ? (
                       <>
-                        <h3 className="text-xl font-heading font-bold text-foreground">
+                        <h3 className="text-xl font-heading font-semibold text-foreground">
                           No matching guests
                         </h3>
                         <p className="text-muted-foreground mt-2 max-w-sm">
@@ -751,14 +751,14 @@ export default function EventDetail() {
                         <Button
                           variant="ghost"
                           onClick={() => setSearchQuery("")}
-                          className="mt-6 text-primary font-bold"
+                          className="mt-6 text-primary font-semibold"
                         >
                           Clear Search
                         </Button>
                       </>
                     ) : stats.total === 0 ? (
                       <>
-                        <h3 className="text-xl font-heading font-bold text-foreground">
+                        <h3 className="text-xl font-heading font-semibold text-foreground">
                           Your guest list is empty
                         </h3>
                         <p className="text-muted-foreground mt-2 max-w-sm">
@@ -771,7 +771,7 @@ export default function EventDetail() {
                       </>
                     ) : (
                       <>
-                        <h3 className="text-xl font-heading font-bold text-foreground">
+                        <h3 className="text-xl font-heading font-semibold text-foreground">
                           {activeTab === "pending"
                             ? "All checked in! 🎉"
                             : "No arrivals yet"}
@@ -795,7 +795,7 @@ export default function EventDetail() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-heading font-bold text-foreground">
+                    <h3 className="text-xl font-heading font-semibold text-foreground">
                       Exhibition Booths
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -842,7 +842,7 @@ export default function EventDetail() {
                       <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mb-6">
                         <LayoutGrid className="w-10 h-10 text-muted-foreground" />
                       </div>
-                      <h3 className="text-xl font-heading font-bold text-foreground">
+                      <h3 className="text-xl font-heading font-semibold text-foreground">
                         No exhibition booths yet
                       </h3>
                       <p className="text-muted-foreground mt-2 max-w-sm">
@@ -868,12 +868,12 @@ export default function EventDetail() {
       >
         <AlertDialogContent className="rounded-[2rem] border-border/40 p-8">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-heading font-bold">
+            <AlertDialogTitle className="text-2xl font-heading font-semibold">
               Clear All Data?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-muted-foreground">
               This will permanently remove all{" "}
-              <span className="font-bold text-foreground">
+              <span className="font-semibold text-foreground">
                 {stats.total} guests
               </span>{" "}
               from this event. The event profile will be preserved, but all
@@ -881,12 +881,12 @@ export default function EventDetail() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="h-12 rounded-2xl border-border/50 font-bold">
+            <AlertDialogCancel className="h-12 rounded-2xl border-border/50 font-semibold">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteImportedData}
-              className="h-12 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-bold px-8"
+              className="h-12 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-semibold px-8"
             >
               Clear Data
             </AlertDialogAction>
@@ -903,26 +903,26 @@ export default function EventDetail() {
             <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
               <Trash2 className="w-6 h-6 text-destructive" />
             </div>
-            <AlertDialogTitle className="text-2xl font-heading font-bold">
+            <AlertDialogTitle className="text-2xl font-heading font-semibold">
               Delete Event permanently?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-muted-foreground leading-relaxed">
               This action cannot be undone. You are about to delete{" "}
-              <span className="font-bold text-foreground">"{event.name}"</span>{" "}
+              <span className="font-semibold text-foreground">"{event.name}"</span>{" "}
               and all its associated data, including{" "}
-              <span className="font-bold text-foreground">
+              <span className="font-semibold text-foreground">
                 {stats.total} guest records
               </span>
               .
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="h-12 rounded-2xl border-border/50 font-bold">
+            <AlertDialogCancel className="h-12 rounded-2xl border-border/50 font-semibold">
               Keep Event
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteEvent}
-              className="h-12 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-bold px-8 shadow-lg shadow-destructive/20"
+              className="h-12 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-semibold px-8 shadow-lg shadow-destructive/20"
             >
               Delete Permanently
             </AlertDialogAction>

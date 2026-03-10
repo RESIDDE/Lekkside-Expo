@@ -43,13 +43,13 @@ export function StatsCard({
               </div>
             </div>
           )}
-          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
             {title}
           </span>
         </div>
 
         <div>
-          <h4 className="text-3xl sm:text-4xl font-heading font-extrabold text-foreground tracking-tight mb-1">
+          <h4 className="text-3xl sm:text-4xl font-heading font-semibold text-foreground tracking-tight mb-1">
             {value}
           </h4>
           {subtitle && (

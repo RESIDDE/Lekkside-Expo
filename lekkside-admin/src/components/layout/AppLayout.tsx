@@ -88,10 +88,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <div className="absolute -inset-2 bg-primary/5 rounded-[22px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-heading font-extrabold text-xl tracking-tight text-foreground bg-clip-text">
+                  <span className="font-heading font-semibold text-xl tracking-tight text-foreground bg-clip-text">
                     Lekkside
                   </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/80 leading-none">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/80 leading-none">
                     Admin Portal
                   </span>
                 </div>
@@ -144,7 +144,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             {/* Right Side Actions */}
             <div className="flex items-center gap-3 sm:gap-6">
               <div className="hidden lg:flex flex-col items-end mr-2">
-                <span className="text-xs font-bold text-foreground/90 truncate max-w-[180px]">
+                <span className="text-xs font-semibold text-foreground/90 truncate max-w-[180px]">
                   {user?.email?.split("@")[0]}
                 </span>
                 <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
@@ -250,7 +250,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   className="pt-4 mt-4 border-t border-border/40"
                 >
                   <div className="px-5 py-3 mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
                       Signed in as
                     </p>
                     <p className="text-sm font-semibold truncate text-foreground">
@@ -289,7 +289,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Subtle Footer Decorations */}
       <footer className="py-12 px-8 flex justify-center items-center opacity-30 pointer-events-none select-none">
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
           &copy; 2026 Lekkside Education Fair • Premium Admin Experience
         </span>
       </footer>

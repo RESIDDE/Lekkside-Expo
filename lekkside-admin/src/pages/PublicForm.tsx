@@ -287,7 +287,7 @@ const PublicForm = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Initializing Registration</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Initializing Registration</p>
       </div>
     );
   }
@@ -303,11 +303,11 @@ const PublicForm = () => {
           <div className="w-20 h-20 rounded-[2rem] bg-white shadow-premium flex items-center justify-center mx-auto mb-6 text-muted-foreground/30">
             <ExternalLink className="w-10 h-10" />
           </div>
-          <h2 className="text-2xl font-heading font-black text-foreground mb-3">Portal Inaccessible</h2>
+          <h2 className="text-2xl font-heading font-semibold text-foreground mb-3">Portal Inaccessible</h2>
           <p className="text-sm text-muted-foreground font-medium mb-8">
             This registration endpoint has been decommissioned or is no longer active.
           </p>
-          <Button onClick={() => window.location.reload()} variant="outline" className="rounded-2xl px-8 h-12 font-bold hover:bg-white shadow-sm border-border/40">
+          <Button onClick={() => window.location.reload()} variant="outline" className="rounded-2xl px-8 h-12 font-semibold hover:bg-white shadow-sm border-border/40">
             Retry Connection
           </Button>
         </motion.div>
@@ -323,7 +323,7 @@ const PublicForm = () => {
             <img src={lekkLogo} alt="Lekkside" className="h-10 w-auto object-contain" />
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[hsl(var(--success))]">Verified Entry</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(var(--success))]">Verified Entry</span>
             </div>
           </div>
         </header>
@@ -338,9 +338,9 @@ const PublicForm = () => {
               <div className="w-20 h-20 rounded-[2.5rem] bg-[hsl(var(--success))/10] text-[hsl(var(--success))] flex items-center justify-center mx-auto shadow-lg shadow-green-500/5">
                  <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-heading font-black text-foreground tracking-tight">Passport Secured</h1>
+              <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-foreground tracking-tight">Passport Secured</h1>
               <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">
-                Identity confirmed for <span className="text-primary font-bold">{event?.name}</span>. Your digital passport is ready for presentation.
+                Identity confirmed for <span className="text-primary font-semibold">{event?.name}</span>. Your digital passport is ready for presentation.
               </p>
             </div>
 
@@ -368,13 +368,13 @@ const PublicForm = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Mail className="w-4 h-4" />
                 </div>
-                <p className="text-xs font-bold text-muted-foreground">
+                <p className="text-xs font-semibold text-muted-foreground">
                   A verification copy has been dispatched to <span className="text-foreground">{formData.email}</span>
                 </p>
               </motion.div>
             )}
 
-            <p className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-[0.4em] opacity-30 pt-8">
+            <p className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.4em] opacity-30 pt-8">
               Lekkside Identity Protocol v4.0
             </p>
           </div>
@@ -399,7 +399,7 @@ const PublicForm = () => {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10">
                <ShieldCheck className="w-3 h-3 text-primary" />
-               <span className="text-[9px] font-black uppercase tracking-widest text-primary">Secured Portal</span>
+               <span className="text-[9px] font-semibold uppercase tracking-widest text-primary">Secured Portal</span>
             </div>
             <div className="w-2 h-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
           </div>
@@ -413,11 +413,11 @@ const PublicForm = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12 text-center space-y-4"
         >
-          <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/5 text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/5 text-[10px] font-semibold uppercase tracking-widest text-primary flex items-center gap-1.5">
              <CheckCircle2 className="w-3.5 h-3.5" />
              Sign Up
           </div>
-          <h1 className="text-4xl sm:text-5xl font-heading font-black text-foreground tracking-tight leading-[1.1]">{event?.name}</h1>
+          <h1 className="text-4xl sm:text-5xl font-heading font-semibold text-foreground tracking-tight leading-[1.1]">{event?.name}</h1>
           {event?.description && (
             <p className="text-base text-muted-foreground font-medium max-w-xl mx-auto leading-relaxed">{event.description}</p>
           )}
@@ -426,13 +426,13 @@ const PublicForm = () => {
             {event?.date && (
               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-border/40 shadow-sm">
                 <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-foreground">{format(new Date(event.date), "PPP 'at' p")}</span>
+                <span className="text-xs font-semibold text-foreground">{format(new Date(event.date), "PPP 'at' p")}</span>
               </div>
             )}
             {event?.venue && (
               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-border/40 shadow-sm">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-foreground">{event.venue}</span>
+                <span className="text-xs font-semibold text-foreground">{event.venue}</span>
               </div>
             )}
           </div>
@@ -451,8 +451,8 @@ const PublicForm = () => {
                   <User className="h-7 w-7" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-heading font-black text-foreground">{form.name}</CardTitle>
-                  <CardDescription className="text-xs font-bold font-inter uppercase tracking-widest text-muted-foreground">Registration Portal</CardDescription>
+                  <CardTitle className="text-2xl font-heading font-semibold text-foreground">{form.name}</CardTitle>
+                  <CardDescription className="text-xs font-semibold font-inter uppercase tracking-widest text-muted-foreground">Registration Portal</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -462,7 +462,7 @@ const PublicForm = () => {
                 <div className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="first_name" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">First Name *</Label>
+                      <Label htmlFor="first_name" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">First Name *</Label>
                       <div className="relative group">
                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                          <Input
@@ -470,13 +470,13 @@ const PublicForm = () => {
                           value={formData.first_name}
                           onChange={(e) => handleChange("first_name", e.target.value)}
                           placeholder="First Name"
-                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold transition-all"
+                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold transition-all"
                           required
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                       <Label htmlFor="last_name" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Last Name *</Label>
+                       <Label htmlFor="last_name" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Last Name *</Label>
                        <div className="relative group">
                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                          <Input
@@ -484,7 +484,7 @@ const PublicForm = () => {
                           value={formData.last_name}
                           onChange={(e) => handleChange("last_name", e.target.value)}
                           placeholder="Last Name"
-                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold transition-all"
+                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold transition-all"
                           required
                         />
                       </div>
@@ -493,7 +493,7 @@ const PublicForm = () => {
 
                   {/* Email & Verification */}
                   <div className="space-y-3">
-                    <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Email Address *</Label>
+                    <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Email Address *</Label>
                     <div className="flex gap-3">
                       <div className="relative flex-1 group">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -504,7 +504,7 @@ const PublicForm = () => {
                           onChange={(e) => handleChange("email", e.target.value)}
                           placeholder="your@email.com"
                           className={cn(
-                            "h-14 pl-12 rounded-2xl border-border/40 focus-visible:ring-primary/20 font-bold transition-all",
+                            "h-14 pl-12 rounded-2xl border-border/40 focus-visible:ring-primary/20 font-semibold transition-all",
                             emailStatus === 'verified' ? "bg-[hsl(var(--success))/5] border-[hsl(var(--success))/30] pr-12" : "bg-muted/20"
                           )}
                           disabled={emailStatus === 'verified'}
@@ -519,7 +519,7 @@ const PublicForm = () => {
                           type="button"
                           onClick={sendOtp}
                           disabled={emailStatus === 'sending' || resendCountdown > 0}
-                          className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 shrink-0"
+                          className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest shadow-lg shadow-primary/20 shrink-0"
                         >
                           {emailStatus === 'sending' ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
@@ -545,7 +545,7 @@ const PublicForm = () => {
                               <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
                                 <ShieldCheck className="w-4 h-4" />
                               </div>
-                              <p className="text-xs font-bold text-muted-foreground leading-snug">
+                              <p className="text-xs font-semibold text-muted-foreground leading-snug">
                                 A verification code has been sent to <span className="text-foreground">{formData.email}</span>. Please enter it below.
                               </p>
                             </div>
@@ -562,7 +562,7 @@ const PublicForm = () => {
                                     <InputOTPSlot 
                                       key={i} 
                                       index={i} 
-                                      className="h-14 w-11 sm:w-14 rounded-xl text-xl font-black border-2 border-border/40 focus:border-primary shadow-sm bg-white" 
+                                      className="h-14 w-11 sm:w-14 rounded-xl text-xl font-semibold border-2 border-border/40 focus:border-primary shadow-sm bg-white" 
                                     />
                                   ))}
                                 </InputOTPGroup>
@@ -570,7 +570,7 @@ const PublicForm = () => {
                             </div>
 
                             {otpError && (
-                              <p className="text-center text-[10px] font-black uppercase tracking-widest text-[hsl(var(--destructive))]">{otpError}</p>
+                              <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-[hsl(var(--destructive))]">{otpError}</p>
                             )}
                           </div>
                         </motion.div>
@@ -580,7 +580,7 @@ const PublicForm = () => {
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Phone Number</Label>
+                      <Label htmlFor="phone" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Phone Number</Label>
                       <div className="relative group">
                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                          <Input
@@ -589,12 +589,12 @@ const PublicForm = () => {
                           value={formData.phone}
                           onChange={(e) => handleChange("phone", e.target.value)}
                           placeholder="+1 (555) 123-4567"
-                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold transition-all"
+                          className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold transition-all"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="notes" className="text-[10px] font-black uppercase tracking-widest text-primary px-1">Additional Notes</Label>
+                      <Label htmlFor="notes" className="text-[10px] font-semibold uppercase tracking-widest text-primary px-1">Additional Notes</Label>
                       <div className="relative group">
                          <MessageSquare className="absolute left-4 top-5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                          <Textarea
@@ -602,7 +602,7 @@ const PublicForm = () => {
                           value={formData.notes}
                           onChange={(e) => handleChange("notes", e.target.value)}
                           placeholder="Special requirements..."
-                          className="min-h-[56px] pl-12 py-4 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-bold transition-all resize-none"
+                          className="min-h-[56px] pl-12 py-4 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold transition-all resize-none"
                         />
                       </div>
                     </div>
@@ -615,14 +615,14 @@ const PublicForm = () => {
                 {customFields.length > 0 && (
                   <div className="space-y-8">
                     <div className="flex items-center gap-2">
-                       <span className="text-[10px] font-black uppercase tracking-widest text-[#f97316]">Event Specifics</span>
+                       <span className="text-[10px] font-semibold uppercase tracking-widest text-[#f97316]">Event Specifics</span>
                        <div className="h-px bg-orange-500/20 flex-1" />
                     </div>
                     
                     <div className="grid gap-6">
                       {customFields.map((field) => (
                         <div key={field.id} className="space-y-2">
-                          <Label htmlFor={field.id} className="text-[10px] font-extrabold text-muted-foreground/80 lowercase italic px-1">
+                          <Label htmlFor={field.id} className="text-[10px] font-semibold text-muted-foreground/80 lowercase italic px-1">
                             // {field.label} {field.required && <span className="text-primary">*</span>}
                           </Label>
                           {field.type === "text" && (
@@ -631,7 +631,7 @@ const PublicForm = () => {
                               value={(customFieldValues[field.id] as string) || ""}
                               onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
                               placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-                              className="h-14 px-6 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-bold shadow-sm"
+                              className="h-14 px-6 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-semibold shadow-sm"
                               required={field.required}
                             />
                           )}
@@ -641,7 +641,7 @@ const PublicForm = () => {
                               value={(customFieldValues[field.id] as string) || ""}
                               onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
                               placeholder={field.placeholder || `Details for ${field.label.toLowerCase()}`}
-                              className="min-h-[100px] p-6 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-bold shadow-sm resize-none"
+                              className="min-h-[100px] p-6 rounded-2xl bg-white border-border/40 focus-visible:ring-primary/20 font-semibold shadow-sm resize-none"
                               required={field.required}
                             />
                           )}
@@ -650,7 +650,7 @@ const PublicForm = () => {
                               value={(customFieldValues[field.id] as string) || ""}
                               onValueChange={(value) => handleCustomFieldChange(field.id, value)}
                             >
-                              <SelectTrigger className="h-14 px-6 rounded-2xl bg-white border-border/40 focus:ring-primary/20 font-bold shadow-sm">
+                              <SelectTrigger className="h-14 px-6 rounded-2xl bg-white border-border/40 focus:ring-primary/20 font-semibold shadow-sm">
                                 <SelectValue placeholder={field.placeholder || `Choose ${field.label.toLowerCase()}`} />
                               </SelectTrigger>
                               <SelectContent className="rounded-2xl shadow-premium border-border/40 p-2">
@@ -670,7 +670,7 @@ const PublicForm = () => {
                                 onCheckedChange={(checked) => handleCustomFieldChange(field.id, !!checked)}
                                 className="mt-0.5 rounded-lg w-6 h-6 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                               />
-                              <Label htmlFor={field.id} className="font-bold text-sm leading-relaxed text-muted-foreground group-hover:text-foreground cursor-pointer transition-colors">
+                              <Label htmlFor={field.id} className="font-semibold text-sm leading-relaxed text-muted-foreground group-hover:text-foreground cursor-pointer transition-colors">
                                 {field.placeholder || field.label}
                               </Label>
                             </div>
@@ -684,7 +684,7 @@ const PublicForm = () => {
                 <div className="pt-8 flex flex-col items-center gap-6">
                   <Button
                     type="submit"
-                    className="w-full h-16 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-primary/30 gap-4 transition-all hover:scale-[1.02] active:scale-95 group disabled:opacity-50 disabled:grayscale"
+                    className="w-full h-16 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-[0.2em] text-xs shadow-2xl shadow-primary/30 gap-4 transition-all hover:scale-[1.02] active:scale-95 group disabled:opacity-50 disabled:grayscale"
                     disabled={!canSubmit || isSubmitting}
                   >
                     {isSubmitting ? (
@@ -701,12 +701,12 @@ const PublicForm = () => {
                   </Button>
                   
                   <div className="text-center space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                       Standard Operational Protocol
                     </p>
                     <div className="flex items-center gap-2 justify-center opacity-40">
                        <ShieldCheck className="w-3 h-3" />
-                       <span className="text-[9px] font-black uppercase tracking-widest">End-to-End Encrypted Registry</span>
+                       <span className="text-[9px] font-semibold uppercase tracking-widest">End-to-End Encrypted Registry</span>
                     </div>
                   </div>
                 </div>
@@ -719,7 +719,7 @@ const PublicForm = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.3 }}
           transition={{ delay: 1 }}
-          className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-[0.5em] mt-16"
+          className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-[0.5em] mt-16"
         >
           Registration System v5.3.1
         </motion.p>

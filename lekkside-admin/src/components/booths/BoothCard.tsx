@@ -71,7 +71,7 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <div className="space-y-1">
-            <CardTitle className="text-xl font-bold">
+            <CardTitle className="text-xl font-semibold">
               {booth.booth_number}
             </CardTitle>
             <p className="text-sm text-muted-foreground">{booth.booth_name}</p>

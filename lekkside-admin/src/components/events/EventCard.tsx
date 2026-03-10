@@ -31,9 +31,9 @@ export function EventCard({ event, index = 0 }: EventCardProps) {
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Active Event</span>
+                 <span className="text-[10px] font-semibold uppercase tracking-widest text-primary/80">Active Event</span>
               </div>
-              <h3 className="text-xl font-heading font-extrabold text-foreground leading-tight group-hover:text-primary transition-colors duration-300 truncate">
+              <h3 className="text-xl font-heading font-semibold text-foreground leading-tight group-hover:text-primary transition-colors duration-300 truncate">
                 {event.name}
               </h3>
             </div>
@@ -71,7 +71,7 @@ export function EventCard({ event, index = 0 }: EventCardProps) {
           </div>
 
           <div className="mt-auto pt-6 border-t border-border/40">
-            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider mb-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider mb-2.5">
               <span className="text-muted-foreground/60">Check-in Progress</span>
               <span className="text-primary">{percentage}%</span>
             </div>

@@ -309,7 +309,7 @@ export default function ExhibitorDashboard() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate("/");
+    navigate("/exhibitor/signup");
   };
 
   const filteredAttendees = attendees.filter((attendee) => {
@@ -339,7 +339,7 @@ export default function ExhibitorDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm font-bold text-muted-foreground">
+          <p className="text-sm font-semibold text-muted-foreground">
             Loading dashboard...
           </p>
         </div>
@@ -356,10 +356,10 @@ export default function ExhibitorDashboard() {
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-heading font-black text-foreground">
+              <h1 className="text-xl font-heading font-semibold text-foreground">
                 {boothInfo?.booth_name}
               </h1>
-              <p className="text-sm text-muted-foreground font-bold">
+              <p className="text-sm text-muted-foreground font-semibold">
                 Booth {boothInfo?.booth_number}
               </p>
             </div>
@@ -367,7 +367,7 @@ export default function ExhibitorDashboard() {
           <Button
             onClick={handleSignOut}
             variant="outline"
-            className="gap-2 rounded-2xl font-bold"
+            className="gap-2 rounded-2xl font-semibold"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -379,13 +379,13 @@ export default function ExhibitorDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="rounded-3xl border-border/40 shadow-lg">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Total Attendees
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-foreground">
+              <p className="text-4xl font-heading font-semibold text-foreground">
                 {attendees.length}
               </p>
             </CardContent>
@@ -393,13 +393,13 @@ export default function ExhibitorDashboard() {
 
           <Card className="rounded-3xl border-border/40 shadow-lg bg-green-50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-green-700 flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-widest text-green-700 flex items-center gap-2">
                 <Star className="w-4 h-4" />
                 Relevant Leads
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-green-700">
+              <p className="text-4xl font-heading font-semibold text-green-700">
                 {relevantCount}
               </p>
             </CardContent>
@@ -407,13 +407,13 @@ export default function ExhibitorDashboard() {
 
           <Card className="rounded-3xl border-border/40 shadow-lg bg-orange-50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-orange-700 flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-widest text-orange-700 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Not Relevant
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-heading font-black text-orange-700">
+              <p className="text-4xl font-heading font-semibold text-orange-700">
                 {notRelevantCount}
               </p>
             </CardContent>
@@ -423,7 +423,7 @@ export default function ExhibitorDashboard() {
         <Card className="rounded-3xl border-border/40 shadow-xl">
           <CardHeader className="border-b border-border/40 pb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle className="text-2xl font-heading font-black">
+              <CardTitle className="text-2xl font-heading font-semibold">
                 Event Attendees
               </CardTitle>
               <div className="flex items-center gap-3">
@@ -440,7 +440,7 @@ export default function ExhibitorDashboard() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="gap-2 rounded-2xl font-bold"
+                      className="gap-2 rounded-2xl font-semibold"
                     >
                       <Download className="w-4 h-4" />
                       Export
@@ -470,15 +470,15 @@ export default function ExhibitorDashboard() {
               onValueChange={(v) => setFilterStatus(v as any)}
             >
               <TabsList className="grid w-full grid-cols-3 mb-6 rounded-2xl">
-                <TabsTrigger value="all" className="rounded-xl font-bold">
+                <TabsTrigger value="all" className="rounded-xl font-semibold">
                   All ({attendees.length})
                 </TabsTrigger>
-                <TabsTrigger value="relevant" className="rounded-xl font-bold">
+                <TabsTrigger value="relevant" className="rounded-xl font-semibold">
                   Relevant ({relevantCount})
                 </TabsTrigger>
                 <TabsTrigger
                   value="not-relevant"
-                  className="rounded-xl font-bold"
+                  className="rounded-xl font-semibold"
                 >
                   Not Relevant ({notRelevantCount})
                 </TabsTrigger>
@@ -489,22 +489,22 @@ export default function ExhibitorDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="font-black uppercase text-xs">
+                        <TableHead className="font-semibold uppercase text-xs">
                           Name
                         </TableHead>
-                        <TableHead className="font-black uppercase text-xs">
+                        <TableHead className="font-semibold uppercase text-xs">
                           Email
                         </TableHead>
-                        <TableHead className="font-black uppercase text-xs">
+                        <TableHead className="font-semibold uppercase text-xs">
                           Phone
                         </TableHead>
-                        <TableHead className="font-black uppercase text-xs">
+                        <TableHead className="font-semibold uppercase text-xs">
                           Ticket Type
                         </TableHead>
-                        <TableHead className="font-black uppercase text-xs">
+                        <TableHead className="font-semibold uppercase text-xs">
                           Status
                         </TableHead>
-                        <TableHead className="font-black uppercase text-xs text-right">
+                        <TableHead className="font-semibold uppercase text-xs text-right">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -526,7 +526,7 @@ export default function ExhibitorDashboard() {
                           );
                           return (
                             <TableRow key={attendee.id}>
-                              <TableCell className="font-bold">
+                              <TableCell className="font-semibold">
                                 <div className="flex flex-col">
                                   <span>
                                     {attendee.first_name} {attendee.last_name}

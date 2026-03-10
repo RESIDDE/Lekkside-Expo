@@ -38,14 +38,14 @@ const NotFound = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.5, type: "spring" }}
-            className="absolute -top-2 -right-2 w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-primary/20 border-4 border-slate-50"
+            className="absolute -top-2 -right-2 w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-semibold shadow-lg shadow-primary/20 border-4 border-slate-50"
           >
             404
           </motion.div>
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-4xl font-heading font-black text-foreground tracking-tight">Page Not Found</h1>
+          <h1 className="text-4xl font-heading font-semibold text-foreground tracking-tight">Page Not Found</h1>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
             The page you are looking for doesn't exist or has been moved to a new location.
           </p>
@@ -53,14 +53,14 @@ const NotFound = () => {
 
         <div className="pt-4">
           <Link to="/">
-            <Button className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest gap-3 shadow-xl shadow-primary/20 transition-all hover:scale-[1.05] active:scale-95 group">
+            <Button className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold uppercase tracking-widest gap-3 shadow-xl shadow-primary/20 transition-all hover:scale-[1.05] active:scale-95 group">
               <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               Go Back Home
             </Button>
           </Link>
         </div>
 
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/30 pt-12">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-muted-foreground/30 pt-12">
           Lekkside Admin Portal / 404 Error
         </p>
       </motion.div>

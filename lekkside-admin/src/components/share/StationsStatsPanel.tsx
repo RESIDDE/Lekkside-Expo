@@ -46,11 +46,11 @@ export function StationsStatsPanel({ eventId }: StationsStatsPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
           <Zap className="w-4 h-4 text-primary" />
           Live Station Performance
         </h3>
-        <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-lg uppercase tracking-wider">
+        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-1 rounded-lg uppercase tracking-wider">
           {totalCheckIns} Total Arrivals
         </span>
       </div>
@@ -72,7 +72,7 @@ export function StationsStatsPanel({ eventId }: StationsStatsPanelProps) {
               <div className="flex flex-col h-full justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <p className="font-heading font-bold text-foreground truncate max-w-[120px]">
+                    <p className="font-heading font-semibold text-foreground truncate max-w-[120px]">
                       {station.station_name}
                     </p>
                     <div className="w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
@@ -80,7 +80,7 @@ export function StationsStatsPanel({ eventId }: StationsStatsPanelProps) {
                     </div>
                   </div>
                   {station.last_check_in && (
-                    <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+                    <p className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatTimeAgo(station.last_check_in)}
                     </p>
@@ -89,8 +89,8 @@ export function StationsStatsPanel({ eventId }: StationsStatsPanelProps) {
 
                 <div className="mt-4 space-y-2">
                   <div className="flex items-end justify-between">
-                    <span className="text-2xl font-black text-foreground">{station.check_in_count}</span>
-                    <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                    <span className="text-2xl font-semibold text-foreground">{station.check_in_count}</span>
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                       {percentage}%
                     </span>
                   </div>
