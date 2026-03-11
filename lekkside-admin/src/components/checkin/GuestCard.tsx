@@ -333,6 +333,7 @@ export const GuestCard = memo(function GuestCard({
             eventVenue={eventVenue}
             confirmationNumber={`LEKK-${guest.id.slice(0, 8).toUpperCase()}`}
             registeredAt={guest.created_at}
+            image_url={(customFields?.['Attendee Photo'] as string) || undefined}
           />
         </PrintPortal>
       )}

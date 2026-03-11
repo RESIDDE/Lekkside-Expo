@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Calendar, MapPin, Loader2, CheckCircle2, Mail, User, Phone, MessageSquare, ArrowRight, ExternalLink, ShieldCheck, FileText, Lock } from "lucide-react";
+import { Calendar, MapPin, Loader2, CheckCircle2, Mail, User, Phone, MessageSquare, ArrowRight, ExternalLink, ShieldCheck, FileText, Lock, ArrowLeft, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import lekkLogo from "@/assets/lekkside-logo.png";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -78,12 +78,32 @@ const PublicForm = () => {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
 
+  // Image upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   const [currentStep, setCurrentStep] = useState(0);
-  const isStudentRegistration = !!form?.is_default;
   const [allEvents, setAllEvents] = useState<{id: string, name: string}[]>([]);
 
   const customFields = ((form?.custom_fields as unknown) as CustomField[]) || [];
   const event = form?.events as any;
+
+  // Helper to identify student fields by label keywords
+  const getStudentFieldType = (label: string) => {
+    const l = label.toLowerCase();
+    if (l.includes("education fair") || l.includes("which fair")) return "fair";
+    if (l.includes("highest level of education") || l.includes("education level")) return "education";
+    if (l.includes("preferred study country") || l.includes("country do you want to study")) return "country";
+    if (l.includes("hear about us") || l.includes("source")) return "source";
+    if (l.includes("level of study") || l.includes("level do you want to study")) return "study_level";
+    if (l.includes("budget") || l.includes("tuition fees")) return "budget";
+    if (l.includes("fund your studies") || l.includes("funding")) return "funding";
+    if (l.includes("start your studies") || l.includes("plan to enroll")) return "start_date";
+    return null;
+  };
+
+  const isStudentRegistration = !!form?.is_default || form?.name.toLowerCase().includes("student") || customFields.some(f => getStudentFieldType(f.label));
 
   // Fetch all events for the "Fair" dropdown if this is a student registration form
   useEffect(() => {
@@ -101,7 +121,7 @@ const PublicForm = () => {
       }
     };
     fetchAllEvents();
-  }, [isStudentRegistration, event?.created_by]);
+  }, [isStudentRegistration, event?.created_by, form?.name]);
 
   // Countdown timer for resend
   useEffect(() => {
@@ -189,20 +209,39 @@ const PublicForm = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const nextStep = () => {
+    let stepFields: CustomField[] = [];
+    
     if (isStudentRegistration) {
-      const stepFields = currentStep === 0 
-        ? ["fair", "education", "country", "source"]
-        : ["study_level", "budget", "funding", "start_date"];
-      
-      for (const fieldId of stepFields) {
-        const field = customFields.find(f => f.id === fieldId);
-        if (field?.required && !customFieldValues[fieldId]) {
-          toast.error(`Please fill in: ${field.label}`);
-          return;
-        }
+      if (currentStep === 0) stepFields = customFields.slice(0, 4);
+      else if (currentStep === 1) stepFields = customFields.slice(4, 8);
+    } else {
+      if (currentStep === 0) stepFields = customFields.slice(0, 4);
+    }
+    
+    for (const field of stepFields) {
+      if (field?.required && !customFieldValues[field.id]) {
+        toast.error(`Please fill in: ${field.label}`);
+        return;
       }
     }
+    
     setCurrentStep(prev => prev + 1);
   };
 
@@ -212,15 +251,17 @@ const PublicForm = () => {
 
   const renderCustomField = (field: CustomField) => {
     let options = field.options || [];
-    if (isStudentRegistration) {
-      if (field.id === "fair") options = allEvents.map(e => e.name);
-      if (field.id === "country") options = COUNTRIES_LIST;
-      if (field.id === "education") options = EDUCATION_LEVELS;
-      if (field.id === "study_level") options = STUDY_LEVELS;
-      if (field.id === "budget") options = BUDGET_RANGES;
-      if (field.id === "funding") options = FUNDING_SOURCES;
-      if (field.id === "start_date") options = START_DATES;
-      if (field.id === "source") options = SOURCES;
+    const studentFieldType = getStudentFieldType(field.label);
+
+    if (isStudentRegistration && studentFieldType) {
+      if (studentFieldType === "fair") options = allEvents.map(e => e.name);
+      if (studentFieldType === "country") options = COUNTRIES_LIST;
+      if (studentFieldType === "education") options = EDUCATION_LEVELS;
+      if (studentFieldType === "study_level") options = STUDY_LEVELS;
+      if (studentFieldType === "budget") options = BUDGET_RANGES;
+      if (studentFieldType === "funding") options = FUNDING_SOURCES;
+      if (studentFieldType === "start_date") options = START_DATES;
+      if (studentFieldType === "source") options = SOURCES;
     }
 
     return (
@@ -304,6 +345,7 @@ const PublicForm = () => {
       return;
     }
 
+    // Final check for all custom fields
     for (const field of customFields) {
       if (field.required && !customFieldValues[field.id]) {
         toast.error(`Please fill in: ${field.label}`);
@@ -314,10 +356,35 @@ const PublicForm = () => {
     setIsSubmitting(true);
 
     try {
-      const customFieldsData: Record<string, string | boolean> = {};
+      if (!selectedImage) {
+        toast.error("Please upload a profile photo");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setIsUploadingImage(true);
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `attendees/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('event-images')
+        .getPublicUrl(filePath);
+
+      setIsUploadingImage(false);
+
+      const customFieldsData: Record<string, string | boolean> = {
+        'Attendee Photo': publicUrl
+      };
       for (const fieldId in customFieldValues) {
         const field = customFields.find(f => f.id === fieldId);
-        if (field) customFieldsData[field.label] = customFieldValues[fieldId];
+        if (field) customFieldsData[field.label] = (customFieldValues[fieldId] as string | boolean);
       }
 
       const guestId = crypto.randomUUID();
@@ -355,6 +422,7 @@ const PublicForm = () => {
               eventDate: event?.date,
               eventVenue: event?.venue,
               confirmationNumber: confNum,
+              image_url: publicUrl
             }
           });
         } catch (e) {}
@@ -429,6 +497,7 @@ const PublicForm = () => {
               eventVenue={event?.venue || undefined}
               confirmationNumber={confirmationNumber}
               registeredAt={registeredAt}
+              image_url={(submittedCustomFields['Attendee Photo'] as string) || undefined}
             />
           </div>
         </motion.div>
@@ -438,6 +507,55 @@ const PublicForm = () => {
 
   const renderIdentityFields = () => (
     <div className="space-y-8">
+      {/* Photo Upload Section */}
+      <div className="space-y-4 text-center">
+        <Label className="text-[10px] uppercase font-bold tracking-widest text-primary">Profile Photo *</Label>
+        <div 
+          className={cn(
+            "relative w-32 h-32 mx-auto rounded-full border-2 border-dashed flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden",
+            imagePreview ? "border-primary border-solid shadow-lg shadow-primary/10" : "border-muted-foreground/20 bg-muted/5 hover:bg-muted/10"
+          )}
+          onClick={() => !imagePreview && document.getElementById('photo-upload')?.click()}
+        >
+          {imagePreview ? (
+            <>
+              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <div 
+                className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImage(null);
+                  setImagePreview(null);
+                }}
+              >
+                <X className="w-6 h-6 text-white" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                <Upload className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-tighter text-muted-foreground">Upload</span>
+            </>
+          )}
+          
+          {isUploadingImage && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+        <input 
+          id="photo-upload" 
+          type="file" 
+          accept="image/*" 
+          className="hidden" 
+          onChange={handleImageChange} 
+        />
+        <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">Face must be horizontal & clearly visible (Max 5MB)</p>
+      </div>
+
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Identity Verification</span>
         <div className="h-px bg-primary/10 flex-1" />
@@ -538,7 +656,7 @@ const PublicForm = () => {
                     <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2">Registration Portal</CardDescription>
                   </div>
                 </div>
-                {isStudentRegistration && (
+                {((isStudentRegistration && customFields.length > 0) || (!isStudentRegistration && customFields.length > 0)) && (
                   <div className="flex items-center gap-2 pt-2">
                     {[0, 1, 2].map(step => (
                       <div key={step} className={cn("h-2 flex-1 rounded-full transition-all duration-700", currentStep >= step ? "bg-primary shadow-lg shadow-primary/20" : "bg-muted")} />
@@ -550,7 +668,7 @@ const PublicForm = () => {
 
           <CardContent className="p-8 sm:p-12">
              <form onSubmit={handleSubmit} className="space-y-8">
-                <AnimatePresence mode="wait">
+                 <AnimatePresence mode="wait">
                   <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-10">
                     {isStudentRegistration ? (
                       <>
@@ -563,31 +681,53 @@ const PublicForm = () => {
                         {currentStep === 1 && (
                           <div className="space-y-10">
                              <div className="flex items-center gap-3"><span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#f97316]">Academic Intent</span><div className="h-px bg-[#f97316]/10 flex-1" /></div>
-                             <div className="grid gap-8">{customFields.slice(4, customFields.length).map(renderCustomField)}</div>
+                             <div className="grid gap-8">{customFields.slice(4, 8).map(renderCustomField)}</div>
                           </div>
                         )}
-                        {currentStep === 2 && renderIdentityFields()}
+                        {currentStep === 2 && (
+                          <div className="space-y-10">
+                            {renderIdentityFields()}
+                            {customFields.slice(8).length > 0 && (
+                              <div className="space-y-10 pt-6">
+                                <div className="flex items-center gap-3"><span className="text-[10px] font-bold uppercase tracking-widest text-[#f97316]">Additional Data</span><div className="h-px bg-[#f97316]/10 flex-1" /></div>
+                                <div className="grid gap-8">{customFields.slice(8).map(renderCustomField)}</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </>
                     ) : (
-                      <div className="space-y-12">
-                         {renderIdentityFields()}
-                         {customFields.length > 0 && (
+                      <>
+                        {currentStep === 0 && customFields.length > 0 ? (
                            <div className="space-y-10">
-                             <div className="flex items-center gap-3"><span className="text-[10px] font-bold uppercase tracking-widest text-[#f97316]">Additional Data</span><div className="h-px bg-[#f97316]/10 flex-1" /></div>
-                             <div className="grid gap-8">{customFields.map(renderCustomField)}</div>
+                              <div className="flex items-center gap-3"><span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#f97316]">Additional Information</span><div className="h-px bg-[#f97316]/10 flex-1" /></div>
+                              <div className="grid gap-8">{customFields.slice(0, 4).map(renderCustomField)}</div>
                            </div>
-                         )}
-                      </div>
+                        ) : (
+                          currentStep === 0 ? renderIdentityFields() : null
+                        )}
+                        {currentStep === 1 && customFields.length > 0 && (
+                           <div className="space-y-10">
+                             {renderIdentityFields()}
+                             {customFields.slice(4).length > 0 && (
+                               <div className="space-y-10 pt-6">
+                                 <div className="flex items-center gap-3"><span className="text-[10px] font-bold uppercase tracking-widest text-[#f97316]">Data Continuation</span><div className="h-px bg-[#f97316]/10 flex-1" /></div>
+                                 <div className="grid gap-8">{customFields.slice(4).map(renderCustomField)}</div>
+                               </div>
+                             )}
+                           </div>
+                        )}
+                      </>
                     )}
                   </motion.div>
                 </AnimatePresence>
 
                 <div className="flex gap-4 pt-8">
-                   {isStudentRegistration && currentStep > 0 && (
+                   {currentStep > 0 && (
                      <Button type="button" variant="outline" onClick={prevStep} className="h-16 px-10 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-slate-50">Back</Button>
                    )}
-                   {isStudentRegistration && currentStep < 2 ? (
-                     <Button type="button" onClick={nextStep} className="h-16 flex-1 rounded-2xl bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Next Component</Button>
+                   {((isStudentRegistration && currentStep < 2) || (!isStudentRegistration && customFields.length > 0 && currentStep === 0)) ? (
+                     <Button type="button" onClick={nextStep} className="h-16 flex-1 rounded-2xl bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Continue</Button>
                    ) : (
                      <Button 
                         type="submit" 
@@ -596,16 +736,16 @@ const PublicForm = () => {
                      >
                         {isSubmitting ? <Loader2 className="animate-spin"/> : (
                            <span className="flex items-center gap-2">Finalize Entry <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
-                        )}
-                     </Button>
-                   )}
-                </div>
-             </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-};
-
-export default PublicForm;
+                         )}
+                      </Button>
+                    )}
+                 </div>
+              </form>
+           </CardContent>
+         </Card>
+       </div>
+     </div>
+   );
+ };
+ 
+ export default PublicForm;

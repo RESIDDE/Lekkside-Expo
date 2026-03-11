@@ -38,18 +38,7 @@ export default function RegistrationTicket({
     >
       {/* Ticket Header */}
       <div className="relative h-32 flex flex-col items-center justify-center text-center overflow-hidden">
-        {image_url ? (
-          <>
-            <img 
-              src={image_url} 
-              alt={eventName} 
-              className="absolute inset-0 w-full h-full object-cover brightness-[0.4] grayscale-[0.3]" 
-            />
-            <div className="absolute inset-0 bg-primary/20" />
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-primary" />
-        )}
+        <div className="absolute inset-0 bg-primary" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full mt-2" />
         <h2 className="relative text-2xl font-bold text-white font-display mt-2 px-4 line-clamp-2">{eventName}</h2>
         <div className="relative inline-flex items-center gap-2 mt-3 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
@@ -57,6 +46,15 @@ export default function RegistrationTicket({
           Confirmed
         </div>
       </div>
+
+      {/* Attendee Photo - Floating */}
+      {image_url && (
+        <div className="relative -mt-12 mb-2 flex justify-center z-10">
+          <div className="w-24 h-24 rounded-full border-4 border-[#111111] shadow-2xl overflow-hidden bg-[#111111]">
+            <img src={image_url} alt="Attendee" className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
 
       {/* Ticket Body */}
       <div className="p-8 space-y-6 relative">

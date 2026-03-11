@@ -16,6 +16,7 @@ interface TicketEmailRequest {
   eventDate?: string;
   eventVenue?: string;
   confirmationNumber: string;
+  image_url?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -28,6 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     const {
       firstName, lastName, email, phone, notes, customFields,
       eventName, eventDate, eventVenue, confirmationNumber,
+      image_url,
     } = data;
 
     console.log(`Sending confirmation ticket to ${email} for ${eventName}`);
@@ -97,6 +99,11 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px;">✓ Registration Confirmed</div>
             </div>
             <div style="padding: 24px; text-align: center; border-bottom: 2px dashed #e5e5e5;">
+              ${image_url ? `
+                <div style="margin-bottom: 16px;">
+                  <img src="${image_url}" alt="Attendee" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #6366f1;">
+                </div>
+              ` : ""}
               <p style="margin: 0 0 4px 0; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Attendee</p>
               <h2 style="margin: 0; font-size: 28px; color: #1a1a1a;">${firstName} ${lastName}</h2>
             </div>
@@ -114,6 +121,9 @@ const handler = async (req: Request): Promise<Response> => {
               </table>
             </div>
             <div style="padding: 24px; background: #f9f9f9; text-align: center;">
+              <div style="margin-bottom: 16px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${confirmationNumber}" alt="QR Code" style="width: 120px; height: 120px; padding: 10px; background: white; border-radius: 12px; border: 1px solid #e5e5e5;">
+              </div>
               <p style="margin: 0 0 8px 0; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Confirmation Number</p>
               <p style="margin: 0; font-size: 24px; font-weight: bold; color: #6366f1; font-family: monospace; letter-spacing: 3px;">${confirmationNumber}</p>
               <p style="margin: 12px 0 0 0; color: #999; font-size: 12px;">Please save this number for check-in</p>
