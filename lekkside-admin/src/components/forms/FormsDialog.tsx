@@ -13,7 +13,8 @@ import {
   ChevronRight,
   ClipboardCheck,
   MoreVertical,
-  Activity
+  Activity,
+  ShieldCheck
 } from "lucide-react";
 import {
   Dialog,
@@ -197,6 +198,7 @@ export const FormsDialog = ({ eventId, open, onOpenChange }: FormsDialogProps) =
                         <FormItem
                           key={form.id}
                           form={form}
+                          isDefault={form.is_default}
                           onCopyLink={() => copyFormLink(form.id)}
                           onShowQR={() => setQrForm({ id: form.id, name: form.name })}
                           onPreview={() => setPreviewingForm({ name: form.name, fields: form.custom_fields })}
@@ -255,6 +257,7 @@ interface FormItemProps {
     is_active: boolean;
     custom_fields: CustomField[];
   };
+  isDefault?: boolean;
   onCopyLink: () => void;
   onShowQR: () => void;
   onPreview: () => void;
@@ -263,7 +266,7 @@ interface FormItemProps {
   onDelete: () => void;
 }
 
-const FormItem = ({ form, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onDelete }: FormItemProps) => {
+const FormItem = ({ form, isDefault, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onDelete }: FormItemProps) => {
   const registrationCount = useFormRegistrationCount(form.id);
 
   return (
@@ -282,9 +285,15 @@ const FormItem = ({ form, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onD
           <div className="flex items-center gap-2">
             <h4 className="font-heading font-semibold text-foreground truncate">{form.name}</h4>
             <div className={cn(
-              "w-2 h-2 rounded-full",
-              form.is_active ? "bg-[hsl(var(--success))] animate-pulse" : "bg-muted"
-            )} />
+                "w-2 h-2 rounded-full",
+                form.is_active ? "bg-[hsl(var(--success))] animate-pulse" : "bg-muted"
+              )} />
+            {isDefault && (
+              <div className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-primary" />
+                <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Default</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             <span className="flex items-center gap-1">
@@ -330,11 +339,7 @@ const FormItem = ({ form, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onD
                 <QrCode className="w-4 h-4 text-primary" />
                 Download QR Code
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit} className="rounded-xl py-3 font-medium gap-3">
-                <Settings2 className="w-4 h-4 text-primary" />
-                Edit Structure
-              </DropdownMenuItem>
-              <div className="h-px bg-border/40 my-1 mx-2" />
+              
               <DropdownMenuItem onClick={onToggle} className="rounded-xl py-3 font-medium gap-3">
                 {form.is_active ? (
                   <>
@@ -348,13 +353,23 @@ const FormItem = ({ form, onCopyLink, onShowQR, onPreview, onEdit, onToggle, onD
                   </>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={onDelete} 
-                className="rounded-xl py-3 font-medium gap-3 text-destructive focus:text-destructive focus:bg-destructive/10"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Form
-              </DropdownMenuItem>
+
+              {!isDefault && (
+                <>
+                  <DropdownMenuItem onClick={onEdit} className="rounded-xl py-3 font-medium gap-3">
+                    <Settings2 className="w-4 h-4 text-primary" />
+                    Edit Structure
+                  </DropdownMenuItem>
+                  <div className="h-px bg-border/40 my-1 mx-2" />
+                  <DropdownMenuItem 
+                    onClick={onDelete} 
+                    className="rounded-xl py-3 font-medium gap-3 text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Form
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

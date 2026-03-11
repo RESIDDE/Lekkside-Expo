@@ -16,6 +16,7 @@ export interface EventForm {
   event_id: string;
   name: string;
   is_active: boolean;
+  is_default: boolean;
   custom_fields: CustomField[];
   created_at: string;
   updated_at: string;
@@ -31,11 +32,11 @@ export const useForms = (eventId: string) => {
         .from("event_forms")
         .select("*")
         .eq("event_id", eventId)
+        .order("is_default", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       
-      // Transform the data to properly type custom_fields
       return (data || []).map((form) => ({
         ...form,
         custom_fields: (form.custom_fields as unknown as CustomField[]) || [],
@@ -44,7 +45,7 @@ export const useForms = (eventId: string) => {
     enabled: !!eventId,
   });
 
-  const createForm = useMutation({
+  const createForm = useMutation<any, Error, string>({
     mutationFn: async (name: string) => {
       const { data, error } = await supabase
         .from("event_forms")
@@ -64,7 +65,7 @@ export const useForms = (eventId: string) => {
     },
   });
 
-  const toggleFormActive = useMutation({
+  const toggleFormActive = useMutation<void, Error, { formId: string; isActive: boolean }>({
     mutationFn: async ({ formId, isActive }: { formId: string; isActive: boolean }) => {
       const { error } = await supabase
         .from("event_forms")
@@ -82,12 +83,13 @@ export const useForms = (eventId: string) => {
     },
   });
 
-  const deleteForm = useMutation({
+  const deleteForm = useMutation<void, Error, string>({
     mutationFn: async (formId: string) => {
       const { error } = await supabase
         .from("event_forms")
         .delete()
-        .eq("id", formId);
+        .eq("id", formId)
+        .eq("is_default", false);
 
       if (error) throw error;
     },
@@ -100,12 +102,13 @@ export const useForms = (eventId: string) => {
     },
   });
 
-  const updateFormFields = useMutation({
+  const updateFormFields = useMutation<void, Error, { formId: string; customFields: CustomField[] }>({
     mutationFn: async ({ formId, customFields }: { formId: string; customFields: CustomField[] }) => {
       const { error } = await supabase
         .from("event_forms")
         .update({ custom_fields: customFields as unknown as null })
-        .eq("id", formId);
+        .eq("id", formId)
+        .eq("is_default", false);
 
       if (error) throw error;
     },
@@ -133,16 +136,15 @@ export const usePublicForm = (formId: string) => {
   const { data: form, isLoading, error } = useQuery({
     queryKey: ["public-form", formId],
     queryFn: async () => {
-      // First fetch the form
+      // First fetch the form from DB
       const { data: formData, error: formError } = await supabase
         .from("event_forms")
         .select("*")
         .eq("id", formId)
-        .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (formError) throw formError;
-      if (!formData) return null;
+      if (!formData) throw new Error("Form not found");
 
       // Then fetch the event separately (works better with RLS for anon users)
       const { data: eventData } = await supabase
@@ -151,11 +153,11 @@ export const usePublicForm = (formId: string) => {
         .eq("id", formData.event_id)
         .single();
 
-      // Return form with nested events object for compatibility with existing code
       return {
         ...formData,
+        custom_fields: (formData.custom_fields as unknown as CustomField[]) || [],
         events: eventData,
-      };
+      } as EventForm & { events: any };
     },
     enabled: !!formId,
   });
