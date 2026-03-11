@@ -22,14 +22,53 @@ export interface EventForm {
   updated_at: string;
 }
 
+// Standalone mutation functions to break type recursion
+const performCreateForm = async (eventId: string, name: string): Promise<EventForm> => {
+  const { data, error } = await (supabase.from("event_forms") as any)
+    .insert({ event_id: eventId, name, is_default: false })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return {
+    ...data,
+    custom_fields: (data.custom_fields as unknown as CustomField[]) || [],
+  } as EventForm;
+};
+
+const performToggleFormActive = async (formId: string, isActive: boolean): Promise<void> => {
+  const { error } = await (supabase.from("event_forms") as any)
+    .update({ is_active: isActive })
+    .eq("id", formId);
+
+  if (error) throw error;
+};
+
+const performDeleteForm = async (formId: string): Promise<void> => {
+  const { error } = await (supabase.from("event_forms") as any)
+    .delete()
+    .eq("id", formId)
+    .eq("is_default", false);
+
+  if (error) throw error;
+};
+
+const performUpdateFormFields = async (formId: string, customFields: CustomField[]): Promise<void> => {
+  const { error } = await (supabase.from("event_forms") as any)
+    .update({ custom_fields: customFields as any })
+    .eq("id", formId)
+    .eq("is_default", false);
+
+  if (error) throw error;
+};
+
 export const useForms = (eventId: string) => {
   const queryClient = useQueryClient();
 
   const { data: forms = [], isLoading } = useQuery({
     queryKey: ["forms", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_forms")
+      const { data, error } = await (supabase.from("event_forms") as any)
         .select("*")
         .eq("event_id", eventId)
         .order("is_default", { ascending: false })
@@ -37,7 +76,7 @@ export const useForms = (eventId: string) => {
 
       if (error) throw error;
       
-      return (data || []).map((form) => ({
+      return (data || []).map((form: any) => ({
         ...form,
         custom_fields: (form.custom_fields as unknown as CustomField[]) || [],
       })) as EventForm[];
@@ -45,17 +84,8 @@ export const useForms = (eventId: string) => {
     enabled: !!eventId,
   });
 
-  const createForm = useMutation<any, Error, string>({
-    mutationFn: async (name: string) => {
-      const { data, error } = await supabase
-        .from("event_forms")
-        .insert({ event_id: eventId, name })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
+  const createForm = useMutation<EventForm, Error, string>({
+    mutationFn: (name: string) => performCreateForm(eventId, name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms", eventId] });
       toast.success("Form created successfully");
@@ -66,14 +96,7 @@ export const useForms = (eventId: string) => {
   });
 
   const toggleFormActive = useMutation<void, Error, { formId: string; isActive: boolean }>({
-    mutationFn: async ({ formId, isActive }: { formId: string; isActive: boolean }) => {
-      const { error } = await supabase
-        .from("event_forms")
-        .update({ is_active: isActive })
-        .eq("id", formId);
-
-      if (error) throw error;
-    },
+    mutationFn: ({ formId, isActive }) => performToggleFormActive(formId, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms", eventId] });
       toast.success("Form updated successfully");
@@ -84,15 +107,7 @@ export const useForms = (eventId: string) => {
   });
 
   const deleteForm = useMutation<void, Error, string>({
-    mutationFn: async (formId: string) => {
-      const { error } = await supabase
-        .from("event_forms")
-        .delete()
-        .eq("id", formId)
-        .eq("is_default", false);
-
-      if (error) throw error;
-    },
+    mutationFn: (formId: string) => performDeleteForm(formId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms", eventId] });
       toast.success("Form deleted successfully");
@@ -103,15 +118,7 @@ export const useForms = (eventId: string) => {
   });
 
   const updateFormFields = useMutation<void, Error, { formId: string; customFields: CustomField[] }>({
-    mutationFn: async ({ formId, customFields }: { formId: string; customFields: CustomField[] }) => {
-      const { error } = await supabase
-        .from("event_forms")
-        .update({ custom_fields: customFields as unknown as null })
-        .eq("id", formId)
-        .eq("is_default", false);
-
-      if (error) throw error;
-    },
+    mutationFn: ({ formId, customFields }) => performUpdateFormFields(formId, customFields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms", eventId] });
       toast.success("Form fields updated successfully");
