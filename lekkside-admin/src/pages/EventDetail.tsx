@@ -138,6 +138,7 @@ export default function EventDetail() {
         reverseName:
           `${guest.last_name || ""} ${guest.first_name || ""}`.trim(),
         searchableCustomFields: customFieldValues,
+        ticketCode: `LEKK-${guest.id.slice(0, 8).toUpperCase()}`,
       };
     });
   }, [guests]);
@@ -151,19 +152,41 @@ export default function EventDetail() {
       filtered = filtered.filter((g) => g.checked_in);
     }
 
-    if (searchQuery.trim()) {
+    const query = searchQuery.trim();
+    if (query) {
+      // Normalize query: remove spaces if it looks like a ticket ID (starts with L or contains hyphens/numbers)
+      // or at least handle the "L E K K" case by stripping spaces for the ticket matching
+      const normalizedQuery = query.replace(/\s+/g, '');
+      
       const fuseOptions = {
         keys: [
           { name: "fullName", weight: 2 },
           { name: "email", weight: 1 },
           { name: "phone", weight: 1 },
           { name: "ticket_number", weight: 1 },
+          { name: "ticketCode", weight: 3 }, // Higher weight for exact ticket code match
           { name: "searchableCustomFields", weight: 0.8 },
         ],
         threshold: 0.4,
       };
+      
       const fuse = new Fuse(filtered, fuseOptions);
-      const searchResults = fuse.search(searchQuery.trim());
+      
+      // Try searching with both original and normalized query if they differ
+      let searchResults = fuse.search(query);
+      
+      if (normalizedQuery !== query) {
+        const normalizedResults = fuse.search(normalizedQuery);
+        // Combine and deduplicate
+        const combined = [...searchResults];
+        normalizedResults.forEach(nr => {
+          if (!combined.find(cr => cr.item.id === nr.item.id)) {
+            combined.push(nr);
+          }
+        });
+        searchResults = combined;
+      }
+
       filtered = searchResults.map((r) => r.item);
     }
 

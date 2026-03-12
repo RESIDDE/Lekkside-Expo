@@ -52,6 +52,7 @@ export default function CheckInOnly() {
       ...guest,
       fullName: `${guest.first_name || ''} ${guest.last_name || ''}`.trim(),
       reverseName: `${guest.last_name || ''} ${guest.first_name || ''}`.trim(),
+      ticketCode: `LEKK-${guest.id.slice(0, 8).toUpperCase()}`,
     }));
   }, [guests]);
 
@@ -66,6 +67,7 @@ export default function CheckInOnly() {
         { name: 'email', weight: 1 },
         { name: 'phone', weight: 1 },
         { name: 'ticket_number', weight: 1 },
+        { name: 'ticketCode', weight: 3 },
       ],
       threshold: 0.4,
       distance: 100,
@@ -77,8 +79,22 @@ export default function CheckInOnly() {
   const filteredGuests = useMemo(() => {
     let result = guestsWithFullName;
 
-    if (searchQuery.trim()) {
-      const searchResults = fuse.search(searchQuery.trim());
+    const query = searchQuery.trim();
+    if (query) {
+      const normalizedQuery = query.replace(/\s+/g, '');
+      let searchResults = fuse.search(query);
+      
+      if (normalizedQuery !== query) {
+        const normalizedResults = fuse.search(normalizedQuery);
+        const combined = [...searchResults];
+        normalizedResults.forEach(nr => {
+          if (!combined.find(cr => cr.item.id === nr.item.id)) {
+            combined.push(nr);
+          }
+        });
+        searchResults = combined;
+      }
+      
       result = searchResults.map(r => r.item);
     }
 

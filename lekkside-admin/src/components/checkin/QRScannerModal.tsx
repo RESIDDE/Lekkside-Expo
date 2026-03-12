@@ -41,7 +41,10 @@ export function QRScannerModal({ isOpen, onClose, onScan }: QRScannerModalProps)
                     if (detectedCodes && detectedCodes.length > 0) {
                       const data = detectedCodes[0].rawValue;
                       if (data) {
-                         onScan(data);
+                         // Normalize the scanned data by removing excessive whitespace
+                         // This fix addresses cases where tickets scanned with spaces like "L E K K - ..."
+                         const normalized = data.trim().replace(/\s+/g, '');
+                         onScan(normalized || data);
                       }
                     }
                   }}
