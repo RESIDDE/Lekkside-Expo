@@ -78,8 +78,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Build custom fields HTML
     let customFieldsHtml = "";
-    if (customFields && Object.keys(customFields).length > 0) {
+    if (customFields && Object.keys(customFields).filter(key => key !== 'Attendee Photo').length > 0) {
       customFieldsHtml = Object.entries(customFields)
+        .filter(([label]) => label !== 'Attendee Photo')
         .map(([label, value]) => {
           const displayValue = typeof value === "boolean" ? (value ? "Yes" : "No") : value;
           return `<tr><td style="padding: 8px 0; color: #666; font-size: 14px;">${label}</td><td style="padding: 8px 0; font-size: 14px; text-align: right;">${displayValue}</td></tr>`;
@@ -122,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div style="padding: 24px; background: #f9f9f9; text-align: center;">
               <div style="margin-bottom: 16px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${confirmationNumber}" alt="QR Code" style="width: 120px; height: 120px; padding: 10px; background: white; border-radius: 12px; border: 1px solid #e5e5e5;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(confirmationNumber)}" alt="QR Code" style="width: 120px; height: 120px; padding: 10px; background: white; border-radius: 12px; border: 1px solid #e5e5e5;">
               </div>
               <p style="margin: 0 0 8px 0; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Confirmation Number</p>
               <p style="margin: 0; font-size: 24px; font-weight: bold; color: #6366f1; font-family: monospace; letter-spacing: 3px;">${confirmationNumber}</p>

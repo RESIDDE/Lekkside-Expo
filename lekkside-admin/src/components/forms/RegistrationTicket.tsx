@@ -116,9 +116,11 @@ const RegistrationTicket = ({
           )}
 
           {/* Custom Fields */}
-          {customFields && Object.keys(customFields).length > 0 && (
+          {customFields && Object.keys(customFields).filter(key => key !== 'Attendee Photo').length > 0 && (
             <div className="space-y-2 pt-2">
-              {Object.entries(customFields).map(([label, value]) => (
+              {Object.entries(customFields)
+                .filter(([label]) => label !== 'Attendee Photo')
+                .map(([label, value]) => (
                 <div key={label} className="flex items-start gap-3">
                   <Hash className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>

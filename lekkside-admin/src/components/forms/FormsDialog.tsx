@@ -354,12 +354,13 @@ const FormItem = ({ form, isDefault, onCopyLink, onShowQR, onPreview, onEdit, on
                 )}
               </DropdownMenuItem>
 
+              <DropdownMenuItem onClick={onEdit} className="rounded-xl py-3 font-medium gap-3">
+                <Settings2 className="w-4 h-4 text-primary" />
+                Edit Structure
+              </DropdownMenuItem>
+              
               {!isDefault && (
                 <>
-                  <DropdownMenuItem onClick={onEdit} className="rounded-xl py-3 font-medium gap-3">
-                    <Settings2 className="w-4 h-4 text-primary" />
-                    Edit Structure
-                  </DropdownMenuItem>
                   <div className="h-px bg-border/40 my-1 mx-2" />
                   <DropdownMenuItem 
                     onClick={onDelete} 

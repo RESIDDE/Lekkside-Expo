@@ -56,8 +56,7 @@ const performDeleteForm = async (formId: string): Promise<void> => {
 const performUpdateFormFields = async (formId: string, customFields: CustomField[]): Promise<void> => {
   const { error } = await (supabase.from("event_forms") as any)
     .update({ custom_fields: customFields as any })
-    .eq("id", formId)
-    .eq("is_default", false);
+    .eq("id", formId);
 
   if (error) throw error;
 };

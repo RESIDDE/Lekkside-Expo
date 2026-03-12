@@ -120,9 +120,11 @@ export default function RegistrationTicket({
           )}
 
           {/* Custom Fields */}
-          {customFields && Object.keys(customFields).length > 0 && (
+          {customFields && Object.keys(customFields).filter(key => key !== 'Attendee Photo').length > 0 && (
             <div className="grid grid-cols-1 gap-3 pt-2">
-              {Object.entries(customFields).map(([label, value]) => (
+              {Object.entries(customFields)
+                .filter(([label]) => label !== 'Attendee Photo')
+                .map(([label, value]) => (
                 <div key={label} className="p-3 rounded-2xl bg-white/5 border border-white/5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
                   <p className="text-sm font-medium text-white">
