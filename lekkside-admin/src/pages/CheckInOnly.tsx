@@ -2,9 +2,10 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
-import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, ShieldCheck, Scan } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -17,6 +18,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GuestCard } from "@/components/checkin/GuestCard";
+import { QRScannerModal } from "@/components/checkin/QRScannerModal";
 import { ProgressRing } from "@/components/stats/ProgressRing";
 import { useGuests, useGuestStats, useCheckIn, useUndoCheckIn } from "@/hooks/useGuests";
 import { useStation } from "@/hooks/useStations";
@@ -29,6 +31,7 @@ export default function CheckInOnly() {
   const { stationId } = useParams<{ stationId: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "checked-in">("all");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch station details to get event ID
@@ -296,19 +299,28 @@ export default function CheckInOnly() {
 
         {/* Global Controls */}
         <div className="flex flex-col md:flex-row gap-6 items-stretch md:items-center">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-16 pl-14 pr-6 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-semibold text-lg focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
-            />
-            {filteredGuests.length > 0 && searchQuery && (
-               <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-md">
-                 {filteredGuests.length} Results
-               </div>
-            )}
+          <div className="flex-1 flex gap-4 items-center">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-16 pl-14 pr-6 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-semibold text-lg focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+              />
+              {filteredGuests.length > 0 && searchQuery && (
+                 <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-md">
+                   {filteredGuests.length} Results
+                 </div>
+              )}
+            </div>
+            
+            <Button 
+               onClick={() => setIsScannerOpen(true)}
+               className="h-16 w-16 shrink-0 rounded-[1.5rem] bg-slate-900 hover:bg-slate-800 text-white shadow-xl transition-all"
+            >
+               <Scan className="w-6 h-6" />
+            </Button>
           </div>
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full md:w-auto">
@@ -416,6 +428,15 @@ export default function CheckInOnly() {
             </motion.div>
           )}
         </AnimatePresence>
+        
+        <QRScannerModal 
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScan={(data) => {
+            setSearchQuery(data);
+            setIsScannerOpen(false);
+          }}
+        />
       </main>
     </div>
   );

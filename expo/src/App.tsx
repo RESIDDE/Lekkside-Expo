@@ -16,6 +16,7 @@ import { PartnersSection } from "./components/PartnersSection";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { format, isAfter, isBefore, startOfToday } from "date-fns";
 import { AllEvents } from "./components/AllEvents";
+import { AIAssistant } from "./components/AIAssistant";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
@@ -355,6 +356,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/all-events" element={<AllEvents />} />
       </Routes>
+      <AIAssistant />
     </Router>
   );
 }

@@ -22,6 +22,7 @@ import {
   ImageIcon,
   Pencil,
   Loader2,
+  Scan,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -30,6 +31,7 @@ import { Progress } from "@/components/ui/progress";
 import { ProgressRing } from "@/components/stats/ProgressRing";
 import { GuestSearch } from "@/components/checkin/GuestSearch";
 import { GuestCard } from "@/components/checkin/GuestCard";
+import { QRScannerModal } from "@/components/checkin/QRScannerModal";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { ExportButton } from "@/components/export/ExportButton";
 import { CheckInStationsDialog } from "@/components/share/CheckInStationsDialog";
@@ -117,6 +119,7 @@ export default function EventDetail() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [deleteDialogType, setDeleteDialogType] = useState<
     "data" | "event" | null
   >(null);
@@ -617,8 +620,16 @@ export default function EventDetail() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl">
-              <GuestSearch value={searchQuery} onChange={setSearchQuery} />
+            <div className="flex-1 max-w-xl flex items-center gap-4">
+              <div className="flex-1">
+                <GuestSearch value={searchQuery} onChange={setSearchQuery} />
+              </div>
+              <Button 
+                 onClick={() => setIsScannerOpen(true)}
+                 className="h-14 w-14 shrink-0 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-xl transition-all"
+              >
+                 <Scan className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
@@ -929,6 +940,15 @@ export default function EventDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <QRScannerModal 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(data) => {
+          setSearchQuery(data);
+          setIsScannerOpen(false);
+        }}
+      />
     </AppLayout>
   );
 }
