@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Megaphone, Send, Loader2 } from "lucide-react";
+import { Megaphone, Send, Loader2, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageInbox } from "./MessageInbox";
 
 interface BroadcastDialogProps {
   eventId: string;
@@ -35,6 +36,7 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [expandedBroadcastId, setExpandedBroadcastId] = useState<string | null>(null);
   const { broadcasts, isLoading, createBroadcast } = useBroadcasts(eventId);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,9 +81,10 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="compose" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="compose">Compose Email</TabsTrigger>
-            <TabsTrigger value="history">History & Stats</TabsTrigger>
+            <TabsTrigger value="inbox">Inbox</TabsTrigger>
+            <TabsTrigger value="history">Broadcast History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="compose" className="space-y-4 py-4">
@@ -132,6 +135,10 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
             </form>
           </TabsContent>
 
+          <TabsContent value="inbox">
+            <MessageInbox />
+          </TabsContent>
+
           <TabsContent value="history" className="space-y-4 py-4">
             {isLoading ? (
               <div className="flex justify-center py-8">
@@ -140,12 +147,22 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
             ) : broadcasts && broadcasts.length > 0 ? (
               <div className="space-y-4">
                 {broadcasts.map((broadcast) => (
-                  <Card key={broadcast.id}>
-                    <CardHeader className="pb-2">
+                  <Card key={broadcast.id} className="overflow-hidden">
+                    <CardHeader 
+                      className="pb-2 cursor-pointer select-none"
+                      onClick={() => setExpandedBroadcastId(expandedBroadcastId === broadcast.id ? null : broadcast.id)}
+                    >
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-medium">
-                          {broadcast.subject}
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-base font-medium">
+                            {broadcast.subject}
+                          </CardTitle>
+                          {expandedBroadcastId === broadcast.id ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
                         <Badge variant={getStatusColor(broadcast.status) as any}>
                           {broadcast.status}
                         </Badge>
@@ -154,6 +171,20 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
                         Sent on {format(new Date(broadcast.created_at), "MMM d, yyyy 'at' h:mm a")}
                       </div>
                     </CardHeader>
+                    {expandedBroadcastId === broadcast.id && (
+                      <CardContent className="pt-0 border-t border-slate-50 mt-2 bg-slate-50/30">
+                        <div className="py-4">
+                          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            Message Content
+                          </p>
+                          <div 
+                            className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-sm text-slate-700 overflow-x-auto"
+                            dangerouslySetInnerHTML={{ __html: broadcast.content }}
+                          />
+                        </div>
+                      </CardContent>
+                    )}
                     <CardContent>
                       <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="flex flex-col items-center justify-center p-2 bg-muted/20 rounded-lg">

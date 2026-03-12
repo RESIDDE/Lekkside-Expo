@@ -22,11 +22,19 @@ export function SupportForm() {
     setError(null);
 
     try {
-      const { error } = await supabase.functions.invoke('send-support-email', {
+      // 1. Send the email via Edge Function
+      const { error: invokeError } = await supabase.functions.invoke('send-support-email', {
         body: formData
       });
 
-      if (error) throw error;
+      if (invokeError) throw invokeError;
+
+      // 2. Persist to Database for Admin Inbox
+      const { error: dbError } = await supabase
+        .from('contact_messages')
+        .insert([formData]);
+
+      if (dbError) throw dbError;
       
       setSuccess(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
