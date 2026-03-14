@@ -809,7 +809,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
 
                         {/* Image Upload */}
                         <div className="space-y-4 mb-8">
-                          <label className="text-sm font-medium text-slate-700 block text-center">Profile Photo <span className="text-rose-500">*</span></label>
+                          <label className="text-sm font-medium text-slate-700 block text-center">Profile Photo</label>
                           <div className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 transition-all group relative overflow-hidden max-w-[200px] mx-auto ${
                             imagePreview ? 'border-primary bg-white' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
                           }`}>
@@ -833,13 +833,12 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                                   <Upload className="w-6 h-6 text-primary" />
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-900">Upload Photo</span>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*"
-                                  required
-                                  onChange={handleImageChange}
-                                />
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                  />
                               </label>
                             )}
                             {isUploadingImage && (
