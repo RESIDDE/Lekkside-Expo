@@ -417,32 +417,32 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
 
     setSubmitting(true);
     try {
-      if (!selectedImage) {
-        alert("Please upload a profile photo");
-        setSubmitting(false);
-        return;
+      let publicUrl = '';
+
+      if (selectedImage) {
+        setIsUploadingImage(true);
+        const fileExt = selectedImage.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `attendees/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('event-images')
+          .upload(filePath, selectedImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl: url } } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(filePath);
+
+        publicUrl = url;
+        setIsUploadingImage(false);
       }
 
-      setIsUploadingImage(true);
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `attendees/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('event-images')
-        .upload(filePath, selectedImage);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('event-images')
-        .getPublicUrl(filePath);
-
-      setIsUploadingImage(false);
-
-      const customFieldsData: Record<string, any> = {
-        'Attendee Photo': publicUrl
-      };
+      const customFieldsData: Record<string, any> = {};
+      if (publicUrl) {
+        customFieldsData['Attendee Photo'] = publicUrl;
+      }
       for (const fieldId in customFieldValues) {
         const field = customFields.find(f => f.id === fieldId);
         if (field) customFieldsData[field.label] = customFieldValues[fieldId];
