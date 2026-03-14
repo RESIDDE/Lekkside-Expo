@@ -44,8 +44,8 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "lekkside@samswift.online",
-        to: ["lekkside@samswift.online"],
+        from: "lekkside@lekksideexpo.com",
+        to: ["lekkside@lekksideexpo.com"],
         reply_to: email,
         subject: `Support Request: ${subject || "No Subject"} - from ${name}`,
         html: `

@@ -146,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Lekkside Events <noreply@samswift.online>",
+            from: "Lekkside Events <noreply@lekksideexpo.com>",
             to: [guest.email],
             subject: broadcast.subject,
             html: htmlContent,

@@ -8,6 +8,7 @@ import {
   X,
   ChevronRight,
   User,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +59,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "Events", icon: Calendar },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/profile", label: "Profile", icon: User },
   ];
 
