@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "Lekkside Check-in Portal <onboarding@resend.dev>",
+          from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
           to: [email],
           subject: "Verify your administrative account - Lekkside",
           html: "<div style=\"font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px; color: #1a1a1a;\">" +

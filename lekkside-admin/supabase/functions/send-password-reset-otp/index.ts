@@ -136,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Lekkside Check-in Portal <onboarding@resend.dev>",
+        from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
         to: [email],
         subject: "Reset your password - Lekkside Check-in Portal",
         html: `
