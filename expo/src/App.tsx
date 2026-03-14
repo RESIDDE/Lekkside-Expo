@@ -137,7 +137,7 @@ function Home() {
                 The Horizon
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900">
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-slate-900">
               UPCOMING EVENTS
             </h2>
           </div>
@@ -240,7 +240,7 @@ function Home() {
                 The Archive
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900">
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-slate-900">
               PAST MEMORIES
             </h2>
           </div>
