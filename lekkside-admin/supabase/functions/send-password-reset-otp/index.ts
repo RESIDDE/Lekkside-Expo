@@ -126,18 +126,13 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send via Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
+    // Send via Zoho
+    const { sendEmail } = await import("../_shared/email.ts");
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
-        to: [email],
+        to: email,
         subject: "Reset your password - Lekkside Check-in Portal",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px;">
@@ -154,12 +149,11 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `,
         text: `Your password reset code is: ${code}\n\nThis code expires in 10 minutes. If you didn't request this code, please ignore this email and your password will remain unchanged.`,
-      }),
-    });
+      });
 
-    if (!resendResponse.ok) {
-      const errorData = await resendResponse.text();
-      console.error("Resend API error:", errorData);
+      console.log(`Password reset email sent via Zoho, ID: ${result.id}`);
+    } catch (emailError: any) {
+      console.error("Email API error:", emailError);
 
       await supabase
         .from("email_verifications")
@@ -173,9 +167,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    const resendData = await resendResponse.json();
-    console.log(`Password reset email sent via Resend, ID: ${resendData.id}`);
 
     return new Response(
       JSON.stringify({ 

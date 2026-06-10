@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export interface ThreadReply {
+  from: "guest" | "admin";
+  name?: string;
+  text: string;
+  timestamp: string;
+}
+
 export interface ContactMessage {
   id: string;
   name: string;
@@ -10,7 +17,9 @@ export interface ContactMessage {
   message: string;
   status: 'unread' | 'read' | 'replied';
   reply_content: string | null;
+  replies: ThreadReply[];
   created_at: string;
+  updated_at: string | null;
 }
 
 export function useMessages() {
@@ -22,10 +31,13 @@ export function useMessages() {
       const { data, error } = await supabase
         .from("contact_messages")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false, nullsFirst: false });
 
       if (error) throw error;
-      return data as ContactMessage[];
+      return (data as ContactMessage[]).map(m => ({
+        ...m,
+        replies: Array.isArray(m.replies) ? m.replies : [],
+      }));
     },
   });
 
@@ -36,7 +48,8 @@ export function useMessages() {
       subject, 
       replyText, 
       originalMessage, 
-      name 
+      name,
+      currentReplies,
     }: { 
       messageId: string; 
       toEmail: string; 
@@ -44,11 +57,11 @@ export function useMessages() {
       replyText: string;
       originalMessage: string;
       name: string;
+      currentReplies: ThreadReply[];
     }) => {
-      // 0. Ensure we have a valid session for auth
       const { data: { session } } = await supabase.auth.getSession();
       
-      // 1. Send reply via Edge Function
+      // 1. Send the email via Edge Function
       const { error: funcError } = await supabase.functions.invoke('reply-support-email', {
         body: {
           to_email: toEmail,
@@ -64,12 +77,21 @@ export function useMessages() {
 
       if (funcError) throw funcError;
 
-      // 2. Update status in database
+      // 2. Append the admin reply to the thread in the database
+      const adminReply: ThreadReply = {
+        from: "admin",
+        name: "Lekkside Admin",
+        text: replyText,
+        timestamp: new Date().toISOString(),
+      };
+
       const { error: updateError } = await supabase
         .from("contact_messages")
         .update({
           status: 'replied',
-          reply_content: replyText
+          reply_content: replyText,
+          replies: [...currentReplies, adminReply],
+          updated_at: new Date().toISOString(),
         })
         .eq("id", messageId);
 

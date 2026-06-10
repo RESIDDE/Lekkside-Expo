@@ -34,7 +34,7 @@ export function useBroadcasts(eventId: string | undefined) {
   });
 
   const createBroadcast = useMutation({
-    mutationFn: async ({ subject, content }: { subject: string; content: string }) => {
+    mutationFn: async ({ subject, content, recipients }: { subject: string; content: string; recipients?: string[] }) => {
       if (!eventId) throw new Error("Event ID is required");
       
       // 1. Create broadcast record
@@ -55,7 +55,8 @@ export function useBroadcasts(eventId: string | undefined) {
       const { error: funcError } = await supabase.functions.invoke('send-broadcast', {
         body: {
           broadcastId: broadcast.id,
-          eventId: eventId
+          eventId: eventId,
+          recipients: recipients
         }
       });
 

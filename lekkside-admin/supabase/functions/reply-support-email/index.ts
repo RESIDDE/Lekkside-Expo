@@ -28,24 +28,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending reply to ${to_email}`);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({ error: "Resend API key not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    const { sendEmail } = await import("../_shared/email.ts");
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const result = await sendEmail({
         from: "lekkside@lekksideexpo.com",
         to: [to_email],
-        reply_to: "lekkside@lekksideexpo.com",
+        replyTo: "lekkside@lekksideexpo.com",
         subject: `Re: ${subject}`,
         html: `
           <!DOCTYPE html>
@@ -68,23 +57,19 @@ const handler = async (req: Request): Promise<Response> => {
           </body>
           </html>
         `,
-      }),
-    });
+      });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Resend API error:", errorData);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: errorData }),
+        JSON.stringify({ success: true, id: result.id }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    } catch (emailError: any) {
+      console.error("Email send error:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Failed to send email", details: emailError.message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    const data = await response.json();
-    return new Response(
-      JSON.stringify({ success: true, id: data.id }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
   } catch (error: any) {
     console.error("Error in reply-support-email function:", error);
     return new Response(

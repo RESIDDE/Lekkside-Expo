@@ -10,6 +10,7 @@ const corsHeaders = {
 interface BroadcastRequest {
   broadcastId: string;
   eventId: string;
+  recipients?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -30,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const { broadcastId, eventId } = (await req.json()) as BroadcastRequest;
+    const { broadcastId, eventId, recipients } = (await req.json()) as BroadcastRequest;
 
     if (!broadcastId || !eventId) {
       throw new Error("Missing broadcastId or eventId");
@@ -58,20 +59,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Event not found");
     }
 
-    // 3. Fetch all guests
-    // Using admin client to ensure we get all guests even if RLS is tricky (though RLS should allow creator to see guests)
-    const { data: guests, error: guestsError } = await supabaseAdmin
-      .from("guests")
-      .select("id, email, first_name, last_name")
-      .eq("event_id", eventId)
-      .not("email", "is", null);
+    // 3. Construct target list (from recipients or by fetching all guests)
+    let validGuests = [];
 
-    if (guestsError) {
-      throw guestsError;
+    if (recipients && recipients.length > 0) {
+      validGuests = recipients.map((email: string) => ({
+        id: null,
+        email: email.trim(),
+        first_name: null,
+        last_name: null,
+      }));
+    } else {
+      // Fetch all guests
+      // Using admin client to ensure we get all guests even if RLS is tricky (though RLS should allow creator to see guests)
+      const { data: guests, error: guestsError } = await supabaseAdmin
+        .from("guests")
+        .select("id, email, first_name, last_name")
+        .eq("event_id", eventId)
+        .not("email", "is", null);
+
+      if (guestsError) {
+        throw guestsError;
+      }
+
+      validGuests =
+        guests?.filter((g: any) => g.email && g.email.includes("@")) || [];
     }
-
-    const validGuests =
-      guests?.filter((g: any) => g.email && g.email.includes("@")) || [];
 
     if (validGuests.length === 0) {
       await supabaseAdmin
@@ -91,13 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ status: "sending" })
       .eq("id", broadcastId);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not set");
-    }
-
-    // 4. Send emails in batches (Resend supports batch sending, but let's do simple loop for now to track individual logs easily)
-    // For better performance with large lists, use Resend Batch API
+    const { sendEmail } = await import("../_shared/email.ts");
 
     let sentCount = 0;
     const projectUrl = Deno.env.get("SUPABASE_URL");
@@ -124,12 +131,6 @@ const handler = async (req: Request): Promise<Response> => {
 
         const trackingPixel = `<img src="${trackBaseUrl}?log_id=${log.id}&type=open" alt="" width="1" height="1" border="0" style="height:1px !important;width:1px !important;border-width:0 !important;margin-top:0 !important;margin-bottom:0 !important;margin-right:0 !important;margin-left:0 !important;padding-top:0 !important;padding-bottom:0 !important;padding-right:0 !important;padding-left:0 !important;" />`;
 
-        // Simple link tracking replacement
-        // This is a naive implementation. Robust implementation requires parsing HTML.
-        // For now, we'll just append a tracked link if there isn't one, or rely on Resend's tracking if enabled.
-        // But since we want to update OUR db, we should wrap links.
-        // Let's keep it simple: Just add the tracking pixel for opens.
-
         const htmlContent = `
           ${broadcast.content}
           <br/><br/>
@@ -139,31 +140,24 @@ const handler = async (req: Request): Promise<Response> => {
           ${trackingPixel}
         `;
 
-        const resendResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Lekkside Events <noreply@lekksideexpo.com>",
-            to: [guest.email],
+        try {
+          await sendEmail({
+            from: "Lekkside <lekkside@lekksideexpo.com>",
+            replyTo: "support@lekksideexpo.com",
+            to: guest.email,
             subject: broadcast.subject,
             html: htmlContent,
-          }),
-        });
+          });
 
-        if (resendResponse.ok) {
           await supabaseAdmin
             .from("broadcast_logs")
             .update({ status: "sent", sent_at: new Date().toISOString() })
             .eq("id", log.id);
           sentCount++;
-        } else {
-          const errorText = await resendResponse.text();
+        } catch (emailError: any) {
           await supabaseAdmin
             .from("broadcast_logs")
-            .update({ status: "failed", error_message: errorText })
+            .update({ status: "failed", error_message: emailError.message })
             .eq("id", log.id);
         }
       } catch (err: any) {

@@ -83,53 +83,32 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send via Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
-    const maskedKey = resendApiKey ? resendApiKey.substring(0, 10) + "..." : "MISSING";
+    // Send via Zoho
+    const { sendEmail } = await import("../_shared/email.ts");
     
     try {
-      const resendResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + resendApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
-          to: [email],
-          subject: "Verify your administrative account - Lekkside",
-          html: "<div style=\"font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px; color: #1a1a1a;\">" +
-                "<h1 style=\"font-size: 24px; font-weight: bold; margin-bottom: 16px;\">Welcome to Lekkside</h1>" +
-                "<p style=\"font-size: 16px; color: #666; margin-bottom: 24px;\">" +
-                "You're almost there! Use the following 6-digit code to verify your administrative account and complete your signup:" +
-                "</p>" +
-                "<div style=\"background: #f5f5f5; border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 24px;\">" +
-                "<span style=\"font-size: 36px; font-weight: bold; letter-spacing: 12px; color: #000;\">" + code + "</span>" +
-                "</div>" +
-                "<p style=\"font-size: 14px; color: #999;\">" +
-                "This code expires in 10 minutes. If you didn't request this account, you can safely ignore this email." +
-                "</p>" +
-                "<hr style=\"border: none; border-top: 1px solid #eee; margin: 32px 0;\" />" +
-                "<p style=\"font-size: 12px; color: #bbb; text-align: center;\">" +
-                "Lekkside Event Management System" +
-                "</p>" +
-                "</div>",
-          text: "Welcome to Lekkside! Your verification code is: " + code + "\n\nThis code expires in 10 minutes.",
-        }),
+      const result = await sendEmail({
+        from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
+        to: [email],
+        subject: "Verify your administrative account - Lekkside",
+        html: "<div style=\"font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px; color: #1a1a1a;\">" +
+              "<h1 style=\"font-size: 24px; font-weight: bold; margin-bottom: 16px;\">Welcome to Lekkside</h1>" +
+              "<p style=\"font-size: 16px; color: #666; margin-bottom: 24px;\">" +
+              "You're almost there! Use the following 6-digit code to verify your administrative account and complete your signup:" +
+              "</p>" +
+              "<div style=\"background: #f5f5f5; border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 24px;\">" +
+              "<span style=\"font-size: 36px; font-weight: bold; letter-spacing: 12px; color: #000;\">" + code + "</span>" +
+              "</div>" +
+              "<p style=\"font-size: 14px; color: #999;\">" +
+              "This code expires in 10 minutes. If you didn't request this account, you can safely ignore this email." +
+              "</p>" +
+              "<hr style=\"border: none; border-top: 1px solid #eee; margin: 32px 0;\" />" +
+              "<p style=\"font-size: 12px; color: #bbb; text-align: center;\">" +
+              "Lekkside Event Management System" +
+              "</p>" +
+              "</div>",
+        text: "Welcome to Lekkside! Your verification code is: " + code + "\n\nThis code expires in 10 minutes.",
       });
-
-      if (!resendResponse.ok) {
-        const errorData = await resendResponse.text();
-        return new Response(
-          JSON.stringify({ 
-            error: "Resend API Error", 
-            details: errorData,
-            apiKeyPrefix: maskedKey,
-            success: false
-          }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
 
       return new Response(
         JSON.stringify({ 
@@ -139,12 +118,11 @@ const handler = async (req: Request): Promise<Response> => {
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
-    } catch (fetchError: any) {
+    } catch (emailError: any) {
       return new Response(
         JSON.stringify({ 
-          error: "Fetch Error", 
-          details: fetchError.message,
-          apiKeyPrefix: maskedKey,
+          error: "Email Send Error", 
+          details: emailError.message,
           success: false
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }

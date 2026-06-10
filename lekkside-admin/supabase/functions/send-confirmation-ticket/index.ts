@@ -141,40 +141,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     const plainText = `REGISTRATION CONFIRMED\n\nThank you, ${firstName}!\n\nYou're registered for: ${eventName}\n${eventDate ? `Date: ${formattedDate} at ${formattedTime}` : ""}\n${eventVenue ? `Venue: ${eventVenue}` : ""}\n\nName: ${firstName} ${lastName}\nEmail: ${email}\n${phone ? `Phone: ${phone}` : ""}\n\nConfirmation Number: ${confirmationNumber}\n\nPlease save this number for check-in.\n\nLekkside Check-in Portal`;
 
-    // Send via Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
+    // Send via Zoho
+    const { sendEmail } = await import("../_shared/email.ts");
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
-        to: [email],
+        to: email,
         subject: `🎟️ Your Registration for ${eventName} is Confirmed!`,
         html: htmlContent,
         text: plainText,
-      }),
-    });
+      });
 
-    if (!resendResponse.ok) {
-      const errorData = await resendResponse.text();
-      console.error("Resend API error:", errorData);
+      console.log(`Confirmation ticket sent via Zoho, ID: ${result.id}`);
+
       return new Response(
-        JSON.stringify({ error: "Failed to send confirmation email. Please try again.", details: errorData }),
+        JSON.stringify({ success: true, message: "Confirmation ticket sent", messageId: result.id }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    } catch (emailError: any) {
+      console.error("Email API error:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Failed to send confirmation email. Please try again.", details: emailError.message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    const resendData = await resendResponse.json();
-    console.log(`Confirmation ticket sent via Resend, ID: ${resendData.id}`);
-
-    return new Response(
-      JSON.stringify({ success: true, message: "Confirmation ticket sent", messageId: resendData.id }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
   } catch (error: any) {
     console.error("Error in send-confirmation-ticket function:", error);
     return new Response(

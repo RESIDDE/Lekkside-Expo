@@ -37,14 +37,20 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [expandedBroadcastId, setExpandedBroadcastId] = useState<string | null>(null);
+  const [recipientsStr, setRecipientsStr] = useState("");
   const { broadcasts, isLoading, createBroadcast } = useBroadcasts(eventId);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isCustom: boolean) => {
     e.preventDefault();
     try {
-      await createBroadcast.mutateAsync({ subject, content });
+      const recipients = isCustom 
+        ? recipientsStr.split(",").map(r => r.trim()).filter(Boolean)
+        : undefined;
+
+      await createBroadcast.mutateAsync({ subject, content, recipients });
       setSubject("");
       setContent("");
+      if (isCustom) setRecipientsStr("");
       // Don't close immediately so user can see success or go to history
     } catch (error) {
       console.error(error);
@@ -81,14 +87,15 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="compose" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="compose">Compose Email</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="compose">Broadcast to All</TabsTrigger>
+            <TabsTrigger value="custom">Custom Recipients</TabsTrigger>
             <TabsTrigger value="inbox">Inbox</TabsTrigger>
-            <TabsTrigger value="history">Broadcast History</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="compose" className="space-y-4 py-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
                 <Input
@@ -128,6 +135,68 @@ export function BroadcastDialog({ eventId }: BroadcastDialogProps) {
                     <>
                       <Send className="mr-2 h-4 w-4" />
                       Send Broadcast
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="custom" className="space-y-4 py-4">
+            <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="custom-subject">Subject</Label>
+                <Input
+                  id="custom-subject"
+                  placeholder="Important Update: Event Schedule Change"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custom-recipients">Recipients</Label>
+                <Textarea
+                  id="custom-recipients"
+                  placeholder="guest1@example.com, guest2@example.com"
+                  className="min-h-[80px]"
+                  value={recipientsStr}
+                  onChange={(e) => setRecipientsStr(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter comma-separated email addresses.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custom-content">Message Content (HTML supported)</Label>
+                <Textarea
+                  id="custom-content"
+                  placeholder="<p>Dear Guest,</p><p>We are excited to announce...</p>"
+                  className="min-h-[200px]"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Basic HTML tags are supported. A tracking pixel will be automatically added.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={createBroadcast.isPending || !subject || !content || !recipientsStr}
+                  className="w-full sm:w-auto"
+                >
+                  {createBroadcast.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send to Custom Recipients
                     </>
                   )}
                 </Button>
