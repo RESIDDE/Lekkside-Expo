@@ -20,6 +20,7 @@ export interface ContactMessage {
   replies: ThreadReply[];
   created_at: string;
   updated_at: string | null;
+  source: 'email' | 'contact_form' | null;
 }
 
 export function useMessages() {

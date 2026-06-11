@@ -32,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     try {
       const result = await sendEmail({
-        from: "Lekkside Support <lekkside@lekksideexpo.com>",
+        from: "Lekkside Support <noreply@lekksideexpo.com>",
         to: [to_email],
         replyTo: "support@lekksideexpo.com",
         subject: `Re: ${subject}`,

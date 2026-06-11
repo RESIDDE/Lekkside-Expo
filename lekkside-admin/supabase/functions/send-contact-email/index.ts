@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,21 +30,48 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // 1. Direct insert to contact_messages with source: 'contact_form'
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { error: dbError } = await supabaseAdmin
+      .from("contact_messages")
+      .insert({
+        name,
+        email: email.toLowerCase(),
+        subject: `Contact Form: ${subject || "No Subject"}`,
+        message,
+        source: 'contact_form',
+        status: 'unread',
+        replies: []
+      });
+
+    if (dbError) {
+      console.error("Database insert error:", dbError);
+      return new Response(
+        JSON.stringify({ error: "Failed to save message to database", details: dbError.message }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 2. Still send email to support@ for admin notification
     const { sendEmail } = await import("../_shared/email.ts");
 
     try {
-      const result = await sendEmail({
+      await sendEmail({
         from: "Lekkside Support <noreply@lekksideexpo.com>",
         to: ["support@lekksideexpo.com"],
         replyTo: email,
-        subject: `Support Request: ${subject || "No Subject"} - from ${name}`,
+        subject: `Contact Request: ${subject || "No Subject"} - from ${name}`,
         html: `
           <!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>New Support Message</title>
+            <title>New Contact Message</title>
           </head>
           <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
             <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f4f4f4; padding: 40px 0;">
@@ -54,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
                     <tr>
                       <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
                         <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
-                          New Support Message
+                          New Contact Message
                         </h1>
                       </td>
                     </tr>
@@ -136,18 +164,19 @@ const handler = async (req: Request): Promise<Response> => {
           </body>
           </html>
         `,
-        text: `New Support Message\n\nFrom: ${name} (${email})\nSubject: ${subject || "No Subject"}\n\nMessage:\n${message}`,
+        text: `New Contact Message\n\nFrom: ${name} (${email})\nSubject: ${subject || "No Subject"}\n\nMessage:\n${message}`,
       });
 
       return new Response(
-        JSON.stringify({ success: true, id: result.id }),
+        JSON.stringify({ success: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     } catch (emailError: any) {
       console.error("Email send error:", emailError);
+      // Even if email fails, DB insert succeeded so we can return success
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: emailError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ success: true, emailError: emailError.message }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   } catch (error: any) {

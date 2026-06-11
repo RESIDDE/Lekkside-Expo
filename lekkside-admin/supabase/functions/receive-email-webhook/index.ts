@@ -65,6 +65,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Ignore emails sent by the system to avoid grouping contact forms/system emails
+    if (senderEmail.toLowerCase() === "noreply@lekksideexpo.com") {
+      console.log("Ignoring system email notification from noreply@lekksideexpo.com");
+      return new Response(
+        JSON.stringify({ success: true, ignored: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -120,6 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
           message: emailBody,
           replies: [],
           status: "unread",
+          source: "email",
         });
 
       if (error) {

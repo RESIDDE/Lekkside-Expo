@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,10 +30,37 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // 1. Direct insert to contact_messages with source: 'contact_form'
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { error: dbError } = await supabaseAdmin
+      .from("contact_messages")
+      .insert({
+        name,
+        email: email.toLowerCase(),
+        subject: `Support Form: ${subject || "No Subject"}`,
+        message,
+        source: 'contact_form',
+        status: 'unread',
+        replies: []
+      });
+
+    if (dbError) {
+      console.error("Database insert error:", dbError);
+      return new Response(
+        JSON.stringify({ error: "Failed to save message to database", details: dbError.message }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 2. Still send email to support@ for admin notification
     const { sendEmail } = await import("../_shared/email.ts");
 
     try {
-      const result = await sendEmail({
+      await sendEmail({
         from: "Lekkside Support <noreply@lekksideexpo.com>",
         to: ["support@lekksideexpo.com"],
         replyTo: email,
@@ -140,14 +168,14 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       return new Response(
-        JSON.stringify({ success: true, id: result.id }),
+        JSON.stringify({ success: true }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     } catch (emailError: any) {
       console.error("Email send error:", emailError);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: emailError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ success: true, emailError: emailError.message }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   } catch (error: any) {

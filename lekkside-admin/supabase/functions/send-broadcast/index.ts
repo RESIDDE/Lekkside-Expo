@@ -142,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         try {
           await sendEmail({
-            from: "Lekkside <lekkside@lekksideexpo.com>",
+            from: "Lekkside Events <noreply@lekksideexpo.com>",
             replyTo: "support@lekksideexpo.com",
             to: guest.email,
             subject: broadcast.subject,
