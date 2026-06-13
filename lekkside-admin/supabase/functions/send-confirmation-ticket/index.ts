@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const plainText = `REGISTRATION CONFIRMED\n\nThank you, ${firstName}!\n\nYou're registered for: ${eventName}\n${eventDate ? `Date: ${formattedDate} at ${formattedTime}` : ""}\n${eventVenue ? `Venue: ${eventVenue}` : ""}\n\nName: ${firstName} ${lastName}\nEmail: ${email}\n${phone ? `Phone: ${phone}` : ""}\n\nConfirmation Number: ${confirmationNumber}\n\nPlease save this number for check-in.\n\nLekkside Check-in Portal`;
 
-    // Send via Zoho
+    // Send via ZeptoMail
     const { sendEmail } = await import("../_shared/email.ts");
 
     try {
@@ -153,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
         text: plainText,
       });
 
-      console.log(`Confirmation ticket sent via Zoho, ID: ${result.id}`);
+      console.log(`Confirmation ticket sent via ZeptoMail, ID: ${result.id}`);
 
       return new Response(
         JSON.stringify({ success: true, message: "Confirmation ticket sent", messageId: result.id }),

@@ -10,13 +10,13 @@ export interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions) => {
-  const host = Deno.env.get("ZOHO_SMTP_HOST");
-  const port = Deno.env.get("ZOHO_SMTP_PORT") || "465";
-  const user = Deno.env.get("ZOHO_SMTP_USER");
-  const pass = Deno.env.get("ZOHO_SMTP_PASSWORD");
+  const host = Deno.env.get("ZEPTOMAIL_SMTP_HOST") || "smtp.zeptomail.com";
+  const port = Deno.env.get("ZEPTOMAIL_SMTP_PORT") || "587";
+  const user = Deno.env.get("ZEPTOMAIL_SMTP_USER") || "emailapikey";
+  const pass = Deno.env.get("ZEPTOMAIL_SMTP_PASSWORD");
 
-  if (!host || !user || !pass) {
-    throw new Error("Missing Zoho SMTP configuration (ZOHO_SMTP_HOST, ZOHO_SMTP_USER, ZOHO_SMTP_PASSWORD)");
+  if (!pass) {
+    throw new Error("Missing ZeptoMail SMTP configuration (ZEPTOMAIL_SMTP_PASSWORD)");
   }
 
   const transporter = nodemailer.createTransport({
@@ -39,10 +39,10 @@ export const sendEmail = async (options: EmailOptions) => {
       html: options.html,
     });
     
-    console.log(`Email sent via Zoho: ${info.messageId}`);
+    console.log(`Email sent via ZeptoMail: ${info.messageId}`);
     return { success: true, id: info.messageId };
   } catch (error) {
-    console.error("Error sending email via Zoho:", error);
+    console.error("Error sending email via ZeptoMail:", error);
     throw error;
   }
 };

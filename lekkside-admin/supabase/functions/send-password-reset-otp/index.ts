@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send via Zoho
+    // Send via ZeptoMail
     const { sendEmail } = await import("../_shared/email.ts");
 
     try {
@@ -151,7 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
         text: `Your password reset code is: ${code}\n\nThis code expires in 10 minutes. If you didn't request this code, please ignore this email and your password will remain unchanged.`,
       });
 
-      console.log(`Password reset email sent via Zoho, ID: ${result.id}`);
+      console.log(`Password reset email sent via ZeptoMail, ID: ${result.id}`);
     } catch (emailError: any) {
       console.error("Email API error:", emailError);
 

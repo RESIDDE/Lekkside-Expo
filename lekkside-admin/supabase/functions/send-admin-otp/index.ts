@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send via Zoho
+    // Send via ZeptoMail
     const { sendEmail } = await import("../_shared/email.ts");
     
     try {

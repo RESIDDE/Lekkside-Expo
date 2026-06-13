@@ -105,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send via Zoho
+    // Send via ZeptoMail
     const { sendEmail } = await import("../_shared/email.ts");
     
     try {
@@ -130,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
         text: `Your verification code is: ${code}\n\nThis code expires in 10 minutes. If you didn't request this code, you can safely ignore this email.`,
       });
 
-      console.log(`Email sent successfully via Zoho, ID: ${result.id}`);
+      console.log(`Email sent successfully via ZeptoMail, ID: ${result.id}`);
     } catch (emailError: any) {
       console.error("Email send error:", emailError);
 
