@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-support-email]
 verify_jwt = false
+
+[functions.receive-email-webhook]
+verify_jwt = false
