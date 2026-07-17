@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { decodePassphrase } from '../integrations/livekit/lib/client-utils';
-import { DebugMode } from '../integrations/livekit/lib/Debug';
 import { KeyboardShortcuts } from '../integrations/livekit/lib/KeyboardShortcuts';
 import { RecordingIndicator } from '../integrations/livekit/lib/RecordingIndicator';
 import { SettingsMenu } from '../integrations/livekit/lib/SettingsMenu';
@@ -29,6 +28,9 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSetupE2EE } from '../integrations/livekit/lib/useSetupE2EE';
 import { useLowCPUOptimizer } from '../integrations/livekit/lib/usePerfomanceOptimiser';
+import '@livekit/components-styles';
+import '@livekit/components-styles/prefabs';
+import './MeetingRoom.css';
 
 const CONN_DETAILS_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/livekit-token`;
 const SHOW_SETTINGS_MENU = true;
@@ -71,9 +73,9 @@ export default function MeetingRoom() {
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
-    <main data-lk-theme="default" style={{ height: '100%' }}>
+    <main data-lk-theme="default" className="meeting-room-container">
       {connectionDetails === undefined || preJoinChoices === undefined ? (
-        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+        <div style={{ display: 'grid', placeItems: 'center', flex: 1 }}>
           <PreJoin
             defaults={preJoinDefaults}
             onSubmit={handlePreJoinSubmit}
@@ -225,14 +227,13 @@ function VideoConferenceComponent(props: {
   }, [lowPowerMode]);
 
   return (
-    <div className="lk-room-container">
+    <div className="lk-room-container" style={{ flex: 1 }}>
       <RoomContext.Provider value={room}>
         <KeyboardShortcuts />
         <VideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
         />
-        <DebugMode />
         <RecordingIndicator />
       </RoomContext.Provider>
     </div>

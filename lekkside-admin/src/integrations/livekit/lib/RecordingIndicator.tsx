@@ -1,28 +1,24 @@
 import { useIsRecording } from '@livekit/components-react';
 import * as React from 'react';
-import toast from 'react-hot-toast';
+import { useToast } from "@/components/ui/use-toast";
 
 export function RecordingIndicator() {
   const isRecording = useIsRecording();
   const [wasRecording, setWasRecording] = React.useState(false);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (isRecording !== wasRecording) {
       setWasRecording(isRecording);
       if (isRecording) {
-        toast('This meeting is being recorded', {
+        toast({
+          title: "🎥 Recording Started",
+          description: "This meeting is being recorded",
           duration: 3000,
-          icon: '🎥',
-          position: 'top-center',
-          className: 'lk-button',
-          style: {
-            backgroundColor: 'var(--lk-danger3)',
-            color: 'var(--lk-fg)',
-          },
         });
       }
     }
-  }, [isRecording]);
+  }, [isRecording, wasRecording, toast]);
 
   return (
     <div

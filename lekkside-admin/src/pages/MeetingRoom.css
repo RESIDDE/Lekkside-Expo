@@ -1,0 +1,29 @@
+.meeting-room-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #08080c;
+  background-image: 
+    radial-gradient(at 10% 20%, rgba(105, 30, 255, 0.4) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(255, 45, 85, 0.3) 0px, transparent 50%),
+    radial-gradient(at 80% 90%, rgba(0, 195, 255, 0.2) 0px, transparent 50%),
+    radial-gradient(at 20% 80%, rgba(255, 0, 128, 0.25) 0px, transparent 50%);
+  background-size: 200% 200%;
+  animation: mesh 15s ease infinite alternate;
+  color: #ffffff;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+@keyframes mesh {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
