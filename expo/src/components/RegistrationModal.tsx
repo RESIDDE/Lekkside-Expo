@@ -81,6 +81,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   
   // Registration data for ticket
   const [confirmationNumber, setConfirmationNumber] = useState('');
+  const [registeredGuestId, setRegisteredGuestId] = useState('');
   const [registeredAt, setRegisteredAt] = useState('');
   const [submittedCustomFields, setSubmittedCustomFields] = useState<Record<string, any>>({});
 
@@ -472,6 +473,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       if (error) throw error;
 
       setConfirmationNumber(confNum);
+      setRegisteredGuestId(guestId);
       setRegisteredAt(registeredAtIso);
       setSubmittedCustomFields(customFieldsData);
 
@@ -676,6 +678,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   eventDate={event.date || undefined}
                   eventVenue={event.venue || undefined}
                   confirmationNumber={confirmationNumber}
+                  guestId={registeredGuestId}
                   registeredAt={registeredAt}
                   customFields={submittedCustomFields}
                   image_url={submittedCustomFields['Attendee Photo']}

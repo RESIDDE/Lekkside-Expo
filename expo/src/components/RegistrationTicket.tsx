@@ -14,6 +14,7 @@ interface RegistrationTicketProps {
   eventVenue?: string;
   image_url?: string;
   confirmationNumber: string;
+  guestId?: string;
   registeredAt: string;
 }
 
@@ -29,6 +30,7 @@ export default function RegistrationTicket({
   eventVenue,
   image_url,
   confirmationNumber,
+  guestId,
   registeredAt,
 }: RegistrationTicketProps) {
   return (
@@ -149,7 +151,7 @@ export default function RegistrationTicket({
             {/* QR Code Section */}
             <div className="flex justify-center py-2 bg-white rounded-xl p-4">
               <QRCodeCanvas 
-                value={confirmationNumber} 
+                value={guestId || confirmationNumber} 
                 size={120}
                 level="H"
                 includeMargin={false}

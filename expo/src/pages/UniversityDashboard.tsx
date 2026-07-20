@@ -17,22 +17,36 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Scan
 } from 'lucide-react';
 import { UniversityApplications } from '../components/UniversityApplications';
 import { UniversityProfile } from '../components/UniversityProfile';
+import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function UniversityDashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'profile'>('overview');
+  const [stats, setStats] = useState({
+    visitors: 0,
+    leads: 0,
+    meetingsScheduled: 0,
+    meetingsCompleted: 0,
+    downloads: 0,
+    appsStarted: 0,
+    appsSubmitted: 0,
+    pendingApps: 0
+  });
+  const [exhibitorData, setExhibitorData] = useState<any>(null);
+  const [showProfileReminder, setShowProfileReminder] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function checkUser() {
+    async function fetchDashboardData() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -41,10 +55,66 @@ export function UniversityDashboard() {
       }
 
       setUser(session.user);
+      
+      // Check profile setup
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('university_name')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      if (!profile?.university_name) {
+        setShowProfileReminder(true);
+      }
+
+      // Fetch Applications Data
+      const { data: applications } = await supabase
+        .from('university_applications')
+        .select('id, status')
+        .eq('university_id', session.user.id);
+        
+      const appsSubmitted = applications?.length || 0;
+      const pendingApps = applications?.filter(app => app.status === 'pending').length || 0;
+
+      // Check if exhibitor to fetch booth leads (estimation)
+      const { data: exhibitor } = await supabase
+        .from('exhibitors')
+        .select('booth_id')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      let leads = 0;
+      let visitors = 0;
+      
+      if (exhibitor) {
+        setExhibitorData(exhibitor);
+        const { data: allLeads } = await supabase
+          .from('booth_leads')
+          .select('id, is_relevant, lead_score')
+          .eq('booth_id', exhibitor.booth_id);
+          
+        const totalLeads = allLeads?.length || 0;
+        const qualifiedLeads = allLeads?.filter(l => l.is_relevant || (l.lead_score && l.lead_score >= 4)).length || 0;
+
+        leads = qualifiedLeads;
+        visitors = totalLeads * 3; // Est visitors
+      }
+
+      setStats({
+        visitors,
+        leads,
+        meetingsScheduled: 0, // Not available
+        meetingsCompleted: 0,
+        downloads: 0,
+        appsStarted: appsSubmitted, // Default to submitted count
+        appsSubmitted,
+        pendingApps
+      });
+
       setLoading(false);
     }
     
-    checkUser();
+    fetchDashboardData();
   }, [navigate]);
 
   const handleSignOut = async () => {
@@ -60,19 +130,11 @@ export function UniversityDashboard() {
     );
   }
 
-  // Mock data for dashboard statistics
-  const stats = {
-    visitors: 245,
-    leads: 89,
-    meetingsScheduled: 12,
-    meetingsCompleted: 8,
-    downloads: 156,
-    appsStarted: 34,
-    appsSubmitted: 15
-  };
+
 
   const navItems = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'profile' as const, label: 'Profile Settings', icon: Settings },
   ];
@@ -80,6 +142,51 @@ export function UniversityDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 font-sans selection:bg-primary/10 selection:text-primary transition-colors duration-500">
       
+      {/* Profile Reminder Modal */}
+      <AnimatePresence>
+        {showProfileReminder && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-gray-100 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
+                <Building2 className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 font-display">Complete Your Profile</h2>
+              <p className="text-gray-600 mb-6">
+                Please set up your university profile so students can see your institution when applying.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowProfileReminder(false)}
+                  className="flex-1 px-4 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Do it later
+                </button>
+                <button
+                  onClick={() => {
+                    setShowProfileReminder(false);
+                    setActiveTab('profile');
+                  }}
+                  className="flex-1 px-4 py-3 bg-primary text-white font-medium hover:bg-primary/90 rounded-xl transition-colors shadow-sm shadow-primary/20"
+                >
+                  Set up Profile
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Desktop Sidebar */}
       <aside 
         className={`hidden md:flex flex-col border-r border-gray-200 bg-white z-40 transition-all duration-300 relative ${
@@ -319,6 +426,7 @@ export function UniversityDashboard() {
             <header className="flex justify-between items-center mb-8 hidden md:flex">
               <h1 className="text-2xl font-bold text-gray-900 font-display">
                 {activeTab === 'overview' && 'University Dashboard'}
+                {activeTab === 'scan' && 'Lead Scanner'}
                 {activeTab === 'applications' && 'Student Applications'}
                 {activeTab === 'profile' && 'University Profile Settings'}
               </h1>
@@ -395,7 +503,7 @@ export function UniversityDashboard() {
                           <p className="text-lg font-bold text-gray-900">{stats.appsSubmitted}</p>
                         </div>
                         <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                          <div className="bg-primary h-full rounded-full" style={{ width: `${(stats.appsSubmitted / stats.appsStarted) * 100}%` }}></div>
+                          <div className="bg-primary h-full rounded-full" style={{ width: `${stats.appsStarted > 0 ? (stats.appsSubmitted / stats.appsStarted) * 100 : 0}%` }}></div>
                         </div>
                       </div>
                     </div>
@@ -406,6 +514,22 @@ export function UniversityDashboard() {
                     <h2 className="text-lg font-bold text-gray-900 mb-6">Quick Actions</h2>
                     <div className="space-y-3">
                       <button 
+                        onClick={() => setActiveTab('scan')}
+                        className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                            <Scan className="h-5 w-5" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-bold text-gray-900">Scan Badges</p>
+                            <p className="text-xs text-gray-500">Capture leads at the booth</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
+                      </button>
+
+                      <button 
                         onClick={() => setActiveTab('applications')}
                         className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors group"
                       >
@@ -415,7 +539,7 @@ export function UniversityDashboard() {
                           </div>
                           <div className="text-left">
                             <p className="font-bold text-gray-900">Review Applications</p>
-                            <p className="text-xs text-gray-500">15 pending review</p>
+                            <p className="text-xs text-gray-500">{stats.pendingApps} pending review</p>
                           </div>
                         </div>
                         <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
@@ -442,15 +566,27 @@ export function UniversityDashboard() {
               </div>
             )}
 
+            {activeTab === 'scan' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+                {exhibitorData ? (
+                  <LeadScanner boothId={exhibitorData.booth_id} />
+                ) : (
+                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-200">
+                    <p className="text-gray-500">You must be assigned to an exhibition booth to scan leads.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'applications' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
-                <UniversityApplications />
+                <UniversityApplications user={user} />
               </div>
             )}
 
             {activeTab === 'profile' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-                <UniversityProfile />
+                <UniversityProfile user={user} />
               </div>
             )}
           </div>
