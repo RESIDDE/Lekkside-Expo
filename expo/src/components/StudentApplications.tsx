@@ -96,12 +96,12 @@ export function StudentApplications({ user }: { user: any }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex-1">
           <h2 className="text-xl font-bold text-gray-900">University Applications</h2>
           <p className="text-gray-500 text-sm mt-1">Track and manage your university applications</p>
           {screeningStatus !== 'approved' && (
-            <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg border border-yellow-200">
+            <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-sm rounded-xl border border-yellow-200 leading-relaxed">
               <span className="font-semibold">Attention:</span> You must complete your screening and have it approved by an administrator before you can submit applications. Current status: <span className="font-bold capitalize">{screeningStatus || 'Not Submitted'}</span>
             </div>
           )}
@@ -109,10 +109,10 @@ export function StudentApplications({ user }: { user: any }) {
         <button
           onClick={() => setIsFormOpen(true)}
           disabled={screeningStatus !== 'approved'}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
             screeningStatus === 'approved' 
-              ? 'bg-primary text-white hover:bg-primary/90' 
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              ? 'bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20' 
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
           }`}
         >
           <Plus className="h-5 w-5" />
