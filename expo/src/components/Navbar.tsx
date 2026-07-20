@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-export function Navbar() {
+export function Navbar({ onOpenPortalAuth }: { onOpenPortalAuth?: () => void }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -89,13 +89,15 @@ export function Navbar() {
                   {link.name}
                 </a>
               ))}
-              <a
-                href="#upcoming"
-                onClick={(e) => scrollToSection(e, '#upcoming')}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onOpenPortalAuth) onOpenPortalAuth();
+                }}
                 className="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"
               >
                 Register Now
-              </a>
+              </button>
             </>
           ) : (
             <>
@@ -138,13 +140,18 @@ export function Navbar() {
                   {link.name}
                 </a>
               ))}
-              <a
-                href="#upcoming"
-                onClick={(e) => scrollToSection(e, '#upcoming')}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onOpenPortalAuth) {
+                    onOpenPortalAuth();
+                    setMobileMenuOpen(false);
+                  }
+                }}
                 className="mt-4 px-8 py-4 rounded-full bg-primary text-white font-bold text-lg uppercase tracking-wider shadow-xl shadow-primary/20"
               >
                 Register Now
-              </a>
+              </button>
             </>
           ) : (
             <>

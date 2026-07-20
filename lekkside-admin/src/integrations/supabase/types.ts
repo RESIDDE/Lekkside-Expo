@@ -208,9 +208,12 @@ export type Database = {
           id: string
           message: string
           name: string
+          replies: Json | null
           reply_content: string | null
+          source: string | null
           status: string
           subject: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -218,9 +221,12 @@ export type Database = {
           id?: string
           message: string
           name: string
+          replies?: Json | null
           reply_content?: string | null
+          source?: string | null
           status?: string
           subject?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -228,9 +234,12 @@ export type Database = {
           id?: string
           message?: string
           name?: string
+          replies?: Json | null
           reply_content?: string | null
+          source?: string | null
           status?: string
           subject?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -582,6 +591,7 @@ export type Database = {
           full_name: string | null
           id: string
           role: string | null
+          university_name: string | null
           updated_at: string
           user_id: string
         }
@@ -590,6 +600,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          university_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -598,10 +609,119 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          university_name?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      student_screenings: {
+        Row: {
+          budget: string | null
+          created_at: string | null
+          cv_url: string | null
+          english_score: string | null
+          english_test: string | null
+          gpa: string | null
+          highest_qualification: string | null
+          id: string
+          intended_course: string | null
+          passport_url: string | null
+          preferred_destination: string | null
+          scholarship: string | null
+          status: string | null
+          transcripts_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          budget?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          english_score?: string | null
+          english_test?: string | null
+          gpa?: string | null
+          highest_qualification?: string | null
+          id?: string
+          intended_course?: string | null
+          passport_url?: string | null
+          preferred_destination?: string | null
+          scholarship?: string | null
+          status?: string | null
+          transcripts_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          budget?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          english_score?: string | null
+          english_test?: string | null
+          gpa?: string | null
+          highest_qualification?: string | null
+          id?: string
+          intended_course?: string | null
+          passport_url?: string | null
+          preferred_destination?: string | null
+          scholarship?: string | null
+          status?: string | null
+          transcripts_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      university_applications: {
+        Row: {
+          created_at: string | null
+          documents: Json | null
+          id: string
+          payment_status: string
+          program_name: string
+          status: string
+          student_id: string
+          university_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          payment_status?: string
+          program_name: string
+          status?: string
+          student_id: string
+          university_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          payment_status?: string
+          program_name?: string
+          status?: string
+          student_id?: string
+          university_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "university_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "university_applications_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
@@ -764,3 +884,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

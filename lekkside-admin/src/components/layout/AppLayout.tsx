@@ -7,9 +7,12 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronLeft,
   User,
   BarChart3,
   Video,
+  FileText,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import lekksideLogo from "@/assets/lekkside-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -28,6 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -61,27 +66,40 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/meetings", label: "Meetings", icon: Video },
+    { href: "/screenings", label: "Screenings", icon: UserCheck },
+    { href: "/applications", label: "Applications", icon: FileText },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/profile", label: "Profile", icon: User },
   ];
 
   return (
-    <div className="min-h-screen bg-background font-sans selection:bg-primary/10 selection:text-primary transition-colors duration-500">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+    <TooltipProvider>
+      <div className="flex h-screen overflow-hidden bg-background font-sans selection:bg-primary/10 selection:text-primary transition-colors duration-500">
+        
+        {/* Desktop Sidebar */}
+        <aside 
+          className={cn(
+            "hidden md:flex flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl z-40 transition-all duration-300 relative",
+            isCollapsed ? "w-[80px]" : "w-[260px]"
+          )}
+        >
+          {/* Toggle Collapse Button */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="absolute -right-3 top-8 bg-background border border-border rounded-full p-1 shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors z-50"
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+
+          <div className="flex flex-col h-full">
             {/* Logo Section */}
-            <div className="flex items-center gap-8">
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-3.5 group relative"
-              >
+            <div className={cn("flex items-center h-20 transition-all duration-300", isCollapsed ? "justify-center px-0" : "px-6 gap-3")}>
+              <Link to="/dashboard" className="flex items-center gap-3 group relative">
                 <div className="relative">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative z-10 w-11 h-11 rounded-2xl overflow-hidden shadow-premium group-hover:shadow-premium-hover transition-all duration-500"
+                    className={cn("relative z-10 rounded-2xl overflow-hidden shadow-premium group-hover:shadow-premium-hover transition-all duration-500 flex-shrink-0", isCollapsed ? "w-10 h-10" : "w-11 h-11")}
                   >
                     <img
                       src={lekksideLogo}
@@ -91,212 +109,250 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </motion.div>
                   <div className="absolute -inset-2 bg-primary/5 rounded-[22px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-heading font-semibold text-xl tracking-tight text-foreground bg-clip-text">
-                    Lekkside
-                  </span>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/80 leading-none">
-                    Admin Portal
-                  </span>
-                </div>
+                
+                {!isCollapsed && (
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-heading font-semibold text-xl tracking-tight text-foreground bg-clip-text whitespace-nowrap">
+                      Lekkside
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/80 leading-none whitespace-nowrap">
+                      Admin Portal
+                    </span>
+                  </div>
+                )}
               </Link>
-
-              {/* Desktop Tabs */}
-              <nav className="hidden md:flex items-center ml-4 space-x-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className={cn(
-                        "relative flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group",
-                        isActive
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeNav"
-                          className="absolute inset-0 bg-primary/10 rounded-full"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{
-                            type: "spring",
-                            bounce: 0.25,
-                            duration: 0.5,
-                          }}
-                        />
-                      )}
-                      <Icon
-                        className={cn(
-                          "w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110",
-                          isActive
-                            ? "text-primary"
-                            : "opacity-70 group-hover:opacity-100",
-                        )}
-                      />
-                      <span className="relative z-10">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
             </div>
 
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-3 sm:gap-6">
-              <div className="hidden lg:flex flex-col items-end mr-2">
-                <span className="text-xs font-semibold text-foreground/90 truncate max-w-[180px]">
-                  {user?.email?.split("@")[0]}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                  Administrator
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="hidden sm:flex h-10 px-4 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
-                </Button>
-
-                {/* Mobile menu button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden h-11 w-11 rounded-2xl bg-muted/50 hover:bg-muted transition-all"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                  <AnimatePresence mode="wait">
-                    {mobileMenuOpen ? (
-                      <motion.div
-                        key="close"
-                        initial={{ rotate: -90, opacity: 0 }}
-                        animate={{ rotate: 0, opacity: 1 }}
-                        exit={{ rotate: 90, opacity: 0 }}
-                      >
-                        <X className="w-5 h-5" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="menu"
-                        initial={{ rotate: 90, opacity: 0 }}
-                        animate={{ rotate: 0, opacity: 1 }}
-                        exit={{ rotate: -90, opacity: 0 }}
-                      >
-                        <Menu className="w-5 h-5" />
-                      </motion.div>
+            {/* Navigation Links */}
+            <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2 scrollbar-none">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname.startsWith(item.href);
+                
+                const linkContent = (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "relative flex items-center rounded-xl text-sm font-medium transition-all duration-300 group",
+                      isCollapsed ? "justify-center p-3" : "px-4 py-3 gap-3",
+                      isActive
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
-                  </AnimatePresence>
-                </Button>
+                  >
+                    <Icon
+                      className={cn(
+                        "w-[20px] h-[20px] transition-transform duration-300 group-hover:scale-110 flex-shrink-0",
+                        isActive
+                          ? "text-primary"
+                          : "opacity-70 group-hover:opacity-100"
+                      )}
+                    />
+                    {!isCollapsed && (
+                      <span className="relative z-10 truncate whitespace-nowrap">{item.label}</span>
+                    )}
+                  </Link>
+                );
+
+                return isCollapsed ? (
+                  <Tooltip key={item.href} delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      {linkContent}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  linkContent
+                );
+              })}
+            </nav>
+
+            {/* User Profile & Sign Out at bottom */}
+            <div className="border-t border-border/40 p-4">
+              <div className={cn("flex", isCollapsed ? "justify-center" : "items-center justify-between")}>
+                {!isCollapsed && (
+                  <div className="flex flex-col overflow-hidden mr-2">
+                    <span className="text-sm font-semibold text-foreground/90 truncate max-w-[120px]">
+                      {user?.email?.split("@")[0]}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                      Admin
+                    </span>
+                  </div>
+                )}
+                
+                {isCollapsed ? (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSignOut}
+                        className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                      >
+                        <LogOut className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Sign out</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSignOut}
+                    className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </aside>
 
-        {/* Mobile Navigation Drawer */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.nav
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] as const }}
-              className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl overflow-hidden"
-            >
-              <div className="px-4 pt-4 pb-8 space-y-2">
-                {navItems.map((item, idx) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname.startsWith(item.href);
-                  return (
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          
+          {/* Mobile Header (Hidden on Desktop) */}
+          <header className="md:hidden sticky top-0 z-30 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+            <div className="flex items-center justify-between h-16 px-4">
+              <Link to="/dashboard" className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl overflow-hidden shadow-sm">
+                  <img src={lekksideLogo} alt="Lekkside Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-heading font-semibold text-lg text-foreground">Lekkside</span>
+              </Link>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl bg-muted/50 hover:bg-muted transition-all"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <AnimatePresence mode="wait">
+                  {mobileMenuOpen ? (
                     <motion.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: idx * 0.05 }}
-                      key={item.href}
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
                     >
-                      <Link
-                        to={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center justify-between px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300",
-                          isActive
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
-                            : "text-foreground hover:bg-muted/80",
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <Icon className="w-5 h-5" />
-                          <span>{item.label}</span>
-                        </div>
-                        <ChevronRight
-                          className={cn(
-                            "w-4 h-4 transition-transform",
-                            isActive ? "opacity-100 rotate-90" : "opacity-30",
-                          )}
-                        />
-                      </Link>
+                      <X className="w-5 h-5" />
                     </motion.div>
-                  );
-                })}
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </div>
+          </header>
 
-                <motion.div
+          {/* Mobile Navigation Drawer */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <>
+                {/* Overlay */}
+                <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="pt-4 mt-4 border-t border-border/40"
+                  exit={{ opacity: 0 }}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="md:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
+                />
+                
+                {/* Drawer */}
+                <motion.nav
+                  initial={{ x: "-100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="md:hidden fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-background border-r border-border/40 shadow-2xl flex flex-col"
                 >
-                  <div className="px-5 py-3 mb-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                      Signed in as
-                    </p>
-                    <p className="text-sm font-semibold truncate text-foreground">
-                      {user?.email}
-                    </p>
+                  <div className="flex items-center h-16 px-6 border-b border-border/40">
+                    <span className="font-heading font-semibold text-xl text-foreground">Menu</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    onClick={handleSignOut}
-                    className="w-full justify-start px-5 py-4 h-auto text-base font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 rounded-2xl"
-                  >
-                    <LogOut className="w-5 h-5 mr-4" />
-                    Sign out
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
-      </header>
+                  
+                  <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                    {navItems.map((item, idx) => {
+                      const Icon = item.icon;
+                      const isActive = location.pathname.startsWith(item.href);
+                      return (
+                        <motion.div
+                          initial={{ x: -20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          key={item.href}
+                        >
+                          <Link
+                            to={item.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center justify-between px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300",
+                              isActive
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
+                                : "text-foreground hover:bg-muted/80",
+                            )}
+                          >
+                            <div className="flex items-center gap-4">
+                              <Icon className="w-5 h-5" />
+                              <span>{item.label}</span>
+                            </div>
+                            <ChevronRight
+                              className={cn(
+                                "w-4 h-4 transition-transform",
+                                isActive ? "opacity-100 rotate-90" : "opacity-30",
+                              )}
+                            />
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
 
-      {/* Main Content with Entrance Animation */}
-      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+                  {/* Mobile Sign Out */}
+                  <div className="p-4 border-t border-border/40">
+                     <Button
+                      variant="ghost"
+                      className="w-full justify-start h-12 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      <LogOut className="w-5 h-5 mr-3" />
+                      Sign out
+                    </Button>
+                  </div>
+                </motion.nav>
+              </>
+            )}
+          </AnimatePresence>
 
-      {/* Subtle Footer Decorations */}
-      <footer className="py-12 px-8 flex justify-center items-center opacity-30 pointer-events-none select-none">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          &copy; 2026 Lekkside Education Fair • Premium Admin Experience
-        </span>
-      </footer>
-    </div>
+          {/* Scrollable Main Content Area */}
+          <main className="flex-1 overflow-y-auto w-full bg-background/50">
+            <div className="max-w-[1440px] mx-auto p-4 sm:p-6 lg:p-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {children}
+              </motion.div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </TooltipProvider>
   );
 }

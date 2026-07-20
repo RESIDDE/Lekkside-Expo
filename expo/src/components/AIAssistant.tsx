@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 interface Message {
   id: string;
@@ -45,42 +46,22 @@ export function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const systemPrompt = `You are the official AI Assistant for the Lekkside Education Fair. Answer questions politely and concisely. You must ONLY answer questions related to the Lekkside Education Fair, studying abroad, event details, registration, and universities. If a user asks anything unrelated to the event or international education, politely decline to answer.`;
-
       const apiMessages = [
-        { role: "system", content: systemPrompt },
         ...messages.map((m) => ({ role: m.role, content: m.content })),
         { role: "user", content: userMessage.content },
       ];
 
-      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      const { data, error: functionError } = await supabase.functions.invoke('ai-assistant', {
+        body: { messages: apiMessages }
+      });
 
-      if (!apiKey) {
-        throw new Error("OpenRouter API key is missing");
-      }
-
-      const response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": window.location.href, // Recommended by OpenRouter
-            "X-Title": "Lekkside Education Fair", // Recommended by OpenRouter
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: apiMessages,
-          }),
-        }
-      );
-
-      if (!response.ok) {
+      if (functionError) {
         throw new Error("Failed to fetch response");
       }
 
-      const data = await response.json();
+      if (data?.error) {
+        throw new Error(data.error);
+      }
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
