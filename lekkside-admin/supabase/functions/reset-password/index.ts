@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!email || !code || !newPassword) {
       return new Response(
         JSON.stringify({ error: "Email, code, and new password are required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -34,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (newPassword.length < 6) {
       return new Response(
         JSON.stringify({ error: "Password must be at least 6 characters" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Invalid or expired OTP for ${email}`);
       return new Response(
         JSON.stringify({ error: "Invalid or expired code. Please request a new one." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error listing users:", userError);
       return new Response(
         JSON.stringify({ error: "An error occurred. Please try again." }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`No user found with email ${email}`);
       return new Response(
         JSON.stringify({ error: "No account found with this email." }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -103,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error updating password:", updateError);
       return new Response(
         JSON.stringify({ error: "Failed to update password. Please try again." }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -127,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in reset-password function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

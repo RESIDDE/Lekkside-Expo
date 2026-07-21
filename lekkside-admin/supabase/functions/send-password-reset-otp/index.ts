@@ -23,7 +23,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!email) {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!emailRegex.test(email)) {
       return new Response(
         JSON.stringify({ error: "Invalid email format" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -42,14 +42,14 @@ const handler = async (req: Request): Promise<Response> => {
       if (!mxRecords || mxRecords.length === 0) {
         return new Response(
           JSON.stringify({ error: "This email domain cannot receive emails. Please use a valid email address." }),
-          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
     } catch (dnsError: any) {
       console.error(`MX lookup failed for ${domain}:`, dnsError.message);
       return new Response(
         JSON.stringify({ error: "This email domain does not exist or cannot receive emails. Please check your email address." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error listing users:", userError);
       return new Response(
         JSON.stringify({ error: "An error occurred. Please try again." }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
       const waitTime = Math.ceil((60000 - (Date.now() - new Date(recentCode.created_at).getTime())) / 1000);
       return new Response(
         JSON.stringify({ error: `Please wait ${waitTime} seconds before requesting a new code` }),
-        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Failed to insert verification record:", insertError);
       return new Response(
         JSON.stringify({ error: "Failed to create reset code" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -164,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       return new Response(
         JSON.stringify({ error: "Failed to send reset email. Please try again." }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -179,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-password-reset-otp function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };
