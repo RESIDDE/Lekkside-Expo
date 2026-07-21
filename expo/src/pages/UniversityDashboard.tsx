@@ -22,8 +22,10 @@ import {
 } from 'lucide-react';
 import { UniversityApplications } from '../components/UniversityApplications';
 import { UniversityProfile } from '../components/UniversityProfile';
+import { UniversityProgramsManager } from '../components/UniversityProgramsManager';
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen } from 'lucide-react';
 
 export function UniversityDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -40,7 +42,7 @@ export function UniversityDashboard() {
   });
   const [exhibitorData, setExhibitorData] = useState<any>(null);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile' | 'programs'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -136,6 +138,7 @@ export function UniversityDashboard() {
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
+    { id: 'programs' as const, label: 'Manage Programs', icon: BookOpen },
     { id: 'profile' as const, label: 'Profile Settings', icon: Settings },
   ];
 
@@ -581,6 +584,12 @@ export function UniversityDashboard() {
             {activeTab === 'applications' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
                 <UniversityApplications user={user} />
+              </div>
+            )}
+
+            {activeTab === 'programs' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+                <UniversityProgramsManager user={user} />
               </div>
             )}
 

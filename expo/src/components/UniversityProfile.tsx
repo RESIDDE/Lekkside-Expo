@@ -17,6 +17,9 @@ export function UniversityProfile({ user }: { user: any }) {
     contact_email: '',
     contact_phone: '',
     logo_url: '',
+    banner_url: '',
+    description: '',
+    website_url: '',
     programs: [] as string[],
     degree_levels: [] as string[],
     tuition_category: '',
@@ -24,7 +27,10 @@ export function UniversityProfile({ user }: { user: any }) {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
@@ -38,7 +44,7 @@ export function UniversityProfile({ user }: { user: any }) {
     async function fetchProfile() {
       const { data } = await supabase
         .from('profiles')
-        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, programs, degree_levels, tuition_category, has_scholarship')
+        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, description, website_url, programs, degree_levels, tuition_category, has_scholarship')
         .eq('user_id', user.id)
         .single();
       
@@ -50,6 +56,9 @@ export function UniversityProfile({ user }: { user: any }) {
           contact_email: data.contact_email || '',
           contact_phone: data.contact_phone || '',
           logo_url: data.logo_url || '',
+          banner_url: data.banner_url || '',
+          description: data.description || '',
+          website_url: data.website_url || '',
           programs: data.programs || [],
           degree_levels: data.degree_levels || [],
           tuition_category: data.tuition_category || '',
@@ -61,15 +70,24 @@ export function UniversityProfile({ user }: { user: any }) {
     fetchProfile();
   }, [user.id]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) {
+      if (type === 'logo' && file.size > 1024 * 1024) {
         alert("Logo image must be less than 1MB");
         return;
       }
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
+      if (type === 'banner' && file.size > 3 * 1024 * 1024) {
+        alert("Banner image must be less than 3MB");
+        return;
+      }
+      if (type === 'logo') {
+        setLogoFile(file);
+        setLogoPreview(URL.createObjectURL(file));
+      } else {
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+      }
     }
   };
 
@@ -78,11 +96,12 @@ export function UniversityProfile({ user }: { user: any }) {
     setSaving(true);
     
     let finalLogoUrl = formData.logo_url;
+    let finalBannerUrl = formData.banner_url;
 
     if (logoFile) {
       setUploadingLogo(true);
       const fileExt = logoFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const fileName = `logo-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -97,6 +116,25 @@ export function UniversityProfile({ user }: { user: any }) {
       }
       setUploadingLogo(false);
     }
+
+    if (bannerFile) {
+      setUploadingBanner(true);
+      const fileExt = bannerFile.name.split('.').pop();
+      const fileName = `banner-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(filePath, bannerFile);
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(filePath);
+        finalBannerUrl = publicUrl;
+      }
+      setUploadingBanner(false);
+    }
     
     const { error: updateError } = await supabase
       .from('profiles')
@@ -108,6 +146,9 @@ export function UniversityProfile({ user }: { user: any }) {
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
         logo_url: finalLogoUrl,
+        banner_url: finalBannerUrl,
+        description: formData.description,
+        website_url: formData.website_url,
         programs: formData.programs,
         degree_levels: formData.degree_levels,
         tuition_category: formData.tuition_category,
@@ -119,7 +160,7 @@ export function UniversityProfile({ user }: { user: any }) {
       console.error(updateError);
       setToast({ message: 'Failed to save profile. Please try again.', type: 'error' });
     } else {
-      setFormData(prev => ({ ...prev, logo_url: finalLogoUrl }));
+      setFormData(prev => ({ ...prev, logo_url: finalLogoUrl, banner_url: finalBannerUrl }));
       setToast({ message: 'Profile saved successfully!', type: 'success' });
     }
     setSaving(false);
@@ -274,7 +315,7 @@ export function UniversityProfile({ user }: { user: any }) {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'logo')}
                       className="hidden"
                     />
                   </label>
@@ -283,6 +324,79 @@ export function UniversityProfile({ user }: { user: any }) {
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Booth Banner Image
+              </label>
+              <div className="flex items-center gap-6">
+                <div className="relative h-24 w-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                  {(bannerPreview || formData.banner_url) ? (
+                    <>
+                      <img 
+                        src={bannerPreview || formData.banner_url} 
+                        alt="Banner Preview" 
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBannerFile(null);
+                          setBannerPreview(null);
+                          setFormData({...formData, banner_url: ''});
+                        }}
+                        className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-gray-600 hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <Building2 className="h-8 w-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Upload className="h-4 w-4" />
+                    Upload Banner
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'banner')}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Max file size: 3MB. Recommended format: PNG, JPG (e.g. 1920x400).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                University Description / About
+              </label>
+              <textarea
+                rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Tell students about your university, campus life, and what makes it special..."
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+              ></textarea>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Website URL
+              </label>
+              <input
+                type="url"
+                value={formData.website_url}
+                onChange={(e) => setFormData({...formData, website_url: e.target.value})}
+                placeholder="https://www.example.edu"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              />
             </div>
           </div>
 
@@ -386,11 +500,11 @@ export function UniversityProfile({ user }: { user: any }) {
           <div className="pt-8 border-t border-gray-100 flex justify-end">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploadingLogo || uploadingBanner}
               className="flex items-center gap-2 px-8 py-3.5 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-70 disabled:shadow-none"
             >
               <Save className="h-5 w-5" />
-              {saving || uploadingLogo ? 'Saving Changes...' : 'Save Profile'}
+              {saving || uploadingLogo || uploadingBanner ? 'Saving Changes...' : 'Save Profile'}
             </button>
           </div>
         </form>

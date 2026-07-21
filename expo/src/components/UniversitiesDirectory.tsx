@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { AnimatePresence } from 'framer-motion';
+import { UniversityBoothModal } from './UniversityBoothModal';
 import { 
   Search, 
   MapPin, 
@@ -45,6 +47,7 @@ export function UniversitiesDirectory() {
   const [selectedDegrees, setSelectedDegrees] = useState<string[]>([]);
   const [selectedTuitions, setSelectedTuitions] = useState<string[]>([]);
   const [requireScholarship, setRequireScholarship] = useState(false);
+  const [selectedBoothId, setSelectedBoothId] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -378,7 +381,10 @@ export function UniversitiesDirectory() {
 
                   {/* Action Footer */}
                   <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                    <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-900 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary">
+                    <button 
+                      onClick={() => setSelectedBoothId(uni.user_id)}
+                      className="w-full py-2.5 bg-white border border-gray-200 text-gray-900 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
+                    >
                       View Profile
                       <CheckCircle2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
@@ -390,6 +396,15 @@ export function UniversitiesDirectory() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedBoothId && (
+          <UniversityBoothModal
+            universityId={selectedBoothId}
+            onClose={() => setSelectedBoothId(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

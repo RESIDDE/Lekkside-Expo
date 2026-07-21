@@ -7,10 +7,6 @@ export function UniversityApplications({ user }: { user: any }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   async function fetchData() {
     setLoading(true);
     
@@ -23,6 +19,10 @@ export function UniversityApplications({ user }: { user: any }) {
     setApplications(apps || []);
     setLoading(false);
   }
+
+  useEffect(() => {
+    fetchData();
+  }, [user.id]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     await supabase

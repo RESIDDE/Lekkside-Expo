@@ -7,7 +7,7 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function run() {
-  const { data, error } = await supabase.from('profiles').select('*').limit(1)
+  const { data, error } = await supabase.from('university_programs').select('*').limit(1)
   if (error) console.error(error)
   else console.log(Object.keys(data[0] || {}))
 }
