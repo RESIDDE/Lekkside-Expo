@@ -279,6 +279,11 @@ export default function Auth() {
   const resetForgotPasswordState = () => {
     setShowForgotPassword(false);
     setForgotPasswordStep("email");
+    
+    // Pre-fill the sign-in form with the new credentials if they were set
+    if (resetEmail) setEmail(resetEmail);
+    if (newPassword) setPassword(newPassword);
+    
     setResetEmail("");
     setResetOtp("");
     setNewPassword("");
