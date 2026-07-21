@@ -93,10 +93,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update user password using admin API
+    // Update user password using admin API and confirm their email
+    // (since they successfully received and verified the OTP)
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       user.id,
-      { password: newPassword }
+      { 
+        password: newPassword,
+        email_confirm: true
+      }
     );
 
     if (updateError) {
