@@ -20,6 +20,7 @@ import {
 import { ScreeningForm } from '../components/ScreeningForm';
 import { StudentApplications } from '../components/StudentApplications';
 import { AIMatching } from '../components/AIMatching';
+import { UniversitiesDirectory } from '../components/UniversitiesDirectory';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function StudentDashboard() {
@@ -345,34 +346,8 @@ export function StudentDashboard() {
                   </div>
                 </div>
 
-                {/* My Events Section */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-900">My Registered Events</h2>
-                    <button
-                      onClick={() => navigate('/all-events')}
-                      className="text-sm font-medium text-primary hover:text-primary/80"
-                    >
-                      Browse Events
-                    </button>
-                  </div>
-
-                  <div className="p-12 text-center">
-                    <div className="h-16 w-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-                      <CalendarDays className="h-8 w-8" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">No events registered</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto mb-6">
-                      You haven't registered for any upcoming Lekkside Expo events yet.
-                    </p>
-                    <button
-                      onClick={() => navigate('/all-events')}
-                      className="px-6 py-3 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      Find an Event
-                    </button>
-                  </div>
-                </div>
+                {/* Universities Directory */}
+                <UniversitiesDirectory />
               </div>
             )}
 
