@@ -20,11 +20,14 @@ import {
   X,
   Scan,
   MessageSquare,
-  Check
+  Check,
+  Calendar
 } from 'lucide-react';
 import { UniversityApplications } from '../components/UniversityApplications';
 import { UniversityProfile } from '../components/UniversityProfile';
 import { UniversityProgramsManager } from '../components/UniversityProgramsManager';
+import { UniversityStudentManager } from '../components/UniversityStudentManager';
+import { UniversityMeetingsManager } from '../components/UniversityMeetingsManager';
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
@@ -47,7 +50,7 @@ export function UniversityDashboard() {
   });
   const [exhibitorData, setExhibitorData] = useState<any>(null);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'leads' | 'meetings' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -74,7 +77,7 @@ export function UniversityDashboard() {
         .from('profiles')
         .select('university_name')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
         
       if (!profile?.university_name) {
         setShowProfileReminder(true);
@@ -94,7 +97,7 @@ export function UniversityDashboard() {
         .from('exhibitors')
         .select('booth_id')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
         
       let leads = 0;
       let visitors = 0;
@@ -190,6 +193,8 @@ export function UniversityDashboard() {
   const navItems = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
+    { id: 'leads' as const, label: 'Manage Leads', icon: Users },
+    { id: 'meetings' as const, label: 'Meetings', icon: Calendar },
     { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'programs' as const, label: 'Manage Programs', icon: BookOpen },
@@ -484,9 +489,11 @@ export function UniversityDashboard() {
           <div className="p-4 md:p-8">
             <header className="flex justify-between items-center mb-8 hidden md:flex">
               <h1 className="text-2xl font-bold text-gray-900 font-display">
-                {activeTab === 'overview' && 'University Dashboard'}
-                {activeTab === 'scan' && 'Lead Scanner'}
-                {activeTab === 'chats' && 'Live Chats'}
+                { activeTab === 'overview' && 'University Dashboard' }
+                { activeTab === 'scan' && 'Lead Scanner' }
+                { activeTab === 'leads' && 'Student Leads' }
+                { activeTab === 'meetings' && 'Meeting Requests' }
+                { activeTab === 'chats' && 'Live Chats' }
                 {activeTab === 'applications' && 'Student Applications'}
                 {activeTab === 'profile' && 'University Profile Settings'}
                 {activeTab === 'programs' && 'Manage Programs'}
@@ -643,6 +650,18 @@ export function UniversityDashboard() {
                     <p className="text-gray-500">You must be assigned to an exhibition booth to scan leads.</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'leads' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+                <UniversityStudentManager user={user} boothId={exhibitorData?.booth_id} />
+              </div>
+            )}
+
+            {activeTab === 'meetings' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+                <UniversityMeetingsManager user={user} />
               </div>
             )}
 

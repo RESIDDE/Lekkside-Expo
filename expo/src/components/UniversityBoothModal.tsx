@@ -45,6 +45,12 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
   
   const [isRequestingVideo, setIsRequestingVideo] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // Appointment state
+  const [isBookingAppointment, setIsBookingAppointment] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentMessage, setAppointmentMessage] = useState('');
+  const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
 
   useEffect(() => {
     async function fetchBoothData() {
@@ -55,7 +61,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
         .from('profiles')
         .select('*')
         .eq('user_id', universityId)
-        .single();
+        .maybeSingle();
         
       if (profile) {
         setUniversity({
@@ -134,6 +140,45 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
     } finally {
       setIsRequestingVideo(false);
+    }
+  };
+
+  const handleBookAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appointmentDate) return;
+    
+    setIsSubmittingAppointment(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('Please log in to request a meeting.'); return; }
+
+      const { error } = await supabase.from('meeting_requests').insert({
+        university_id: universityId,
+        student_id: user.id,
+        requested_time: new Date(appointmentDate).toISOString(),
+        message: appointmentMessage
+      });
+
+      if (error) throw error;
+      
+      // Notify the university
+      await supabase.from('notifications').insert({
+        user_id: universityId,
+        title: 'New Meeting Request',
+        message: `${user.user_metadata?.full_name || 'A student'} requested a meeting for ${new Date(appointmentDate).toLocaleString()}`,
+        type: 'meeting',
+        read: false
+      });
+
+      alert('Meeting request sent successfully!');
+      setIsBookingAppointment(false);
+      setAppointmentDate('');
+      setAppointmentMessage('');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to send request: ' + err.message);
+    } finally {
+      setIsSubmittingAppointment(false);
     }
   };
 
@@ -245,7 +290,10 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
               </span>
             </button>
 
-            <button className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer">
+            <button 
+              onClick={() => setIsBookingAppointment(true)}
+              className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer"
+            >
               <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                 <Calendar className="w-5 h-5 text-purple-600" />
               </div>
@@ -395,6 +443,83 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
             universityName={university.university_name}
             onClose={() => setIsChatOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Appointment Booking Modal */}
+      <AnimatePresence>
+        {isBookingAppointment && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsBookingAppointment(false)}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" /> Book Appointment
+                </h3>
+                <button
+                  onClick={() => setIsBookingAppointment(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleBookAppointment} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={appointmentDate}
+                    onChange={(e) => setAppointmentDate(e.target.value)}
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message (Optional)
+                  </label>
+                  <textarea
+                    value={appointmentMessage}
+                    onChange={(e) => setAppointmentMessage(e.target.value)}
+                    placeholder="Briefly describe what you'd like to discuss..."
+                    className="w-full p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none resize-none h-24 text-sm"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsBookingAppointment(false)}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingAppointment || !appointmentDate}
+                    className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingAppointment ? 'Sending...' : 'Request Meeting'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

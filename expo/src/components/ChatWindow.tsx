@@ -59,7 +59,7 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
         .select('*')
         .eq('student_id', user.id)
         .eq('university_id', universityId)
-        .single();
+        .maybeSingle();
 
       let convId: string;
       if (existing) {

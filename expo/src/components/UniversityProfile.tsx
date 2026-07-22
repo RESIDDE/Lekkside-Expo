@@ -46,7 +46,7 @@ export function UniversityProfile({ user }: { user: any }) {
         .from('profiles')
         .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, description, website_url, programs, degree_levels, tuition_category, has_scholarship')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (data) {
         setFormData({

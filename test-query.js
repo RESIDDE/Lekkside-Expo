@@ -8,7 +8,7 @@ const supabaseKey = env.match(/VITE_SUPABASE_PUBLISHABLE_KEY=(.*)/)[1];
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const { data } = await supabase.from('profiles').select('*').limit(10);
+  const { data } = await supabase.from('booth_leads').select('*').limit(1);
   console.log(data);
 }
 run();
