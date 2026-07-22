@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -6,6 +6,7 @@ import {
   X, Send, Paperclip, SmilePlus, CheckCheck, Check,
   Loader2, MessageSquare
 } from 'lucide-react';
+import { PresenceIndicator } from './PresenceIndicator';
 
 interface ChatWindowProps {
   universityId: string;
@@ -240,7 +241,10 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm leading-tight truncate">{universityName}</p>
-          <p className="text-[11px] text-white/70">Live Chat</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <PresenceIndicator userId={universityId} showText={true} />
+            <span className="text-[10px] text-white/70">Live Chat</span>
+          </div>
         </div>
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 transition-colors flex-shrink-0">
           <X className="w-4 h-4" />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FileText, Plus, Upload, CreditCard, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { PresenceIndicator } from './PresenceIndicator';
 
 export function StudentApplications({ user }: { user: any }) {
   const [applications, setApplications] = useState<any[]>([]);
@@ -187,7 +188,10 @@ export function StudentApplications({ user }: { user: any }) {
                   <div className="flex items-start gap-4">
                     <div className="mt-1">{getStatusIcon(app.status)}</div>
                     <div>
-                      <h4 className="text-lg font-bold text-gray-900">{app.profiles?.university_name || app.profiles?.full_name || 'Unknown University'}</h4>
+                      <div className="flex items-center gap-2">
+                        <PresenceIndicator userId={app.university_id} />
+                        <h4 className="text-lg font-bold text-gray-900">{app.profiles?.university_name || app.profiles?.full_name || 'Unknown University'}</h4>
+                      </div>
                       <p className="text-gray-600 font-medium">{app.program_name}</p>
                       <p className="text-sm text-gray-400 mt-1">Started on {new Date(app.created_at).toLocaleDateString()}</p>
                     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FileText, CheckCircle, XCircle, Clock, Search, ChevronDown } from 'lucide-react';
+import { PresenceIndicator } from './PresenceIndicator';
 
 export function UniversityApplications({ user }: { user: any }) {
   const [applications, setApplications] = useState<any[]>([]);
@@ -88,7 +89,10 @@ export function UniversityApplications({ user }: { user: any }) {
                   <div className="flex items-start gap-4">
                     <div className="mt-1">{getStatusIcon(app.status)}</div>
                     <div>
-                      <h4 className="text-lg font-bold text-gray-900">{app.profiles?.full_name || 'Unknown Applicant'}</h4>
+                      <div className="flex items-center gap-2">
+                        <PresenceIndicator userId={app.student_id} />
+                        <h4 className="text-lg font-bold text-gray-900">{app.profiles?.full_name || 'Unknown Applicant'}</h4>
+                      </div>
                       <p className="text-gray-700 font-medium mt-1">Program: {app.program_name}</p>
                       <p className="text-xs text-gray-400 mt-1">Applied on {new Date(app.created_at).toLocaleDateString()}</p>
                     </div>

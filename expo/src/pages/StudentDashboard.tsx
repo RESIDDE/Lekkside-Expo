@@ -299,7 +299,7 @@ export function StudentDashboard() {
         {/* Scrollable Main Content Area */}
         <main className="flex-1 overflow-y-auto w-full custom-scrollbar">
           <div className="p-4 md:p-8">
-            <header className="flex justify-between items-center mb-8 hidden md:flex">
+            <header className="justify-between items-center mb-8 hidden md:flex">
               <h1 className="text-2xl font-bold text-gray-900 font-display">
                 {activeTab === 'exhibition-hall' && 'Virtual Exhibition Hall'}
                 {activeTab === 'screening' && 'Student Screening'}

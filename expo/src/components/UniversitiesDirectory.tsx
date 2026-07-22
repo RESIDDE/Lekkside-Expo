@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { UniversityBoothModal } from './UniversityBoothModal';
+import { PresenceIndicator } from './PresenceIndicator';
 import { 
   Search, 
   MapPin, 
@@ -10,7 +11,6 @@ import {
   DollarSign, 
   Award,
   Filter,
-  CheckCircle2,
   CheckCircle2,
   Building2,
   X,
@@ -27,7 +27,6 @@ interface University {
   logo_url: string;
   // Mock augmented fields
   country: string;
-  online: boolean;
   hasScholarship: boolean;
   programs: string[];
   degreeLevels: string[];
@@ -88,9 +87,6 @@ export function UniversitiesDirectory() {
              country = COUNTRY_OPTIONS[idx % COUNTRY_OPTIONS.length];
           }
 
-          // Online status can remain mocked for demo purposes (usually handled via websockets)
-          const isOnline = Math.random() > 0.4; 
-
           return {
             id: profile.id,
             user_id: profile.user_id,
@@ -99,7 +95,6 @@ export function UniversitiesDirectory() {
             location: profile.location || '',
             logo_url: profile.logo_url || '',
             country,
-            online: isOnline,
             hasScholarship: profile.has_scholarship || false,
             programs: Array.isArray(profile.programs) ? profile.programs : [],
             degreeLevels: Array.isArray(profile.degree_levels) ? profile.degree_levels : [],
@@ -345,11 +340,8 @@ export function UniversitiesDirectory() {
                   {/* Card Header Background */}
                   <div className="h-20 bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-100 relative">
                     {/* Status Badge */}
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-gray-100 text-xs font-semibold">
-                      <span className={`h-2 w-2 rounded-full ${uni.online ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                      <span className={uni.online ? 'text-green-700' : 'text-gray-600'}>
-                        {uni.online ? 'Online Now' : 'Offline'}
-                      </span>
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm shadow-sm border border-gray-100 rounded-full px-2.5 py-1">
+                      <PresenceIndicator userId={uni.user_id} showText={true} />
                     </div>
                   </div>
 
@@ -424,7 +416,6 @@ export function UniversitiesDirectory() {
             </div>
           )}
         </div>
-      </div>
       </div>
 
       {/* Floating Compare Button */}

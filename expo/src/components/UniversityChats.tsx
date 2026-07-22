@@ -7,6 +7,7 @@ import {
   Loader2, MessageSquare, Search, ChevronLeft,
   Info, X, MapPin, Mail, Phone, GraduationCap, Globe, DollarSign, Award, FileText, ExternalLink, BookOpen
 } from 'lucide-react';
+import { PresenceIndicator } from './PresenceIndicator';
 
 interface StudentProfile {
   full_name?: string;
@@ -75,13 +76,13 @@ export function UniversityChats({ user }: UniversityChatsProps) {
     setLoadingProfile(true);
     setStudentProfile(null);
     try {
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('full_name, location, contact_email, contact_phone')
         .eq('id', studentId)
         .maybeSingle();
       
-      const { data: screeningData, error: screeningError } = await supabase
+      const { data: screeningData } = await supabase
         .from('student_screenings')
         .select('highest_qualification, gpa, intended_course, preferred_destination, budget, scholarship, english_test, english_score, transcripts_url, passport_url, cv_url')
         .eq('user_id', studentId)
@@ -320,7 +321,10 @@ export function UniversityChats({ user }: UniversityChatsProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold text-sm text-gray-900 truncate">{conv.student_name || conv.student_email}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <PresenceIndicator userId={conv.student_id} />
+                        <p className="font-semibold text-sm text-gray-900 truncate">{conv.student_name || conv.student_email}</p>
+                      </div>
                       {(conv.unread_count || 0) > 0 && (
                         <span className="flex-shrink-0 min-w-[18px] h-[18px] bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                           {conv.unread_count}
@@ -351,7 +355,10 @@ export function UniversityChats({ user }: UniversityChatsProps) {
                   {(selectedConv.student_name?.[0] || selectedConv.student_email?.[0] || 'S').toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm">{selectedConv.student_name || selectedConv.student_email}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-gray-900 text-sm">{selectedConv.student_name || selectedConv.student_email}</p>
+                    <PresenceIndicator userId={selectedConv.student_id} showText={true} />
+                  </div>
                   <p className="text-xs text-gray-400">{selectedConv.student_email}</p>
                 </div>
               </div>

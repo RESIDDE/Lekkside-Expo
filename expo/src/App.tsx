@@ -8,6 +8,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import { initializePresence } from "./hooks/usePresence";
 import { type Database } from "../../lekkside-admin/src/integrations/supabase/types";
 import { RegistrationModal } from "./components/RegistrationModal";
 import { SupportForm } from "./components/SupportForm";
@@ -357,6 +358,25 @@ function Home() {
 }
 
 function App() {
+  useEffect(() => {
+    // Initialize presence if already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        initializePresence(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) {
+        initializePresence(session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <Router>
       <Routes>
