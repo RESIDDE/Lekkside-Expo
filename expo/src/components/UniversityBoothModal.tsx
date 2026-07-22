@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, Video, MessageSquare, Calendar, Download, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChatWindow } from './ChatWindow';
 
 interface Program {
   id: string;
@@ -41,6 +42,9 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDegrees, setSelectedDegrees] = useState<string[]>([]);
   const [requireScholarship, setRequireScholarship] = useState(false);
+  
+  const [isRequestingVideo, setIsRequestingVideo] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     async function fetchBoothData() {
@@ -103,6 +107,35 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       return true;
     });
   }, [programs, searchQuery, selectedDegrees, requireScholarship]);
+
+  const handleInteractionRequest = async (type: 'video' | 'chat') => {
+    if (type === 'chat') {
+      // Open the chat window directly — ChatWindow handles the notification
+      setIsChatOpen(true);
+      return;
+    }
+
+    // Video flow
+    try {
+      setIsRequestingVideo(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('Please log in to request a meeting.'); return; }
+
+      const studentName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'A Student';
+      const studentEmail = user.email || 'unknown@student.com';
+
+      await supabase.functions.invoke('notify-university', {
+        body: { universityId, studentName, studentEmail, requestType: 'video' }
+      });
+
+      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to request video:', error);
+      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+    } finally {
+      setIsRequestingVideo(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -185,6 +218,55 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-8">
           
+          {/* Communication Options */}
+          <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <button 
+              onClick={() => handleInteractionRequest('video')}
+              disabled={isRequestingVideo}
+              className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                <Video className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center leading-tight">
+                {isRequestingVideo ? 'Requesting...' : <>Join Video<br/>Meeting</>}
+              </span>
+            </button>
+            
+            <button 
+              onClick={() => handleInteractionRequest('chat')}
+              className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                <MessageSquare className="w-5 h-5 text-green-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center leading-tight">
+                Live<br/>Chat
+              </span>
+            </button>
+
+            <button className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                <Calendar className="w-5 h-5 text-purple-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center leading-tight">Book<br/>Appointment</span>
+            </button>
+
+            <button className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                <Download className="w-5 h-5 text-orange-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center leading-tight">Download<br/>Brochure</span>
+            </button>
+
+            <button className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-2xl border border-primary shadow-sm hover:shadow-md hover:bg-primary/90 transition-all gap-2 col-span-2 md:col-span-1 cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <Send className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-sm font-medium text-center leading-tight">Apply<br/>Now</span>
+            </button>
+          </section>
+
           {/* About Section */}
           <section className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -304,6 +386,17 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           </section>
         </div>
       </motion.div>
+
+      {/* Chat Window - renders over the modal */}
+      <AnimatePresence>
+        {isChatOpen && university && (
+          <ChatWindow
+            universityId={universityId}
+            universityName={university.university_name}
+            onClose={() => setIsChatOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

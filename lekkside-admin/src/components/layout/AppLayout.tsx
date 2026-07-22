@@ -12,7 +12,8 @@ import {
   BarChart3,
   Video,
   FileText,
-  UserCheck
+  UserCheck,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import lekksideLogo from "@/assets/lekkside-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { NotificationBell } from "./NotificationBell";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -66,6 +68,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/meetings", label: "Meetings", icon: Video },
+    { href: "/chats", label: "Live Chats", icon: MessageSquare },
     { href: "/screenings", label: "Screenings", icon: UserCheck },
     { href: "/applications", label: "Applications", icon: FileText },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -185,28 +188,34 @@ export function AppLayout({ children }: AppLayoutProps) {
                 )}
                 
                 {isCollapsed ? (
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleSignOut}
-                        className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
-                      >
-                        <LogOut className="w-5 h-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Sign out</TooltipContent>
-                  </Tooltip>
+                  <div className="flex flex-col gap-2 items-center">
+                    <NotificationBell />
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleSignOut}
+                          className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                        >
+                          <LogOut className="w-5 h-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Sign out</TooltipContent>
+                    </Tooltip>
+                  </div>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleSignOut}
-                    className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <NotificationBell />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSignOut}
+                      className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -226,34 +235,37 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span className="font-heading font-semibold text-lg text-foreground">Lekkside</span>
               </Link>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-xl bg-muted/50 hover:bg-muted transition-all"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <AnimatePresence mode="wait">
-                  {mobileMenuOpen ? (
-                    <motion.div
-                      key="close"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                    >
-                      <X className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="menu"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                    >
-                      <Menu className="w-5 h-5" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Button>
+              <div className="flex items-center gap-1">
+                <NotificationBell />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl bg-muted/50 hover:bg-muted transition-all"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                  <AnimatePresence mode="wait">
+                    {mobileMenuOpen ? (
+                      <motion.div
+                        key="close"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                      >
+                        <X className="w-5 h-5" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="menu"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                      >
+                        <Menu className="w-5 h-5" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </div>
             </div>
           </header>
 

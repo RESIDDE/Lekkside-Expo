@@ -1,4 +1,4 @@
-import { Users, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { Users, Calendar, CheckCircle, Clock, Bell, Video, MessageSquare, Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { EventCard } from '@/components/events/EventCard';
@@ -6,9 +6,64 @@ import { CreateEventDialog } from '@/components/events/CreateEventDialog';
 import { useEvents } from '@/hooks/useEvents';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  link?: string;
+  created_at: string;
+}
 
 export default function Dashboard() {
   const { data: events, isLoading } = useEvents();
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (data) setNotifications(data as Notification[]);
+  }, [user]);
+
+  useEffect(() => {
+    fetchNotifications();
+    if (!user) return;
+    const channel = supabase
+      .channel('dashboard-notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        (payload) => setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 5))
+      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => fetchNotifications()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchNotifications]);
+
+  const markAsRead = async (id: string) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    setNotifications([]);
+  };
 
   const upcomingEvents = events?.filter(e => !e.date || new Date(e.date) >= new Date()) || [];
   const totalEvents = events?.length ?? 0;
@@ -138,6 +193,62 @@ export default function Dashboard() {
             </motion.div>
           )}
         </div>
+        {/* Recent Notifications Section */}
+        {notifications.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-heading font-semibold text-foreground flex items-center gap-3">
+                <Bell className="w-6 h-6 text-primary" />
+                Incoming Requests
+                <span className="px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] uppercase tracking-wider font-semibold">
+                  {notifications.length} New
+                </span>
+              </h2>
+              <button onClick={markAllRead} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                Mark all read
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {notifications.map((n, i) => (
+                <motion.div
+                  key={n.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="flex items-start gap-4 p-4 bg-card border border-border/50 rounded-2xl hover:border-primary/30 hover:shadow-md transition-all"
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    n.type === 'video' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                  }`}>
+                    {n.type === 'video' ? <Video className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">{n.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {n.link && (
+                      <Link to={n.link} onClick={() => markAsRead(n.id)} className="text-xs font-medium text-primary hover:underline whitespace-nowrap">
+                        {n.type === 'video' ? 'Join Room' : 'View Chat'}
+                      </Link>
+                    )}
+                    <button onClick={() => markAsRead(n.id)} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                      <Check className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
       </div>
     </AppLayout>
   );

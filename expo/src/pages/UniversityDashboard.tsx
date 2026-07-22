@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Menu,
   X,
-  Scan
+  Scan,
+  MessageSquare,
+  Check
 } from 'lucide-react';
 import { UniversityApplications } from '../components/UniversityApplications';
 import { UniversityProfile } from '../components/UniversityProfile';
@@ -26,6 +28,9 @@ import { UniversityProgramsManager } from '../components/UniversityProgramsManag
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
+import { ChatWindow } from '../components/ChatWindow';
+import { UniversityChats } from '../components/UniversityChats';
+import { formatDistanceToNow } from 'date-fns';
 
 export function UniversityDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -42,10 +47,16 @@ export function UniversityDashboard() {
   });
   const [exhibitorData, setExhibitorData] = useState<any>(null);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile' | 'programs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
+
+  // Notifications state
+  interface Notification { id: string; title: string; message: string; type: string; read: boolean; link?: string; created_at: string; }
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [openChatConvId, setOpenChatConvId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -124,6 +135,48 @@ export function UniversityDashboard() {
     navigate('/');
   };
 
+  const fetchNotifications = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) setNotifications(data as Notification[]);
+  }, []);
+
+  // Subscribe to notifications realtime when user is loaded
+  useEffect(() => {
+    if (!user) return;
+    fetchNotifications(user.id);
+    const channel = supabase
+      .channel(`uni-notifications-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 10));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => fetchNotifications(user.id))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchNotifications]);
+
+  const markNotificationRead = async (id: string) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    setNotifications([]);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -137,10 +190,13 @@ export function UniversityDashboard() {
   const navItems = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
+    { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'programs' as const, label: 'Manage Programs', icon: BookOpen },
     { id: 'profile' as const, label: 'Profile Settings', icon: Settings },
   ];
+
+  const unreadCount = notifications.length;
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 font-sans selection:bg-primary/10 selection:text-primary transition-colors duration-500">
@@ -430,16 +486,25 @@ export function UniversityDashboard() {
               <h1 className="text-2xl font-bold text-gray-900 font-display">
                 {activeTab === 'overview' && 'University Dashboard'}
                 {activeTab === 'scan' && 'Lead Scanner'}
+                {activeTab === 'chats' && 'Live Chats'}
                 {activeTab === 'applications' && 'Student Applications'}
                 {activeTab === 'profile' && 'University Profile Settings'}
+                {activeTab === 'programs' && 'Manage Programs'}
               </h1>
-              <button className="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors">
+              <button
+                onClick={() => setShowNotifications(v => !v)}
+                className="relative p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              >
                 <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
+                )}
               </button>
             </header>
 
             {activeTab === 'overview' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -581,6 +646,12 @@ export function UniversityDashboard() {
               </div>
             )}
 
+            {activeTab === 'chats' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <UniversityChats user={user} />
+              </div>
+            )}
+
             {activeTab === 'applications' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
                 <UniversityApplications user={user} />
@@ -601,6 +672,120 @@ export function UniversityDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Notification Slide-Over Panel */}
+      <AnimatePresence>
+        {showNotifications && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotifications(false)}
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+            />
+            {/* Slide-over panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+              className="fixed top-0 right-0 h-full w-[360px] bg-white shadow-2xl z-50 flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  <h2 className="font-bold text-gray-900">Notifications</h2>
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">{unreadCount}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowNotifications(false)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              <div className="flex-1 overflow-y-auto py-4">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                    <Bell className="w-12 h-12 text-gray-200 mb-3" />
+                    <p className="text-base font-semibold text-gray-400">All caught up!</p>
+                    <p className="text-sm text-gray-300 mt-1">No new notifications</p>
+                  </div>
+                ) : (
+                  <div className="px-4 space-y-3">
+                    {notifications.map((n, i) => (
+                      <motion.div
+                        key={n.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:bg-primary/5 transition-all"
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          n.type === 'video' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        }`}>
+                          {n.type === 'video' ? <Video className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-gray-900">{n.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{n.message}</p>
+                          <p className="text-[10px] text-gray-400 mt-1.5">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            {n.type === 'chat' && (
+                              <button
+                                onClick={() => {
+                                  markNotificationRead(n.id);
+                                  setActiveTab('chats');
+                                  setShowNotifications(false);
+                                }}
+                                className="text-xs font-semibold text-green-600 hover:text-green-700 hover:underline"
+                              >
+                                💬 View Chat
+                              </button>
+                            )}
+                            {n.type === 'video' && (
+                              <button
+                                onClick={() => {
+                                  markNotificationRead(n.id);
+                                  setShowNotifications(false);
+                                  window.open(`http://localhost:8080/meetings/booth-${user?.id}`, '_blank');
+                                }}
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                              >
+                                🎥 Join Meeting
+                              </button>
+                            )}
+                            <button
+                              onClick={() => markNotificationRead(n.id)}
+                              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors ml-auto"
+                            >
+                              ✓ Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
