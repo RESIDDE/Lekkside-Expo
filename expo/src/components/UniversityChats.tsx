@@ -4,8 +4,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   Send, Paperclip, SmilePlus, CheckCheck, Check,
-  Loader2, MessageSquare, Search, ChevronLeft
+  Loader2, MessageSquare, Search, ChevronLeft,
+  Info, X, MapPin, Mail, Phone, GraduationCap, Globe, DollarSign, Award, FileText, ExternalLink, BookOpen
 } from 'lucide-react';
+
+interface StudentProfile {
+  full_name?: string;
+  location?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  highest_qualification?: string;
+  gpa?: string;
+  intended_course?: string;
+  preferred_destination?: string;
+  budget?: string;
+  scholarship?: string;
+  english_test?: string;
+  english_score?: string;
+  transcripts_url?: string;
+  passport_url?: string;
+  cv_url?: string;
+}
 
 interface Conversation {
   id: string;
@@ -45,9 +64,40 @@ export function UniversityChats({ user }: UniversityChatsProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchStudentProfile = useCallback(async (studentId: string) => {
+    setLoadingProfile(true);
+    setStudentProfile(null);
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, location, contact_email, contact_phone')
+        .eq('id', studentId)
+        .maybeSingle();
+      
+      const { data: screeningData, error: screeningError } = await supabase
+        .from('student_screenings')
+        .select('highest_qualification, gpa, intended_course, preferred_destination, budget, scholarship, english_test, english_score, transcripts_url, passport_url, cv_url')
+        .eq('user_id', studentId)
+        .maybeSingle();
+      
+      if (profileData || screeningData) {
+        setStudentProfile({ ...(profileData || {}), ...(screeningData || {}) });
+      } else {
+        setStudentProfile(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, []);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
@@ -115,9 +165,13 @@ export function UniversityChats({ user }: UniversityChatsProps) {
   }, [user, fetchConversations]);
 
   useEffect(() => {
-    if (!selectedConv) return;
+    if (!selectedConv) {
+      setShowProfilePanel(false);
+      return;
+    }
     fetchMessages(selectedConv.id);
     markMessagesRead(selectedConv.id);
+    fetchStudentProfile(selectedConv.student_id);
 
     const msgChannel = supabase
       .channel(`uni-messages-${selectedConv.id}`)
@@ -283,22 +337,30 @@ export function UniversityChats({ user }: UniversityChatsProps) {
 
         {/* Right: Thread */}
         {selectedConv ? (
-          <div className={`flex-1 flex-col min-w-0 ${selectedConv ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`flex-1 flex-col min-w-0 ${selectedConv && !showProfilePanel ? 'flex' : 'hidden md:flex'}`}>
             {/* Thread Header */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-gray-50/50">
-              <button 
-                onClick={() => setSelectedConv(null)} 
-                className="md:hidden p-1.5 -ml-2 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setSelectedConv(null)} 
+                  className="md:hidden p-1.5 -ml-2 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                  {(selectedConv.student_name?.[0] || selectedConv.student_email?.[0] || 'S').toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{selectedConv.student_name || selectedConv.student_email}</p>
+                  <p className="text-xs text-gray-400">{selectedConv.student_email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProfilePanel(!showProfilePanel)}
+                className={`p-2 rounded-full transition-colors ${showProfilePanel ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <Info className="w-5 h-5" />
               </button>
-              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm flex-shrink-0">
-                {(selectedConv.student_name?.[0] || selectedConv.student_email?.[0] || 'S').toUpperCase()}
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 text-sm">{selectedConv.student_name || selectedConv.student_email}</p>
-                <p className="text-xs text-gray-400">{selectedConv.student_email}</p>
-              </div>
             </div>
 
             {/* Messages */}
@@ -403,6 +465,185 @@ export function UniversityChats({ user }: UniversityChatsProps) {
             <p className="text-sm mt-1">Choose a student from the list to start chatting</p>
           </div>
         )}
+
+        {/* Profile Side Panel */}
+        <AnimatePresence>
+          {showProfilePanel && selectedConv && (
+            <motion.div 
+              initial={{ width: 0, opacity: 0 }} 
+              animate={{ width: 320, opacity: 1 }} 
+              exit={{ width: 0, opacity: 0 }}
+              className="border-l border-gray-100 bg-gray-50 overflow-hidden flex-shrink-0 z-10 md:static absolute inset-y-0 right-0 h-full w-full md:w-80 shadow-2xl md:shadow-none"
+            >
+              <div className="w-full md:w-80 h-full flex flex-col bg-white">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+                  <h3 className="font-bold text-gray-900">Student Profile</h3>
+                  <button onClick={() => setShowProfilePanel(false)} className="p-1.5 rounded-full text-gray-400 hover:bg-gray-200 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  {loadingProfile ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  ) : studentProfile ? (
+                    <div className="space-y-6">
+                      {/* Basic Info */}
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl mb-3">
+                          {(studentProfile.full_name?.[0] || selectedConv.student_email?.[0] || 'S').toUpperCase()}
+                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg">{studentProfile.full_name || selectedConv.student_name}</h4>
+                        {studentProfile.location && (
+                          <p className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                            <MapPin className="w-3.5 h-3.5" /> {studentProfile.location}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Contact */}
+                      <div className="space-y-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        {studentProfile.contact_email && (
+                          <div className="flex items-start gap-2 text-sm">
+                            <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
+                            <span className="text-gray-700 break-all">{studentProfile.contact_email}</span>
+                          </div>
+                        )}
+                        {studentProfile.contact_phone && (
+                          <div className="flex items-start gap-2 text-sm">
+                            <Phone className="w-4 h-4 text-gray-400 mt-0.5" />
+                            <span className="text-gray-700">{studentProfile.contact_phone}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Academics */}
+                      <div>
+                        <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Academic Background</h5>
+                        <div className="space-y-3">
+                          {studentProfile.highest_qualification && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <GraduationCap className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">Highest Qualification</p>
+                                <p className="font-medium text-gray-900">{studentProfile.highest_qualification}</p>
+                              </div>
+                            </div>
+                          )}
+                          {studentProfile.gpa && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Award className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">GPA / Grades</p>
+                                <p className="font-medium text-gray-900">{studentProfile.gpa}</p>
+                              </div>
+                            </div>
+                          )}
+                          {studentProfile.intended_course && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <BookOpen className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">Intended Course</p>
+                                <p className="font-medium text-gray-900">{studentProfile.intended_course}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Study Preferences */}
+                      <div>
+                        <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Study Preferences</h5>
+                        <div className="space-y-3">
+                          {studentProfile.preferred_destination && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">Destination</p>
+                                <p className="font-medium text-gray-900">{studentProfile.preferred_destination}</p>
+                              </div>
+                            </div>
+                          )}
+                          {studentProfile.budget && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <DollarSign className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">Budget</p>
+                                <p className="font-medium text-gray-900">{studentProfile.budget}</p>
+                              </div>
+                            </div>
+                          )}
+                          {studentProfile.scholarship && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Award className="w-4 h-4 text-gray-400 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-gray-500">Scholarship Preference</p>
+                                <p className="font-medium text-gray-900">{studentProfile.scholarship}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* English Proficiency */}
+                      {(studentProfile.english_test || studentProfile.english_score) && (
+                        <div>
+                          <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Language</h5>
+                          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <span className="font-semibold text-blue-900">{studentProfile.english_test || 'English Test'}</span>
+                            <span className="bg-white px-2.5 py-1 rounded-lg text-sm font-bold text-blue-700 shadow-sm">{studentProfile.english_score || 'N/A'}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Documents */}
+                      {(studentProfile.transcripts_url || studentProfile.passport_url || studentProfile.cv_url) && (
+                        <div>
+                          <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Documents</h5>
+                          <div className="space-y-2">
+                            {studentProfile.transcripts_url && (
+                              <a href={studentProfile.transcripts_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors group">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm font-medium text-gray-700">Transcripts</span>
+                                </div>
+                                <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary transition-colors" />
+                              </a>
+                            )}
+                            {studentProfile.passport_url && (
+                              <a href={studentProfile.passport_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors group">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm font-medium text-gray-700">Passport</span>
+                                </div>
+                                <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary transition-colors" />
+                              </a>
+                            )}
+                            {studentProfile.cv_url && (
+                              <a href={studentProfile.cv_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors group">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm font-medium text-gray-700">CV / Resume</span>
+                                </div>
+                                <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary transition-colors" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <Info className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500">Student profile data is incomplete or unavailable.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
