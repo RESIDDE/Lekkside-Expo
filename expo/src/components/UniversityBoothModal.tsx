@@ -52,6 +52,12 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
   const [appointmentMessage, setAppointmentMessage] = useState('');
   const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
 
+  // Application state
+  const [isApplying, setIsApplying] = useState(false);
+  const [applicationProgram, setApplicationProgram] = useState('');
+  const [applicationMessage, setApplicationMessage] = useState('');
+  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
+
   useEffect(() => {
     async function fetchBoothData() {
       setLoading(true);
@@ -182,6 +188,45 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
     }
   };
 
+  const handleApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applicationProgram) return;
+
+    setIsSubmittingApplication(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('Please log in to apply.'); return; }
+
+      const { error } = await supabase.from('university_applications').insert({
+        university_id: universityId,
+        student_id: user.id,
+        program_id: applicationProgram,
+        status: 'pending'
+      });
+
+      if (error) throw error;
+      
+      // Notify the university
+      await supabase.from('notifications').insert({
+        user_id: universityId,
+        title: 'New Student Application',
+        message: `${user.user_metadata?.full_name || 'A student'} has submitted a new application.`,
+        type: 'application',
+        read: false
+      });
+
+      alert('Application submitted successfully!');
+      setIsApplying(false);
+      setApplicationProgram('');
+      setApplicationMessage('');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to submit application: ' + err.message);
+    } finally {
+      setIsSubmittingApplication(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
@@ -307,7 +352,10 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
               <span className="text-sm font-medium text-gray-700 text-center leading-tight">Download<br/>Brochure</span>
             </button>
 
-            <button className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-2xl border border-primary shadow-sm hover:shadow-md hover:bg-primary/90 transition-all gap-2 col-span-2 md:col-span-1 cursor-pointer">
+            <button 
+              onClick={() => setIsApplying(true)}
+              className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-2xl border border-primary shadow-sm hover:shadow-md hover:bg-primary/90 transition-all gap-2 col-span-2 md:col-span-1 cursor-pointer"
+            >
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Send className="w-5 h-5 text-white" />
               </div>
@@ -515,6 +563,87 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
                     className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmittingAppointment ? 'Sending...' : 'Request Meeting'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Apply Now Modal */}
+      <AnimatePresence>
+        {isApplying && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsApplying(false)}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-primary" /> Begin Application
+                </h3>
+                <button
+                  onClick={() => setIsApplying(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleApply} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Program
+                  </label>
+                  <select
+                    required
+                    value={applicationProgram}
+                    onChange={(e) => setApplicationProgram(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                  >
+                    <option value="">-- Choose a Program --</option>
+                    {programs.map(p => (
+                      <option key={p.id} value={p.id}>{p.program_name} ({p.degree_level})</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Personal Statement / Message (Optional)
+                  </label>
+                  <textarea
+                    value={applicationMessage}
+                    onChange={(e) => setApplicationMessage(e.target.value)}
+                    placeholder="Tell the admissions team why you'd be a great fit..."
+                    className="w-full p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none resize-none h-32 text-sm"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsApplying(false)}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingApplication || !applicationProgram}
+                    className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingApplication ? 'Submitting...' : 'Submit Application'}
                   </button>
                 </div>
               </form>

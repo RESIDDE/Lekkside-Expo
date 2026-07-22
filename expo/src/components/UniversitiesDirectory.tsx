@@ -11,8 +11,11 @@ import {
   Award,
   Filter,
   CheckCircle2,
+  CheckCircle2,
   Building2,
-  X
+  X,
+  Scale,
+  ArrowRight
 } from 'lucide-react';
 
 interface University {
@@ -49,6 +52,21 @@ export function UniversitiesDirectory() {
   const [requireScholarship, setRequireScholarship] = useState(false);
   const [selectedBoothId, setSelectedBoothId] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [compareList, setCompareList] = useState<University[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+
+  const toggleCompare = (uni: University) => {
+    setCompareList(prev => {
+      if (prev.find(p => p.id === uni.id)) {
+        return prev.filter(p => p.id !== uni.id);
+      }
+      if (prev.length >= 3) {
+        alert("You can compare up to 3 universities at a time.");
+        return prev;
+      }
+      return [...prev, uni];
+    });
+  };
 
   useEffect(() => {
     async function fetchUniversities() {
@@ -380,13 +398,24 @@ export function UniversitiesDirectory() {
                   </div>
 
                   {/* Action Footer */}
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                    <button 
+                      onClick={() => toggleCompare(uni)}
+                      className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
+                        compareList.find(p => p.id === uni.id)
+                          ? 'bg-blue-50 border-blue-200 text-blue-600'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                      title="Compare"
+                    >
+                      <Scale className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={() => setSelectedBoothId(uni.user_id)}
-                      className="w-full py-2.5 bg-white border border-gray-200 text-gray-900 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
+                      className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-900 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
                     >
-                      View Profile
-                      <CheckCircle2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      Visit Booth
+                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </div>
 
@@ -396,6 +425,125 @@ export function UniversitiesDirectory() {
           )}
         </div>
       </div>
+      </div>
+
+      {/* Floating Compare Button */}
+      <AnimatePresence>
+        {compareList.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 right-6 md:right-10 z-40"
+          >
+            <button
+              onClick={() => setShowCompareModal(true)}
+              className="bg-primary text-white shadow-xl shadow-primary/30 px-6 py-3 rounded-full font-bold flex items-center gap-3 hover:bg-primary/90 transition-all hover:scale-105"
+            >
+              <Scale className="w-5 h-5" />
+              Compare ({compareList.length})
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Compare Modal */}
+      <AnimatePresence>
+        {showCompareModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowCompareModal(false)} />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col relative z-10 overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <Scale className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Compare Institutions</h2>
+                </div>
+                <button onClick={() => setShowCompareModal(false)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-x-auto p-6 bg-white custom-scrollbar">
+                <div className="min-w-max flex gap-6">
+                  {compareList.map(uni => (
+                    <div key={uni.id} className="w-72 flex flex-col border border-gray-200 rounded-2xl overflow-hidden relative">
+                      <button 
+                        onClick={() => toggleCompare(uni)}
+                        className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-red-500 rounded-full z-10"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      
+                      <div className="h-24 bg-gray-50 flex items-center justify-center p-4 border-b border-gray-100">
+                        {uni.logo_url ? (
+                          <img src={uni.logo_url} alt="" className="h-16 object-contain" />
+                        ) : (
+                          <Building2 className="w-10 h-10 text-gray-300" />
+                        )}
+                      </div>
+                      
+                      <div className="p-5 flex-1 flex flex-col gap-4">
+                        <div>
+                          <h3 className="font-bold text-gray-900 leading-tight mb-1">{uni.university_name}</h3>
+                          <p className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3"/> {uni.country}</p>
+                        </div>
+                        
+                        <div className="space-y-3 flex-1">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Tuition</p>
+                            <p className="text-sm font-medium text-gray-900">{uni.tuitionCategory}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Scholarships</p>
+                            <p className="text-sm font-medium text-gray-900">{uni.hasScholarship ? 'Yes' : 'No'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Programs</p>
+                            <div className="flex flex-wrap gap-1">
+                              {uni.programs.map((p, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{p}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Degrees</p>
+                            <p className="text-sm text-gray-700">{uni.degreeLevels.join(', ')}</p>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          onClick={() => {
+                            setShowCompareModal(false);
+                            setSelectedBoothId(uni.user_id);
+                          }}
+                          className="w-full py-2 bg-primary/10 text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2"
+                        >
+                          Visit Booth <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {compareList.length < 3 && (
+                    <div className="w-72 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center text-gray-400 bg-gray-50/50">
+                      <Scale className="w-8 h-8 mb-3 text-gray-300" />
+                      <p className="text-sm font-medium">Add another institution</p>
+                      <p className="text-xs mt-1">Up to 3 allowed</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selectedBoothId && (

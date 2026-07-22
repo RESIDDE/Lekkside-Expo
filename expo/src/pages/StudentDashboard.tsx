@@ -26,7 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function StudentDashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'screening' | 'applications' | 'ai-matches'>('overview');
+  const [activeTab, setActiveTab] = useState<'exhibition-hall' | 'screening' | 'applications' | 'ai-matches'>('exhibition-hall');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ export function StudentDashboard() {
   }
 
   const navItems = [
-    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { id: 'exhibition-hall' as const, label: 'Exhibition Hall', icon: LayoutDashboard },
     { id: 'screening' as const, label: 'Screening', icon: ClipboardList },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'ai-matches' as const, label: 'AI Matches', icon: Handshake },
@@ -301,7 +301,7 @@ export function StudentDashboard() {
           <div className="p-4 md:p-8">
             <header className="flex justify-between items-center mb-8 hidden md:flex">
               <h1 className="text-2xl font-bold text-gray-900 font-display">
-                {activeTab === 'overview' && 'Dashboard Overview'}
+                {activeTab === 'exhibition-hall' && 'Virtual Exhibition Hall'}
                 {activeTab === 'screening' && 'Student Screening'}
                 {activeTab === 'applications' && 'My Applications'}
                 {activeTab === 'ai-matches' && 'AI Recommendations'}
@@ -311,7 +311,7 @@ export function StudentDashboard() {
               </button>
             </header>
 
-            {activeTab === 'overview' && (
+            {activeTab === 'exhibition-hall' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                   {/* Quick Stats Cards */}

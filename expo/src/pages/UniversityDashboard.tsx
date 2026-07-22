@@ -489,7 +489,7 @@ export function UniversityDashboard() {
           <div className="p-4 md:p-8">
             <header className="flex justify-between items-center mb-8 hidden md:flex">
               <h1 className="text-2xl font-bold text-gray-900 font-display">
-                { activeTab === 'overview' && 'University Dashboard' }
+                { activeTab === 'overview' && 'Exhibitor Command Center' }
                 { activeTab === 'scan' && 'Lead Scanner' }
                 { activeTab === 'leads' && 'Student Leads' }
                 { activeTab === 'meetings' && 'Meeting Requests' }
