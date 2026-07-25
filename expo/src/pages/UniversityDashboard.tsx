@@ -193,7 +193,7 @@ export function UniversityDashboard() {
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
     { id: 'leads' as const, label: 'Manage Leads', icon: Users },
-    { id: 'meetings' as const, label: 'Meetings', icon: Calendar },
+    { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
     { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'programs' as const, label: 'Manage Programs', icon: BookOpen },
@@ -331,7 +331,7 @@ export function UniversityDashboard() {
                         }`}
                       />
                       {!isCollapsed && (
-                        <span className="relative z-10 truncate whitespace-nowrap">{item.label}</span>
+                        <span className="relative z-10 text-left leading-tight">{item.label}</span>
                       )}
                     </button>
                   );
@@ -497,7 +497,7 @@ export function UniversityDashboard() {
                 { activeTab === 'overview' && 'Exhibitor Command Center' }
                 { activeTab === 'scan' && 'Lead Scanner' }
                 { activeTab === 'leads' && 'Student Leads' }
-                { activeTab === 'meetings' && 'Meeting Requests' }
+                { activeTab === 'meetings' && 'Meetings and Appointments' }
                 { activeTab === 'chats' && 'Live Chats' }
                 {activeTab === 'applications' && 'Student Applications'}
                 {activeTab === 'profile' && 'University Profile Settings'}

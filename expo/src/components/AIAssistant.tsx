@@ -87,11 +87,22 @@ export function AIAssistant() {
     <>
       {/* Floating Button */}
       <motion.button
+        drag
+        dragConstraints={{ 
+          left: typeof window !== 'undefined' ? -window.innerWidth + 100 : -1000, 
+          right: 0, 
+          top: typeof window !== 'undefined' ? -window.innerHeight + 100 : -1000, 
+          bottom: 0 
+        }}
+        dragElastic={0.1}
+        dragMomentum={false}
+        whileDrag={{ scale: 1.1, cursor: "grabbing" }}
+        whileHover={{ scale: 1.1 }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-primary/90 transition-all hover:scale-110 ${
+        className={`fixed bottom-6 right-6 z-50 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-primary/90 transition-colors cursor-grab ${
           isOpen ? "hidden" : "flex"
         }`}
       >

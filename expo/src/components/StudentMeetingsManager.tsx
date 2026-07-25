@@ -79,7 +79,7 @@ export function StudentMeetingsManager({ user }: StudentMeetingsManagerProps) {
                   : 'bg-black text-gray-500 border-gray-800 hover:text-white hover:border-gray-600'
               }`}
             >
-              <span>{tab}</span>
+              <span>{tab === 'declined' ? 'rejected' : tab}</span>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                 isActive ? 'bg-black/10 text-black' : 'bg-gray-800 text-gray-400'
               }`}>
@@ -155,6 +155,16 @@ export function StudentMeetingsManager({ user }: StudentMeetingsManagerProps) {
                   {activeTab === 'rescheduled' && (
                     <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl text-xs font-medium mt-auto">
                       The university has proposed a new time for your meeting. If this works, simply join at the new time!
+                    </div>
+                  )}
+                  {activeTab === 'pending' && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 p-4 rounded-xl text-xs font-medium mt-auto">
+                      Waiting for that particular university to accept the meeting request.
+                    </div>
+                  )}
+                  {activeTab === 'declined' && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-medium mt-auto">
+                      The university was unable to accept your meeting request for this time.
                     </div>
                   )}
                 </div>

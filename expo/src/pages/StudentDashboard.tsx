@@ -60,7 +60,7 @@ export function StudentDashboard() {
     { id: 'exhibition-hall' as const, label: 'Exhibition Hall', icon: LayoutDashboard },
     { id: 'screening' as const, label: 'Screening', icon: ClipboardList },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
-    { id: 'meetings' as const, label: 'My Meetings', icon: Calendar },
+    { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
     { id: 'ai-matches' as const, label: 'AI Matches', icon: Handshake },
     { id: 'support' as const, label: 'Lekkside Support', icon: MessageCircleQuestion },
   ];
@@ -130,7 +130,7 @@ export function StudentDashboard() {
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
                   {!isCollapsed && (
-                    <span className="font-medium text-sm tracking-wide">{item.label}</span>
+                    <span className="font-medium text-sm tracking-wide text-left leading-tight">{item.label}</span>
                   )}
                 </button>
               );

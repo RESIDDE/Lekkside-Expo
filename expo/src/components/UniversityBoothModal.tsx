@@ -44,7 +44,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
   const [selectedDegrees, setSelectedDegrees] = useState<string[]>([]);
   const [requireScholarship, setRequireScholarship] = useState(false);
   
-  const [isRequestingVideo, setIsRequestingVideo] = useState(false);
+
   const [isChatOpen, setIsChatOpen] = useState(false);
   
   // Appointment state
@@ -122,35 +122,8 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
     });
   }, [programs, searchQuery, selectedDegrees, requireScholarship]);
 
-  const handleInteractionRequest = async (type: 'video' | 'chat') => {
-    if (type === 'chat') {
-      // Open the chat window directly — ChatWindow handles the notification
-      setIsChatOpen(true);
-      return;
-    }
-
-    // Video flow
-    try {
-      setIsRequestingVideo(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { alert('Please log in to request a meeting.'); return; }
-
-      const studentName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'A Student';
-      const studentEmail = user.email || 'unknown@student.com';
-
-      await supabase.functions.invoke('notify-university', {
-        body: { universityId, studentName, studentEmail, requestType: 'video' }
-      });
-
-      const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
-      window.open(`${meetingsUrl}/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
-    } catch (error) {
-      console.error('Failed to request video:', error);
-      const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
-      window.open(`${meetingsUrl}/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
-    } finally {
-      setIsRequestingVideo(false);
-    }
+  const handleInteractionRequest = async () => {
+    setIsChatOpen(true);
   };
 
   const handleBookAppointment = async (e: React.FormEvent) => {
@@ -201,10 +174,14 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('Please log in to apply.'); return; }
 
+      const selectedProgram = programs.find(p => p.id === applicationProgram);
+      const programName = selectedProgram?.program_name || 'Unknown Program';
+
       const { error } = await supabase.from('university_applications').insert({
         university_id: universityId,
         student_id: user.id,
         program_id: applicationProgram,
+        program_name: programName,
         status: 'pending'
       });
 
@@ -313,22 +290,10 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-8">
           
           {/* Communication Options */}
-          <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <button 
-              onClick={() => handleInteractionRequest('video')}
-              disabled={isRequestingVideo}
-              className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <Video className="w-5 h-5 text-blue-600" />
-              </div>
-              <span className="text-sm font-medium text-gray-700 text-center leading-tight">
-                {isRequestingVideo ? 'Requesting...' : <>Join Video<br/>Meeting</>}
-              </span>
-            </button>
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
             
             <button 
-              onClick={() => handleInteractionRequest('chat')}
+              onClick={handleInteractionRequest}
               className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all gap-2 group cursor-pointer"
             >
               <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
@@ -367,7 +332,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
 
             <button 
               onClick={() => setIsApplying(true)}
-              className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-2xl border border-primary shadow-sm hover:shadow-md hover:bg-primary/90 transition-all gap-2 col-span-2 md:col-span-1 cursor-pointer"
+              className="flex flex-col items-center justify-center p-4 bg-primary text-white rounded-2xl border border-primary shadow-sm hover:shadow-md hover:bg-primary/90 transition-all gap-2 cursor-pointer"
             >
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Send className="w-5 h-5 text-white" />

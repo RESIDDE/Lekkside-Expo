@@ -76,7 +76,7 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
         const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
         message = `Your meeting request was accepted! Join here when it's time: ${meetingsUrl}/meetings/booth-${user.id}`;
       } else if (newStatus === 'declined') {
-        message = `Your meeting request was declined. Please try another time.`;
+        message = `Your meeting request was rejected. Please try another time.`;
       }
 
       if (message) {
@@ -166,7 +166,7 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                   : 'bg-black text-gray-500 border-gray-800 hover:text-white hover:border-gray-600'
               }`}
             >
-              <span>{tab}</span>
+              <span>{tab === 'declined' ? 'rejected' : tab}</span>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                 isActive ? 'bg-black/10 text-black' : 'bg-gray-800 text-gray-400'
               }`}>
@@ -248,7 +248,7 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                         disabled={submitting}
                         className="flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                       >
-                        <XCircle className="w-4 h-4" /> DECLINE
+                        <XCircle className="w-4 h-4" /> REJECT
                       </button>
                     </div>
                   ) : activeTab === 'accepted' ? (
