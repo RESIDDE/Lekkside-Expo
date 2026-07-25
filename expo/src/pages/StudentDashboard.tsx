@@ -9,6 +9,7 @@ import {
   Handshake,
   MessageCircleQuestion,
   Menu,
+  MessageSquare,
   X,
   ChevronLeft,
   ChevronRight,
@@ -20,12 +21,13 @@ import { StudentMeetingsManager } from '../components/StudentMeetingsManager';
 import { AIMatching } from '../components/AIMatching';
 import { UniversitiesDirectory } from '../components/UniversitiesDirectory';
 import { LekksideSupportChat } from '../components/LekksideSupportChat';
+import { StudentChats } from '../components/StudentChats';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function StudentDashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'exhibition-hall' | 'screening' | 'applications' | 'meetings' | 'ai-matches' | 'support'>('exhibition-hall');
+  const [activeTab, setActiveTab] = useState<'exhibition-hall' | 'screening' | 'applications' | 'meetings' | 'ai-matches' | 'chats' | 'support'>('exhibition-hall');
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -62,6 +64,7 @@ export function StudentDashboard() {
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
     { id: 'ai-matches' as const, label: 'AI Matches', icon: Handshake },
+    { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'support' as const, label: 'Lekkside Support', icon: MessageCircleQuestion },
   ];
 
@@ -79,9 +82,8 @@ export function StudentDashboard() {
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`hidden md:flex flex-col z-40 my-6 ml-6 rounded-[2rem] bg-white/70 backdrop-blur-2xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all duration-500 ease-out ${
-          isCollapsed ? "w-[88px]" : "w-[280px]"
-        }`}
+        className={`hidden md:flex flex-col z-40 my-6 ml-6 rounded-[2rem] bg-white/70 backdrop-blur-2xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all duration-500 ease-out ${isCollapsed ? "w-[88px]" : "w-[280px]"
+          }`}
       >
         <div className="flex flex-col h-full py-8 relative">
           {/* Collapse Button */}
@@ -114,18 +116,16 @@ export function StudentDashboard() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
-              
+
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center transition-all duration-300 rounded-2xl group relative overflow-hidden ${
-                    isCollapsed ? "justify-center px-0 py-3" : "px-4 py-3.5 gap-4"
-                  } ${
-                    isActive 
-                      ? "bg-black text-white shadow-md" 
+                  className={`w-full flex items-center transition-all duration-300 rounded-2xl group relative overflow-hidden ${isCollapsed ? "justify-center px-0 py-3" : "px-4 py-3.5 gap-4"
+                    } ${isActive
+                      ? "bg-black text-white shadow-md"
                       : "text-gray-600 hover:bg-black/5 hover:text-black"
-                  }`}
+                    }`}
                   title={isCollapsed ? item.label : undefined}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
@@ -152,9 +152,8 @@ export function StudentDashboard() {
               )}
               <button
                 onClick={handleSignOut}
-                className={`flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors ${
-                  isCollapsed ? "w-full mt-2 py-2" : "p-2"
-                }`}
+                className={`flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors ${isCollapsed ? "w-full mt-2 py-2" : "p-2"
+                  }`}
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />
@@ -192,9 +191,8 @@ export function StudentDashboard() {
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center px-4 py-4 rounded-2xl gap-4 transition-all ${
-                      isActive ? "bg-black text-white shadow-md" : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-full flex items-center px-4 py-4 rounded-2xl gap-4 transition-all ${isActive ? "bg-black text-white shadow-md" : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
@@ -231,6 +229,19 @@ export function StudentDashboard() {
                 {activeTab === 'applications' && <StudentApplications user={user} />}
                 {activeTab === 'meetings' && <StudentMeetingsManager user={user} />}
                 {activeTab === 'ai-matches' && <AIMatching />}
+                {activeTab === 'chats' && (
+                  <div className="h-full flex flex-col">
+                    <div className="flex-none pb-6">
+                      <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Live Chats</h1>
+                      <p className="text-gray-500 font-medium">Connect directly with university representatives.</p>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="h-full bg-white rounded-3xl border border-gray-200/60 shadow-sm overflow-hidden flex flex-col relative">
+                        <StudentChats user={user} />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'support' && (
                   <div className="h-[calc(100vh-8rem)]">
                     <LekksideSupportChat user={user} />
