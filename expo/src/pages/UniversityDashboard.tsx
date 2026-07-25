@@ -27,6 +27,7 @@ import { UniversityProfile } from '../components/UniversityProfile';
 import { UniversityProgramsManager } from '../components/UniversityProgramsManager';
 import { UniversityStudentManager } from '../components/UniversityStudentManager';
 import { UniversityMeetingsManager } from '../components/UniversityMeetingsManager';
+import { UniversityVideoMeetings } from '../components/UniversityVideoMeetings';
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, GraduationCap } from 'lucide-react';
@@ -50,7 +51,7 @@ export function UniversityDashboard() {
   const [exhibitorData, setExhibitorData] = useState<any>(null);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
   const [isDeactivated, setIsDeactivated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'leads' | 'students' | 'meetings' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'leads' | 'students' | 'meetings' | 'video-meetings' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -203,6 +204,7 @@ export function UniversityDashboard() {
     { id: 'leads' as const, label: 'Manage Leads', icon: Users },
     { id: 'students' as const, label: 'Registered Students', icon: GraduationCap },
     { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
+    { id: 'video-meetings' as const, label: 'Video Rooms', icon: Video },
     { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
     { id: 'programs' as const, label: 'Manage Programs', icon: BookOpen },
@@ -709,6 +711,12 @@ export function UniversityDashboard() {
             {activeTab === 'meetings' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
                 <UniversityMeetingsManager user={user} />
+              </div>
+            )}
+
+            {activeTab === 'video-meetings' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto h-[calc(100vh-100px)]">
+                <UniversityVideoMeetings />
               </div>
             )}
 

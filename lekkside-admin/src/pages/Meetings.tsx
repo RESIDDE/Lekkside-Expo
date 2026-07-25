@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +11,14 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Meetings() {
-  const [roomName, setRoomName] = useState("");
+  const [roomName, setRoomName] = useState(() => localStorage.getItem("lekkside_admin_meeting_room") || "");
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.setItem("lekkside_admin_meeting_room", roomName);
+  }, [roomName]);
 
   const generateRoomName = () => {
     const words = ['expo', 'connect', 'global', 'summit', 'insight', 'future', 'edu', 'talent'];
