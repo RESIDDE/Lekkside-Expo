@@ -178,7 +178,11 @@ export function UniversityProfile({ user }: { user: any }) {
   };
 
   if (loading) {
-    return <div className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div></div>;
+    return (
+      <div className="p-16 text-center">
+        <div className="w-12 h-12 border-4 border-gray-800 border-t-white rounded-full animate-spin mx-auto"></div>
+      </div>
+    );
   }
 
   return (
@@ -206,24 +210,24 @@ export function UniversityProfile({ user }: { user: any }) {
         )}
       </AnimatePresence>
 
-      <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-3 mb-8 pb-6 border-b border-gray-100">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <Building2 className="h-6 w-6" />
+      <div className="bg-gray-900 p-8 md:p-12 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-5 mb-10 pb-8 border-b border-gray-800">
+          <div className="h-16 w-16 rounded-[1.25rem] bg-black flex items-center justify-center text-white border border-gray-800 shadow-inner">
+            <Building2 className="h-8 w-8" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Institution Profile</h2>
-            <p className="text-gray-500 text-sm">This information will be displayed to students in the portal.</p>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Institution Profile</h2>
+            <p className="text-gray-400 font-medium text-sm mt-1">This information will be displayed to students in the portal.</p>
           </div>
         </div>
 
         <form onSubmit={handleSave} className="space-y-8">
           
           {/* Section: Basic Information */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
+          <div className="space-y-8">
+            <h3 className="text-xl font-bold text-white mb-6">Basic Information</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 University / Institution Name
               </label>
               <input
@@ -232,13 +236,13 @@ export function UniversityProfile({ user }: { user: any }) {
                 value={formData.university_name}
                 onChange={(e) => setFormData({...formData, university_name: e.target.value})}
                 placeholder="e.g. Stanford University"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                   Contact / Representative Name
                 </label>
                 <input
@@ -246,11 +250,11 @@ export function UniversityProfile({ user }: { user: any }) {
                   value={formData.full_name}
                   onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                   placeholder="Your full name"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                   Contact Phone
                 </label>
                 <input
@@ -258,13 +262,13 @@ export function UniversityProfile({ user }: { user: any }) {
                   value={formData.contact_phone}
                   onChange={(e) => setFormData({...formData, contact_phone: e.target.value})}
                   placeholder="+1 234 567 8900"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 Location / Address
               </label>
               <input
@@ -272,19 +276,19 @@ export function UniversityProfile({ user }: { user: any }) {
                 value={formData.location}
                 onChange={(e) => setFormData({...formData, location: e.target.value})}
                 placeholder="e.g. Stanford, CA, United States"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
                 The country will be extracted from this field for filtering. Please include the country name.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 University Logo
               </label>
-              <div className="flex items-center gap-6">
-                <div className="relative h-24 w-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+              <div className="flex items-center gap-8">
+                <div className="relative h-28 w-28 rounded-2xl border-2 border-dashed border-gray-700 flex items-center justify-center bg-black overflow-hidden shadow-inner">
                   {(logoPreview || formData.logo_url) ? (
                     <>
                       <img 
@@ -299,19 +303,19 @@ export function UniversityProfile({ user }: { user: any }) {
                           setLogoPreview(null);
                           setFormData({...formData, logo_url: ''});
                         }}
-                        className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-gray-600 hover:text-red-600 transition-colors"
+                        className="absolute top-2 right-2 bg-black/80 backdrop-blur p-1.5 rounded-full text-white hover:text-red-400 transition-colors border border-gray-700"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </>
                   ) : (
-                    <Building2 className="h-8 w-8 text-gray-400" />
+                    <Building2 className="h-10 w-10 text-gray-700" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                  <label className="cursor-pointer inline-flex items-center gap-3 px-5 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-bold text-white hover:bg-gray-700 transition-colors shadow-sm">
                     <Upload className="h-4 w-4" />
-                    Upload Logo
+                    UPLOAD LOGO
                     <input
                       type="file"
                       accept="image/*"
@@ -319,7 +323,7 @@ export function UniversityProfile({ user }: { user: any }) {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
                     Max file size: 1MB. Recommended format: PNG, JPG.
                   </p>
                 </div>
@@ -327,17 +331,17 @@ export function UniversityProfile({ user }: { user: any }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 Booth Banner Image
               </label>
-              <div className="flex items-center gap-6">
-                <div className="relative h-24 w-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+              <div className="flex items-center gap-8">
+                <div className="relative h-28 w-56 rounded-2xl border-2 border-dashed border-gray-700 flex items-center justify-center bg-black overflow-hidden shadow-inner">
                   {(bannerPreview || formData.banner_url) ? (
                     <>
                       <img 
                         src={bannerPreview || formData.banner_url} 
                         alt="Banner Preview" 
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover opacity-80"
                       />
                       <button
                         type="button"
@@ -346,19 +350,19 @@ export function UniversityProfile({ user }: { user: any }) {
                           setBannerPreview(null);
                           setFormData({...formData, banner_url: ''});
                         }}
-                        className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-gray-600 hover:text-red-600 transition-colors"
+                        className="absolute top-2 right-2 bg-black/80 backdrop-blur p-1.5 rounded-full text-white hover:text-red-400 transition-colors border border-gray-700"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </>
                   ) : (
-                    <Building2 className="h-8 w-8 text-gray-400" />
+                    <Building2 className="h-10 w-10 text-gray-700" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                  <label className="cursor-pointer inline-flex items-center gap-3 px-5 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-bold text-white hover:bg-gray-700 transition-colors shadow-sm">
                     <Upload className="h-4 w-4" />
-                    Upload Banner
+                    UPLOAD BANNER
                     <input
                       type="file"
                       accept="image/*"
@@ -366,7 +370,7 @@ export function UniversityProfile({ user }: { user: any }) {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
                     Max file size: 3MB. Recommended format: PNG, JPG (e.g. 1920x400).
                   </p>
                 </div>
@@ -374,20 +378,20 @@ export function UniversityProfile({ user }: { user: any }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 University Description / About
               </label>
               <textarea
-                rows={4}
+                rows={5}
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Tell students about your university, campus life, and what makes it special..."
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all resize-none placeholder-gray-600 font-medium custom-scrollbar"
               ></textarea>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 Website URL
               </label>
               <input
@@ -395,21 +399,21 @@ export function UniversityProfile({ user }: { user: any }) {
                 value={formData.website_url}
                 onChange={(e) => setFormData({...formData, website_url: e.target.value})}
                 placeholder="https://www.example.edu"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
               />
             </div>
           </div>
 
-          <hr className="border-gray-100" />
+          <hr className="border-gray-800" />
 
           {/* Section: Academic Offerings */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-gray-500" /> Academic Offerings
+          <div className="space-y-8">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <BookOpen className="w-6 h-6 text-gray-500" /> Academic Offerings
             </h3>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
                 Programs Offered (Select all that apply)
               </label>
               <div className="flex flex-wrap gap-3">
@@ -418,10 +422,10 @@ export function UniversityProfile({ user }: { user: any }) {
                     key={program}
                     type="button"
                     onClick={() => toggleArrayItem('programs', program)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                    className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
                       formData.programs.includes(program)
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-primary/50 hover:bg-primary/5'
+                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                        : 'bg-black text-gray-400 border-gray-800 hover:border-gray-500 hover:text-white'
                     }`}
                   >
                     {program}
@@ -431,7 +435,7 @@ export function UniversityProfile({ user }: { user: any }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
                 Degree Levels (Select all that apply)
               </label>
               <div className="flex flex-wrap gap-3">
@@ -440,10 +444,10 @@ export function UniversityProfile({ user }: { user: any }) {
                     key={degree}
                     type="button"
                     onClick={() => toggleArrayItem('degree_levels', degree)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                    className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
                       formData.degree_levels.includes(degree)
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-primary/50 hover:bg-primary/5'
+                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                        : 'bg-black text-gray-400 border-gray-800 hover:border-gray-500 hover:text-white'
                     }`}
                   >
                     {degree}
@@ -453,24 +457,24 @@ export function UniversityProfile({ user }: { user: any }) {
             </div>
           </div>
 
-          <hr className="border-gray-100" />
+          <hr className="border-gray-800" />
 
           {/* Section: Tuition & Scholarships */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-gray-500" /> Tuition & Scholarships
+          <div className="space-y-8">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <DollarSign className="w-6 h-6 text-gray-500" /> Tuition & Scholarships
             </h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                 Average Annual Tuition Fee
               </label>
               <select
                 value={formData.tuition_category}
                 onChange={(e) => setFormData({...formData, tuition_category: e.target.value})}
-                className="w-full md:w-1/2 rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white"
+                className="w-full md:w-1/2 rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all font-medium appearance-none cursor-pointer"
               >
-                <option value="" disabled>Select tuition range...</option>
+                <option value="" disabled className="text-gray-600">Select tuition range...</option>
                 {TUITION_OPTIONS.map(tuition => (
                   <option key={tuition} value={tuition}>{tuition}</option>
                 ))}
@@ -478,18 +482,23 @@ export function UniversityProfile({ user }: { user: any }) {
             </div>
 
             <div className="pt-2">
-              <label className="flex items-center gap-3 cursor-pointer p-4 bg-blue-50/50 rounded-xl border border-blue-100 transition-colors hover:bg-blue-50">
-                <input 
-                  type="checkbox" 
-                  checked={formData.has_scholarship}
-                  onChange={(e) => setFormData({...formData, has_scholarship: e.target.checked})}
-                  className="rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
-                />
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-blue-600" />
+              <label className="flex items-center gap-5 cursor-pointer p-6 bg-black rounded-[1.5rem] border border-gray-800 transition-colors hover:border-gray-600 group">
+                <div className="relative flex items-center justify-center w-6 h-6">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.has_scholarship}
+                    onChange={(e) => setFormData({...formData, has_scholarship: e.target.checked})}
+                    className="appearance-none w-6 h-6 rounded border border-gray-600 checked:bg-white checked:border-white transition-colors cursor-pointer"
+                  />
+                  {formData.has_scholarship && <CheckCircle2 className="absolute w-4 h-4 text-black pointer-events-none" />}
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-gray-900 rounded-xl border border-gray-800 group-hover:border-gray-700 transition-colors shadow-inner">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
                   <div>
-                    <span className="text-sm font-semibold text-blue-900 block">We offer scholarships to international students</span>
-                    <span className="text-xs text-blue-700">Checking this will highlight your institution to prospective students.</span>
+                    <span className="text-base font-bold text-white block">We offer scholarships to international students</span>
+                    <span className="text-xs font-medium text-gray-500 tracking-wide mt-1 block">Checking this will highlight your institution to prospective students.</span>
                   </div>
                 </div>
               </label>
@@ -497,14 +506,14 @@ export function UniversityProfile({ user }: { user: any }) {
           </div>
 
 
-          <div className="pt-8 border-t border-gray-100 flex justify-end">
+          <div className="pt-10 border-t border-gray-800 flex justify-end">
             <button
               type="submit"
               disabled={saving || uploadingLogo || uploadingBanner}
-              className="flex items-center gap-2 px-8 py-3.5 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-70 disabled:shadow-none"
+              className="flex items-center gap-3 px-10 py-4 bg-white text-black rounded-[1.25rem] font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:shadow-none"
             >
               <Save className="h-5 w-5" />
-              {saving || uploadingLogo || uploadingBanner ? 'Saving Changes...' : 'Save Profile'}
+              {saving || uploadingLogo || uploadingBanner ? 'SAVING...' : 'SAVE PROFILE'}
             </button>
           </div>
         </form>

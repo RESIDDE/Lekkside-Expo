@@ -6,9 +6,10 @@ import {
   Copy,
   ExternalLink,
   MoreVertical,
-  Trash2,
   ToggleLeft,
   ToggleRight,
+  Trash2,
+  Unlink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +62,17 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
     });
   };
 
+  const handleUnassign = async () => {
+    await updateBooth.mutateAsync({
+      id: booth.id,
+      university_id: null,
+    });
+    toast({
+      title: "Booth Unassigned",
+      description: "The booth has been unassigned from the university.",
+    });
+  };
+
   const handleDelete = async () => {
     await deleteBooth.mutateAsync(booth.id);
     setShowDeleteDialog(false);
@@ -100,6 +112,12 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
                     </>
                   )}
                 </DropdownMenuItem>
+                {booth.university_id && (
+                  <DropdownMenuItem onClick={handleUnassign}>
+                    <Unlink className="w-4 h-4 mr-2" />
+                    Unassign University
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => setShowDeleteDialog(true)}
                   className="text-destructive"
@@ -113,15 +131,17 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={handleCopyLink}
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copy Link
-            </Button>
+            {!booth.university_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleCopyLink}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -132,8 +152,14 @@ export function BoothCard({ booth, onViewDetails }: BoothCardProps) {
               View Details
             </Button>
           </div>
-          <div className="text-xs text-muted-foreground">
-            <p className="truncate">Token: {booth.invitation_token}</p>
+          <div className="text-xs text-muted-foreground flex justify-between items-center">
+            {booth.university_id ? (
+              <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50">
+                Assigned to University
+              </Badge>
+            ) : (
+              <p className="truncate">Token: {booth.invitation_token}</p>
+            )}
           </div>
         </CardContent>
       </Card>

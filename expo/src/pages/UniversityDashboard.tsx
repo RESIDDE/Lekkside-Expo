@@ -20,7 +20,6 @@ import {
   X,
   Scan,
   MessageSquare,
-  Check,
   Calendar
 } from 'lucide-react';
 import { UniversityApplications } from '../components/UniversityApplications';
@@ -31,7 +30,6 @@ import { UniversityMeetingsManager } from '../components/UniversityMeetingsManag
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
-import { ChatWindow } from '../components/ChatWindow';
 import { UniversityChats } from '../components/UniversityChats';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -59,7 +57,6 @@ export function UniversityDashboard() {
   // Notifications state
   interface Notification { id: string; title: string; message: string; type: string; read: boolean; link?: string; created_at: string; }
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [openChatConvId, setOpenChatConvId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -75,11 +72,11 @@ export function UniversityDashboard() {
       // Check profile setup
       const { data: profile } = await supabase
         .from('profiles')
-        .select('university_name')
+        .select('university_name, contact_email')
         .eq('user_id', session.user.id)
         .maybeSingle();
         
-      if (!profile?.university_name) {
+      if (!(profile as any)?.university_name) {
         setShowProfileReminder(true);
       }
 
@@ -92,22 +89,24 @@ export function UniversityDashboard() {
       const appsSubmitted = applications?.length || 0;
       const pendingApps = applications?.filter(app => app.status === 'pending').length || 0;
 
-      // Check if exhibitor to fetch booth leads (estimation)
-      const { data: exhibitor } = await supabase
-        .from('exhibitors')
-        .select('booth_id')
-        .eq('user_id', session.user.id)
+      // Find booth assigned to this university directly
+      const { data: assignedBooth } = await supabase
+        .from('exhibition_booths')
+        .select('id')
+        .eq('university_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
         
       let leads = 0;
       let visitors = 0;
       
-      if (exhibitor) {
-        setExhibitorData(exhibitor);
+      if (assignedBooth) {
+        setExhibitorData({ booth_id: assignedBooth.id });
         const { data: allLeads } = await supabase
           .from('booth_leads')
           .select('id, is_relevant, lead_score')
-          .eq('booth_id', exhibitor.booth_id);
+          .eq('booth_id', assignedBooth.id);
           
         const totalLeads = allLeads?.length || 0;
         const qualifiedLeads = allLeads?.filter(l => l.is_relevant || (l.lead_score && l.lead_score >= 4)).length || 0;
@@ -182,8 +181,8 @@ export function UniversityDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-800 border-t-white rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -204,7 +203,13 @@ export function UniversityDashboard() {
   const unreadCount = notifications.length;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 font-sans selection:bg-primary/10 selection:text-primary transition-colors duration-500">
+    <div className="flex h-screen overflow-hidden bg-white text-gray-900 font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-500">
+      
+      {/* Background Mesh */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-blue-100/40 rounded-full blur-[120px] mix-blend-multiply"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[120%] bg-indigo-100/40 rounded-full blur-[100px] mix-blend-multiply"></div>
+      </div>
       
       {/* Profile Reminder Modal */}
       <AnimatePresence>
@@ -213,26 +218,26 @@ export function UniversityDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-gray-100 relative overflow-hidden"
+              className="bg-gray-900 rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 text-center border border-gray-800 relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+              <div className="mx-auto w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-6 text-white border border-gray-700 shadow-inner">
                 <Building2 className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 font-display">Complete Your Profile</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold text-white mb-3 tracking-tight">Complete Your Profile</h2>
+              <p className="text-gray-400 mb-8 font-medium">
                 Please set up your university profile so students can see your institution when applying.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <button
                   onClick={() => setShowProfileReminder(false)}
-                  className="flex-1 px-4 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors"
+                  className="flex-1 px-4 py-4 text-gray-400 font-bold hover:bg-gray-800 rounded-2xl transition-all"
                 >
                   Do it later
                 </button>
@@ -241,7 +246,7 @@ export function UniversityDashboard() {
                     setShowProfileReminder(false);
                     setActiveTab('profile');
                   }}
-                  className="flex-1 px-4 py-3 bg-primary text-white font-medium hover:bg-primary/90 rounded-xl transition-colors shadow-sm shadow-primary/20"
+                  className="flex-1 px-4 py-4 bg-white text-black font-bold hover:bg-gray-200 hover:-translate-y-0.5 rounded-2xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                 >
                   Set up Profile
                 </button>
@@ -253,50 +258,50 @@ export function UniversityDashboard() {
 
       {/* Desktop Sidebar */}
       <aside 
-        className={`hidden md:flex flex-col border-r border-gray-200 bg-white z-40 transition-all duration-300 relative ${
-          isCollapsed ? "w-[80px]" : "w-[260px]"
-        }`}
+        className={`hidden md:flex flex-col border-r border-gray-200 bg-white/70 backdrop-blur-2xl z-40 transition-all duration-500 relative ${
+          isCollapsed ? "w-[80px]" : "w-[280px]"
+        } shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
       >
         {/* Toggle Collapse Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-8 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors z-50"
+          className="absolute -right-4 top-8 bg-gray-900 border border-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-all z-50 hover:scale-110"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className={`flex items-center h-20 transition-all duration-300 ${isCollapsed ? "justify-center px-0" : "px-6 gap-3"}`}>
-            <div className={`relative z-10 flex items-center justify-center overflow-hidden flex-shrink-0 ${isCollapsed ? "w-10 h-10" : "w-auto"}`}>
+          <div className={`flex items-center h-24 transition-all duration-300 ${isCollapsed ? "justify-center px-0" : "px-8 gap-4"}`}>
+            <div className={`relative z-10 flex items-center justify-center overflow-hidden flex-shrink-0 bg-black shadow-sm rounded-2xl p-2 ${isCollapsed ? "w-12 h-12" : "w-14 h-14"}`}>
               <img
                 src="/lekkside-logo.png"
                 alt="Lekkside Logo"
-                className={`${isCollapsed ? "h-6 object-contain" : "h-8"}`}
+                className={`h-full object-contain ${isCollapsed ? "p-1" : ""}`}
               />
             </div>
             
             {!isCollapsed && (
               <div className="flex flex-col overflow-hidden">
-                <span className="font-bold text-gray-900 font-display whitespace-nowrap">
-                  University Portal
+                <span className="font-bold text-gray-900 tracking-wide whitespace-nowrap">
+                  University
                 </span>
               </div>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col">
-            <div className={`p-4 transition-all ${isCollapsed ? "px-2" : "px-6"}`}>
-              <div className={`flex items-center mb-8 ${isCollapsed ? "justify-center" : "gap-3"}`}>
-                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+          <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col pt-4">
+            <div className={`transition-all ${isCollapsed ? "px-2" : "px-6"}`}>
+              <div className={`flex items-center mb-10 ${isCollapsed ? "justify-center" : "gap-4 bg-white/5 p-4 rounded-2xl border border-white/5"}`}>
+                <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gray-800 flex items-center justify-center text-white font-bold border border-gray-700 shadow-inner">
                   {user?.user_metadata?.full_name?.charAt(0) || <Building2 className="h-5 w-5" />}
                 </div>
                 {!isCollapsed && (
                   <div className="overflow-hidden">
-                    <p className="text-sm font-bold text-gray-900 truncate">
+                    <p className="text-sm font-bold text-white truncate tracking-wide">
                       {user?.user_metadata?.full_name || 'University'}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    <p className="text-[11px] text-gray-400 truncate uppercase tracking-widest mt-1 font-bold">{user?.email}</p>
                   </div>
                 )}
               </div>
@@ -312,17 +317,17 @@ export function UniversityDashboard() {
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
                       title={isCollapsed ? item.label : undefined}
-                      className={`relative w-full flex items-center rounded-xl text-sm font-medium transition-all duration-300 group ${
-                        isCollapsed ? "justify-center p-3" : "px-4 py-3 gap-3"
+                      className={`relative w-full flex items-center rounded-[1.25rem] text-sm font-bold transition-all duration-500 group overflow-hidden ${
+                        isCollapsed ? "justify-center p-3.5" : "px-5 py-4 gap-4"
                       } ${
                         isActive
-                          ? "bg-primary text-white shadow-md shadow-primary/20"
-                          : "text-gray-600 hover:bg-gray-50"
+                          ? "bg-black text-white shadow-[0_4px_15px_rgba(0,0,0,0.1)]"
+                          : "text-gray-500 hover:bg-black/5 hover:text-black"
                       }`}
                     >
                       <Icon
-                        className={`w-[20px] h-[20px] transition-transform duration-300 group-hover:scale-110 flex-shrink-0 ${
-                          isActive ? "text-white" : "opacity-70 group-hover:opacity-100"
+                        className={`w-5 h-5 transition-transform duration-500 group-hover:scale-110 flex-shrink-0 ${
+                          isActive ? "text-black" : "opacity-70 group-hover:opacity-100"
                         }`}
                       />
                       {!isCollapsed && (
@@ -336,16 +341,16 @@ export function UniversityDashboard() {
           </div>
 
           {/* Sign Out at bottom */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-white/5 p-6">
             <div className={`flex ${isCollapsed ? "justify-center" : "items-center"}`}>
               <button
                 onClick={handleSignOut}
                 title={isCollapsed ? "Sign Out" : undefined}
-                className={`flex items-center text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 ${
-                  isCollapsed ? "p-3 justify-center w-full" : "w-full gap-3 px-4 py-3 text-sm font-medium"
+                className={`flex items-center text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-[1.25rem] transition-all duration-300 border border-transparent hover:border-red-500/20 ${
+                  isCollapsed ? "p-3.5 justify-center w-full" : "w-full gap-4 px-5 py-4 text-sm font-bold"
                 }`}
               >
-                <LogOut className={`w-[20px] h-[20px] flex-shrink-0`} />
+                <LogOut className={`w-5 h-5 flex-shrink-0`} />
                 {!isCollapsed && <span>Sign Out</span>}
               </button>
             </div>
@@ -354,18 +359,18 @@ export function UniversityDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         
         {/* Mobile Header (Hidden on Desktop) */}
-        <header className="md:hidden sticky top-0 z-30 w-full border-b border-gray-200 bg-white">
-          <div className="flex items-center justify-between h-16 px-4">
+        <header className="md:hidden sticky top-0 z-30 w-full border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+          <div className="flex items-center justify-between h-20 px-6">
             <div className="flex items-center gap-3">
               <img src="/lekkside-logo.png" alt="Lekkside Logo" className="h-6" />
-              <span className="font-bold text-gray-900 font-display">University</span>
+              <span className="font-bold text-gray-900 tracking-wide">University</span>
             </div>
 
             <button
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-3 text-gray-900 hover:bg-black/5 rounded-xl transition-colors border border-gray-200"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <AnimatePresence mode="wait">
@@ -376,7 +381,7 @@ export function UniversityDashboard() {
                     animate={{ rotate: 0, opacity: 1 }}
                     exit={{ rotate: 90, opacity: 0 }}
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -385,7 +390,7 @@ export function UniversityDashboard() {
                     animate={{ rotate: 0, opacity: 1 }}
                     exit={{ rotate: -90, opacity: 0 }}
                   >
-                    <Menu className="w-6 h-6" />
+                    <Menu className="w-5 h-5" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -403,7 +408,7 @@ export function UniversityDashboard() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="md:hidden fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm"
+                className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-md"
               />
               
               {/* Drawer */}
@@ -412,19 +417,19 @@ export function UniversityDashboard() {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="md:hidden fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-white border-r border-gray-200 shadow-2xl flex flex-col"
+                className="md:hidden fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-gray-900 border-r border-gray-800 shadow-2xl flex flex-col"
               >
-                <div className="flex items-center h-16 px-6 border-b border-gray-200">
-                  <span className="font-bold text-gray-900 font-display text-xl">Menu</span>
+                <div className="flex items-center h-20 px-8 border-b border-gray-800 bg-black/20">
+                  <span className="font-bold text-white tracking-widest uppercase text-xs">Navigation</span>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-                  <div className="flex items-center gap-3 mb-6 px-2">
-                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                      {user?.user_metadata?.full_name?.charAt(0) || <Building2 className="h-5 w-5" />}
+                <div className="flex-1 overflow-y-auto py-8 px-4 space-y-2">
+                  <div className="flex items-center gap-4 mb-8 px-4 bg-black/20 p-4 rounded-2xl border border-white/5">
+                    <div className="h-12 w-12 flex-shrink-0 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center text-white font-bold shadow-inner">
+                      {user?.user_metadata?.full_name?.charAt(0) || <Building2 className="h-6 w-6" />}
                     </div>
                     <div className="overflow-hidden">
-                      <p className="text-sm font-bold text-gray-900 truncate">
+                      <p className="text-base font-bold text-white truncate">
                         {user?.user_metadata?.full_name || 'University'}
                       </p>
                     </div>
@@ -445,10 +450,10 @@ export function UniversityDashboard() {
                             setActiveTab(item.id);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ${
+                          className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.25rem] text-sm font-bold transition-all duration-300 border border-transparent ${
                             isActive
-                              ? "bg-primary text-white shadow-lg shadow-primary/20"
-                              : "text-gray-600 hover:bg-gray-50"
+                              ? "bg-white text-black shadow-xl"
+                              : "text-gray-400 hover:bg-white/5 hover:text-white"
                           }`}
                         >
                           <div className="flex items-center gap-4">
@@ -457,7 +462,7 @@ export function UniversityDashboard() {
                           </div>
                           <ChevronRight
                             className={`w-4 h-4 transition-transform ${
-                              isActive ? "opacity-100 rotate-90" : "opacity-30"
+                              isActive ? "opacity-100 rotate-90 text-black" : "opacity-30"
                             }`}
                           />
                         </button>
@@ -485,10 +490,10 @@ export function UniversityDashboard() {
         </AnimatePresence>
 
         {/* Scrollable Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full custom-scrollbar">
-          <div className="p-4 md:p-8">
-            <header className="flex justify-between items-center mb-8 hidden md:flex">
-              <h1 className="text-2xl font-bold text-gray-900 font-display">
+        <main className="flex-1 overflow-y-auto w-full scrollbar-none custom-scrollbar">
+          <div className="p-6 md:p-12 lg:p-16 max-w-[1600px] mx-auto w-full">
+            <header className="hidden md:flex justify-between items-center mb-12">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 leading-tight">
                 { activeTab === 'overview' && 'Exhibitor Command Center' }
                 { activeTab === 'scan' && 'Lead Scanner' }
                 { activeTab === 'leads' && 'Student Leads' }
@@ -500,11 +505,11 @@ export function UniversityDashboard() {
               </h1>
               <button
                 onClick={() => setShowNotifications(v => !v)}
-                className="relative p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                className="relative p-3.5 bg-gray-900 border border-gray-800 text-gray-400 hover:text-white rounded-[1.25rem] hover:bg-gray-800 transition-all shadow-sm hover:scale-105"
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-4 ring-gray-900 animate-pulse" />
                 )}
               </button>
             </header>
@@ -514,126 +519,130 @@ export function UniversityDashboard() {
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                  <div className="bg-gray-900 p-8 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.1)] relative overflow-hidden group hover:border-gray-700 transition-colors">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className="h-14 w-14 rounded-[1.25rem] bg-black border border-gray-800 flex items-center justify-center text-blue-400 shadow-inner">
                         <Users className="h-6 w-6" />
                       </div>
-                      <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">+12%</span>
+                      <span className="px-3 py-1.5 bg-green-500/10 text-green-400 text-[10px] uppercase tracking-widest font-bold rounded-full border border-green-500/20">+12%</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">Booth Visitors</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.visitors}</h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Booth Visitors</p>
+                    <h3 className="text-4xl font-bold text-white mt-2 tracking-tight relative z-10">{stats.visitors}</h3>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <div className="bg-gray-900 p-8 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.1)] relative overflow-hidden group hover:border-gray-700 transition-colors">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className="h-14 w-14 rounded-[1.25rem] bg-black border border-gray-800 flex items-center justify-center text-yellow-400 shadow-inner">
                         <Star className="h-6 w-6" />
                       </div>
-                      <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">+5%</span>
+                      <span className="px-3 py-1.5 bg-green-500/10 text-green-400 text-[10px] uppercase tracking-widest font-bold rounded-full border border-green-500/20">+5%</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">Qualified Leads</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.leads}</h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Qualified Leads</p>
+                    <h3 className="text-4xl font-bold text-white mt-2 tracking-tight relative z-10">{stats.leads}</h3>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                  <div className="bg-gray-900 p-8 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.1)] relative overflow-hidden group hover:border-gray-700 transition-colors">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className="h-14 w-14 rounded-[1.25rem] bg-black border border-gray-800 flex items-center justify-center text-purple-400 shadow-inner">
                         <Video className="h-6 w-6" />
                       </div>
-                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200">Today</span>
+                      <span className="px-3 py-1.5 bg-gray-800 text-gray-300 text-[10px] uppercase tracking-widest font-bold rounded-full border border-gray-700">Today</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">Meetings</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.meetingsCompleted} <span className="text-lg text-gray-400 font-normal">/ {stats.meetingsScheduled}</span></h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Meetings</p>
+                    <h3 className="text-4xl font-bold text-white mt-2 tracking-tight relative z-10">{stats.meetingsCompleted} <span className="text-xl text-gray-500 font-medium">/ {stats.meetingsScheduled}</span></h3>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+                  <div className="bg-gray-900 p-8 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.1)] relative overflow-hidden group hover:border-gray-700 transition-colors">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className="h-14 w-14 rounded-[1.25rem] bg-black border border-gray-800 flex items-center justify-center text-emerald-400 shadow-inner">
                         <Download className="h-6 w-6" />
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">Document Downloads</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.downloads}</h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Document Downloads</p>
+                    <h3 className="text-4xl font-bold text-white mt-2 tracking-tight relative z-10">{stats.downloads}</h3>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Applications Overview */}
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Application Pipeline</h2>
-                    <div className="space-y-6">
+                  <div className="bg-gray-900 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.5)] p-10">
+                    <h2 className="text-2xl font-bold text-white mb-8">Application Pipeline</h2>
+                    <div className="space-y-8">
                       <div>
-                        <div className="flex justify-between items-end mb-2">
-                          <p className="text-sm font-medium text-gray-600">Applications Started</p>
-                          <p className="text-lg font-bold text-gray-900">{stats.appsStarted}</p>
+                        <div className="flex justify-between items-end mb-3">
+                          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Applications Started</p>
+                          <p className="text-2xl font-bold text-white">{stats.appsStarted}</p>
                         </div>
-                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                          <div className="bg-blue-500 h-full rounded-full" style={{ width: '100%' }}></div>
+                        <div className="w-full bg-black h-3 rounded-full overflow-hidden border border-gray-800">
+                          <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" style={{ width: '100%' }}></div>
                         </div>
                       </div>
                       <div>
-                        <div className="flex justify-between items-end mb-2">
-                          <p className="text-sm font-medium text-gray-600">Applications Submitted</p>
-                          <p className="text-lg font-bold text-gray-900">{stats.appsSubmitted}</p>
+                        <div className="flex justify-between items-end mb-3">
+                          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Applications Submitted</p>
+                          <p className="text-2xl font-bold text-white">{stats.appsSubmitted}</p>
                         </div>
-                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                          <div className="bg-primary h-full rounded-full" style={{ width: `${stats.appsStarted > 0 ? (stats.appsSubmitted / stats.appsStarted) * 100 : 0}%` }}></div>
+                        <div className="w-full bg-black h-3 rounded-full overflow-hidden border border-gray-800">
+                          <div className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${stats.appsStarted > 0 ? (stats.appsSubmitted / stats.appsStarted) * 100 : 0}%` }}></div>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Quick Actions */}
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Quick Actions</h2>
-                    <div className="space-y-3">
+                  <div className="bg-gray-900 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.5)] p-10">
+                    <h2 className="text-2xl font-bold text-white mb-8">Quick Actions</h2>
+                    <div className="space-y-4">
                       <button 
                         onClick={() => setActiveTab('scan')}
-                        className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors group"
+                        className="w-full flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-800 bg-black hover:border-gray-600 transition-all group hover:-translate-y-1"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                        <div className="flex items-center gap-5">
+                          <div className="h-12 w-12 rounded-[1rem] bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors border border-gray-800 shadow-inner">
                             <Scan className="h-5 w-5" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-gray-900">Scan Badges</p>
-                            <p className="text-xs text-gray-500">Capture leads at the booth</p>
+                            <p className="font-bold text-white text-lg">Scan Badges</p>
+                            <p className="text-xs text-gray-500 font-medium tracking-wide">Capture leads at the booth</p>
                           </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
+                        <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-white transition-colors" />
                       </button>
 
                       <button 
                         onClick={() => setActiveTab('applications')}
-                        className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors group"
+                        className="w-full flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-800 bg-black hover:border-gray-600 transition-all group hover:-translate-y-1"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                        <div className="flex items-center gap-5">
+                          <div className="h-12 w-12 rounded-[1rem] bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors border border-gray-800 shadow-inner">
                             <FileCheck className="h-5 w-5" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-gray-900">Review Applications</p>
-                            <p className="text-xs text-gray-500">{stats.pendingApps} pending review</p>
+                            <p className="font-bold text-white text-lg">Review Applications</p>
+                            <p className="text-xs text-gray-500 font-medium tracking-wide">{stats.pendingApps} pending review</p>
                           </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
+                        <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-white transition-colors" />
                       </button>
 
                       <button 
                         onClick={() => setActiveTab('profile')}
-                        className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors group"
+                        className="w-full flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-800 bg-black hover:border-gray-600 transition-all group hover:-translate-y-1"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                        <div className="flex items-center gap-5">
+                          <div className="h-12 w-12 rounded-[1rem] bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors border border-gray-800 shadow-inner">
                             <FileEdit className="h-5 w-5" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-gray-900">Update Profile</p>
-                            <p className="text-xs text-gray-500">Edit your university details</p>
+                            <p className="font-bold text-white text-lg">Update Profile</p>
+                            <p className="text-xs text-gray-500 font-medium tracking-wide">Edit your university details</p>
                           </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
+                        <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-white transition-colors" />
                       </button>
                     </div>
                   </div>
@@ -646,8 +655,8 @@ export function UniversityDashboard() {
                 {exhibitorData ? (
                   <LeadScanner boothId={exhibitorData.booth_id} />
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-200">
-                    <p className="text-gray-500">You must be assigned to an exhibition booth to scan leads.</p>
+                  <div className="bg-gray-900 p-16 text-center rounded-[3rem] border border-gray-800 shadow-2xl">
+                    <p className="text-gray-400 font-medium text-lg">You must be assigned to an exhibition booth to scan leads.</p>
                   </div>
                 )}
               </div>
@@ -702,7 +711,7 @@ export function UniversityDashboard() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowNotifications(false)}
-              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md"
             />
             {/* Slide-over panel */}
             <motion.div
@@ -710,60 +719,64 @@ export function UniversityDashboard() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed top-0 right-0 h-full w-[360px] bg-white shadow-2xl z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-[400px] bg-gray-900 border-l border-gray-800 shadow-2xl z-50 flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-primary" />
-                  <h2 className="font-bold text-gray-900">Notifications</h2>
+              <div className="flex items-center justify-between px-8 py-8 border-b border-gray-800 bg-black/40">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/5 rounded-xl border border-white/10">
+                    <Bell className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="font-bold text-white text-xl">Notifications</h2>
                   {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">{unreadCount}</span>
+                    <span className="px-2.5 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full border border-red-500/30">{unreadCount}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
-                      Mark all read
+                    <button onClick={markAllRead} className="text-xs font-bold text-gray-500 hover:text-white transition-colors tracking-wide">
+                      MARK ALL READ
                     </button>
                   )}
                   <button
                     onClick={() => setShowNotifications(false)}
-                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400"
+                    className="p-2 rounded-xl hover:bg-gray-800 transition-colors text-gray-500 hover:text-white"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Notifications List */}
-              <div className="flex-1 overflow-y-auto py-4">
+              <div className="flex-1 overflow-y-auto py-6 px-6 bg-transparent">
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center px-6">
-                    <Bell className="w-12 h-12 text-gray-200 mb-3" />
-                    <p className="text-base font-semibold text-gray-400">All caught up!</p>
-                    <p className="text-sm text-gray-300 mt-1">No new notifications</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <div className="w-20 h-20 rounded-full bg-black border border-gray-800 flex items-center justify-center mb-6 shadow-inner">
+                      <Bell className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-xl font-bold text-white tracking-tight">All caught up!</p>
+                    <p className="text-sm text-gray-500 mt-2 font-medium">No new notifications</p>
                   </div>
                 ) : (
-                  <div className="px-4 space-y-3">
+                  <div className="space-y-4">
                     {notifications.map((n, i) => (
                       <motion.div
                         key={n.id}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:bg-primary/5 transition-all"
+                        className="flex items-start gap-4 p-5 rounded-[1.5rem] bg-black border border-gray-800 hover:border-gray-600 transition-all shadow-sm group"
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          n.type === 'video' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        <div className={`w-12 h-12 rounded-[1rem] flex items-center justify-center flex-shrink-0 border shadow-inner ${
+                          n.type === 'video' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-white text-black border-gray-200'
                         }`}>
                           {n.type === 'video' ? <Video className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-900">{n.title}</p>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{n.message}</p>
-                          <p className="text-[10px] text-gray-400 mt-1.5">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
-                          <div className="flex items-center gap-3 mt-2">
+                          <p className="font-bold text-sm text-white">{n.title}</p>
+                          <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{n.message}</p>
+                          <p className="text-[10px] text-gray-500 mt-3 uppercase tracking-widest font-bold">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                          <div className="flex items-center gap-4 mt-4">
                             {n.type === 'chat' && (
                               <button
                                 onClick={() => {
@@ -771,9 +784,9 @@ export function UniversityDashboard() {
                                   setActiveTab('chats');
                                   setShowNotifications(false);
                                 }}
-                                className="text-xs font-semibold text-green-600 hover:text-green-700 hover:underline"
+                                className="text-xs font-bold text-white hover:text-gray-300 transition-colors bg-white/10 px-3 py-1.5 rounded-lg border border-white/10"
                               >
-                                💬 View Chat
+                                View Chat
                               </button>
                             )}
                             {n.type === 'video' && (
@@ -783,16 +796,16 @@ export function UniversityDashboard() {
                                   setShowNotifications(false);
                                   window.open(`http://localhost:8080/meetings/booth-${user?.id}`, '_blank');
                                 }}
-                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                                className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20"
                               >
-                                🎥 Join Meeting
+                                Join Meeting
                               </button>
                             )}
                             <button
                               onClick={() => markNotificationRead(n.id)}
-                              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors ml-auto"
+                              className="text-[10px] font-bold text-gray-600 hover:text-white transition-colors ml-auto uppercase tracking-widest"
                             >
-                              ✓ Dismiss
+                              Dismiss
                             </button>
                           </div>
                         </div>

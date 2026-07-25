@@ -208,7 +208,15 @@ function VideoConferenceComponent(props: {
   const lowPowerMode = useLowCPUOptimizer(room);
 
   const navigate = useNavigate();
-  const handleOnLeave = React.useCallback(() => navigate('/meetings'), [navigate]);
+  const handleOnLeave = React.useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const returnUrl = params.get('returnUrl');
+    if (returnUrl) {
+      window.location.href = returnUrl;
+    } else {
+      navigate('/meetings');
+    }
+  }, [navigate]);
   const handleError = React.useCallback((error: Error) => {
     console.error(error);
     alert(`Encountered an unexpected error, check the console logs for details: ${error.message}`);

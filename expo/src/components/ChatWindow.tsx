@@ -12,6 +12,7 @@ interface ChatWindowProps {
   universityId: string;
   universityName: string;
   onClose: () => void;
+  inline?: boolean;
 }
 
 interface Message {
@@ -28,7 +29,7 @@ interface Message {
 
 const EMOJIS = ['😊', '👍', '🎓', '📚', '✅', '❤️', '🙏', '🤝', '💡', '📋', '🌟', '📩'];
 
-export function ChatWindow({ universityId, universityName, onClose }: ChatWindowProps) {
+export function ChatWindow({ universityId, universityName, onClose, inline = false }: ChatWindowProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -229,39 +230,46 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      className="fixed bottom-4 right-4 w-[380px] h-[560px] bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-[100]"
+      initial={inline ? undefined : { opacity: 0, y: 40 }}
+      animate={inline ? undefined : { opacity: 1, y: 0 }}
+      exit={inline ? undefined : { opacity: 0, y: 40 }}
+      className={inline 
+        ? "w-full h-full flex flex-col bg-black" 
+        : "fixed bottom-4 right-4 w-[380px] h-[560px] bg-black/90 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.6)] border border-gray-800 flex flex-col overflow-hidden z-[100]"
+      }
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-primary text-white flex-shrink-0">
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-5 bg-gray-900/50 backdrop-blur-md border-b border-gray-800 flex-shrink-0">
+        <div className="w-10 h-10 rounded-[1rem] bg-gray-800 flex items-center justify-center font-bold text-sm text-white flex-shrink-0 border border-gray-700 shadow-inner">
           {universityName[0]?.toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm leading-tight truncate">{universityName}</p>
-          <div className="flex items-center gap-2 mt-0.5">
+          <p className="font-bold text-sm text-white leading-tight truncate tracking-wide">{universityName}</p>
+          <div className="flex items-center gap-2 mt-1">
             <PresenceIndicator userId={universityId} showText={true} />
-            <span className="text-[10px] text-white/70">Live Chat</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Live Chat</span>
           </div>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 transition-colors flex-shrink-0">
-          <X className="w-4 h-4" />
-        </button>
+        {!inline && (
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors flex-shrink-0">
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-4 bg-transparent">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageSquare className="w-10 h-10 text-gray-300 mb-3" />
-            <p className="text-sm text-gray-500 font-medium">Start the conversation</p>
-            <p className="text-xs text-gray-400 mt-1">University staff will respond shortly</p>
+            <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center mb-4 border border-gray-800 shadow-inner">
+              <MessageSquare className="w-8 h-8 text-gray-500" />
+            </div>
+            <p className="text-sm text-gray-300 font-bold tracking-wide">Start the conversation</p>
+            <p className="text-xs text-gray-600 mt-2 font-medium">University staff will respond shortly</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -281,9 +289,9 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="max-w-[75%]">
-                    <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
+                  <div className="max-w-[80%]">
+                    <div className={`px-4 py-3 rounded-[1.5rem] text-sm leading-relaxed ${
+                      isMe ? 'bg-white text-black rounded-br-sm shadow-md' : 'bg-gray-900 text-gray-200 rounded-bl-sm shadow-sm border border-gray-800'
                     }`}>
                       {msg.file_url ? (
                         isImage(msg.file_type) ? (
@@ -295,11 +303,11 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
                         )
                       ) : msg.content}
                     </div>
-                    <div className={`flex items-center gap-1 mt-0.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <span className="text-[10px] text-gray-400">{format(new Date(msg.created_at), 'HH:mm')}</span>
+                    <div className={`flex items-center gap-1.5 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">{format(new Date(msg.created_at), 'HH:mm')}</span>
                       {isMe && (msg.is_read
-                        ? <CheckCheck className="w-3 h-3 text-primary" />
-                        : <Check className="w-3 h-3 text-gray-400" />
+                        ? <CheckCheck className="w-3.5 h-3.5 text-green-500" />
+                        : <Check className="w-3.5 h-3.5 text-gray-600" />
                       )}
                     </div>
                   </div>
@@ -313,10 +321,10 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
         <AnimatePresence>
           {isTyping && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex justify-start">
-              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5 shadow-sm border border-gray-100">
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-gray-900 px-4 py-3.5 rounded-2xl rounded-bl-sm flex items-center gap-2 shadow-sm border border-gray-800">
+                <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </motion.div>
           )}
@@ -344,27 +352,27 @@ export function ChatWindow({ universityId, universityName, onClose }: ChatWindow
       </AnimatePresence>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="px-3 py-3 bg-white border-t border-gray-100 flex items-center gap-2 flex-shrink-0">
+      <form onSubmit={sendMessage} className="px-4 py-4 bg-gray-900/50 backdrop-blur-md border-t border-gray-800 flex items-center gap-3 flex-shrink-0">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+          {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
         </button>
-        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-          <SmilePlus className="w-4 h-4" />
+        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+          <SmilePlus className="w-5 h-5" />
         </button>
         <input
           type="text"
-          placeholder="Type a message..."
+          placeholder="Message..."
           value={newMessage}
           onChange={e => { setNewMessage(e.target.value); handleTyping(); }}
-          className="flex-1 px-3.5 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none focus:bg-gray-50 focus:ring-2 focus:ring-primary/20 transition-all"
+          className="flex-1 px-5 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-black focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition-all shadow-inner"
         />
         <button
           type="submit"
           disabled={!newMessage.trim() || sending}
-          className="p-2 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          className="p-3 bg-white text-black rounded-2xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-sm"
         >
-          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
         </button>
       </form>
     </motion.div>

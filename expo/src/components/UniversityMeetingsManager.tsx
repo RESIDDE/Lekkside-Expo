@@ -150,9 +150,9 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-12rem)]">
+    <div className="bg-gray-900 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col h-[calc(100vh-12rem)]">
       {/* Tabs */}
-      <div className="flex items-center border-b border-gray-100 bg-gray-50/50 p-4 gap-2 overflow-x-auto">
+      <div className="flex items-center border-b border-gray-800 bg-black p-5 gap-3 overflow-x-auto">
         {(['pending', 'accepted', 'rescheduled', 'declined'] as const).map(tab => {
           const isActive = activeTab === tab;
           const count = requests.filter(r => r.status === tab).length;
@@ -161,15 +161,15 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
+              className={`px-5 py-3 rounded-[1rem] text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-3 border ${
                 isActive 
-                  ? 'bg-primary text-white shadow-sm shadow-primary/20' 
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
+                  : 'bg-black text-gray-500 border-gray-800 hover:text-white hover:border-gray-600'
               }`}
             >
-              <span className="capitalize">{tab}</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+              <span>{tab}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                isActive ? 'bg-black/10 text-black' : 'bg-gray-800 text-gray-400'
               }`}>
                 {count}
               </span>
@@ -179,60 +179,60 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
         {filteredRequests.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-400">
-              <Calendar className="w-8 h-8" />
+          <div className="flex flex-col items-center justify-center h-full text-center py-16">
+            <div className="w-20 h-20 bg-black rounded-[1.5rem] flex items-center justify-center mb-6 text-gray-500 border border-gray-800 shadow-inner">
+              <Calendar className="w-10 h-10" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">No {activeTab} meetings</h3>
-            <p className="text-gray-500 text-sm">You have no meeting requests in this status.</p>
+            <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">NO {activeTab.toUpperCase()} MEETINGS</h3>
+            <p className="text-gray-400 font-medium">You have no meeting requests in this status.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredRequests.map(req => {
               const studentName = req.student?.full_name || 'A Student';
               const studentEmail = req.student?.contact_email || 'No email provided';
               const reqTime = new Date(req.requested_time);
               
               return (
-                <div key={req.id} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:border-primary/30 transition-all flex flex-col">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+                <div key={req.id} className="bg-black rounded-[1.5rem] p-6 border border-gray-800 shadow-inner hover:border-gray-600 transition-all flex flex-col group">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-white font-bold border border-gray-800">
                         {studentName.charAt(0)}
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900">{studentName}</h4>
-                        <p className="text-xs text-gray-500">{studentEmail}</p>
+                        <h4 className="font-bold text-lg text-white tracking-wide">{studentName}</h4>
+                        <p className="text-xs text-gray-500 font-medium">{studentEmail}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-gray-400 font-medium">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
                       Requested {new Date(req.created_at).toLocaleDateString()}
                     </span>
                   </div>
 
-                  <div className="bg-gray-50 rounded-xl p-4 mb-4 flex-1">
-                    <div className="flex items-center gap-2 text-primary font-bold mb-2">
-                      <Clock className="w-4 h-4" />
+                  <div className="bg-gray-900 rounded-xl p-5 mb-6 flex-1 border border-gray-800 group-hover:border-gray-700 transition-colors">
+                    <div className="flex items-center gap-3 text-white font-bold mb-3 text-sm tracking-wide">
+                      <Clock className="w-4 h-4 text-gray-400" />
                       {reqTime.toLocaleDateString()} at {reqTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     {req.message && (
-                      <div className="flex items-start gap-2 mt-3 pt-3 border-t border-gray-200">
-                        <MessageSquare className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-                        <p className="text-sm text-gray-700 italic">"{req.message}"</p>
+                      <div className="flex items-start gap-3 mt-4 pt-4 border-t border-gray-800">
+                        <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5 shrink-0" />
+                        <p className="text-sm text-gray-400 font-medium">"{req.message}"</p>
                       </div>
                     )}
                   </div>
 
                   {activeTab === 'pending' || activeTab === 'rescheduled' ? (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-3">
                       <button 
                         onClick={() => handleUpdateStatus(req.id, 'accepted', req.student_id)}
                         disabled={submitting}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-sm font-bold transition-colors"
+                        className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                       >
-                        <CheckCircle className="w-4 h-4" /> Accept
+                        <CheckCircle className="w-4 h-4" /> ACCEPT
                       </button>
                       <button 
                         onClick={() => {
@@ -240,16 +240,16 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                           setIsRescheduling(true);
                         }}
                         disabled={submitting}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition-colors"
+                        className="flex items-center justify-center gap-2 py-3 bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                       >
-                        <Clock className="w-4 h-4" /> Reschedule
+                        <Clock className="w-4 h-4" /> RESCHEDULE
                       </button>
                       <button 
                         onClick={() => handleUpdateStatus(req.id, 'declined', req.student_id)}
                         disabled={submitting}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-bold transition-colors"
+                        className="flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                       >
-                        <XCircle className="w-4 h-4" /> Decline
+                        <XCircle className="w-4 h-4" /> DECLINE
                       </button>
                     </div>
                   ) : activeTab === 'accepted' ? (
@@ -257,9 +257,9 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                       href={`http://localhost:8080/meetings/booth-${user.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+                      className="w-full flex items-center justify-center gap-3 py-3.5 bg-white text-black rounded-[1.25rem] font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                     >
-                      Join Meeting Now
+                      JOIN MEETING NOW
                     </a>
                   ) : null}
                 </div>
@@ -284,26 +284,26 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden"
+              className="relative bg-gray-900 border border-gray-800 rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-sm w-full overflow-hidden"
             >
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" /> Reschedule Meeting
+              <div className="p-6 border-b border-gray-800 flex items-center justify-between bg-black">
+                <h3 className="font-bold text-white flex items-center gap-3 tracking-tight">
+                  <div className="p-2 bg-gray-900 rounded-lg border border-gray-800"><Clock className="w-5 h-5 text-white" /></div> RESCHEDULE
                 </h3>
                 <button
                   onClick={() => setIsRescheduling(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-2.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <form onSubmit={handleReschedule} className="p-6 space-y-4">
+              <form onSubmit={handleReschedule} className="p-8 space-y-6">
                 <div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Propose a new time for your meeting with <span className="font-bold text-gray-900">{rescheduleTarget.student?.full_name}</span>.
+                  <p className="text-sm text-gray-400 mb-6 font-medium">
+                    Propose a new time for your meeting with <span className="font-bold text-white">{rescheduleTarget.student?.full_name}</span>.
                   </p>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
                     New Date & Time
                   </label>
                   <input
@@ -311,24 +311,24 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                     required
                     value={newDate}
                     onChange={(e) => setNewDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                    className="w-full px-5 py-3 bg-black border border-gray-800 rounded-[1.25rem] focus:ring-2 focus:ring-white/20 outline-none text-white font-medium [color-scheme:dark]"
                   />
                 </div>
                 
-                <div className="pt-2 flex justify-end gap-3">
+                <div className="pt-4 flex justify-end gap-4">
                   <button
                     type="button"
                     onClick={() => setIsRescheduling(false)}
-                    className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                    className="px-6 py-3.5 text-[10px] font-bold text-white uppercase tracking-widest bg-black border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors"
                   >
-                    Cancel
+                    CANCEL
                   </button>
                   <button
                     type="submit"
                     disabled={submitting || !newDate}
-                    className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="px-6 py-3.5 text-[10px] font-bold text-black uppercase tracking-widest bg-white rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
                   >
-                    {submitting ? 'Sending...' : 'Send Request'}
+                    {submitting ? 'SENDING...' : 'SEND REQUEST'}
                   </button>
                 </div>
               </form>

@@ -14,7 +14,7 @@ export const useAnalytics = (eventId?: string) => {
   return useQuery({
     queryKey: ["analytics", eventId],
     queryFn: async (): Promise<AnalyticsData> => {
-      let query = supabase.from("guests").select("created_at, custom_fields, ticket_type, checked_in");
+      let query = supabase.from("guests").select("created_at, custom_fields, ticket_type, checked_in").limit(10000);
 
       if (eventId) {
         query = query.eq("event_id", eventId);
@@ -49,7 +49,7 @@ export const useAnalytics = (eventId?: string) => {
       const sourceMap = new Map<string, number>();
       guests?.forEach((guest) => {
         const fields = guest.custom_fields as any;
-        const source = fields?.source || "Unknown";
+        const source = fields?.source || fields?.["How did you hear about us?"] || fields?.["How did you hear about us ?"] || "Unknown";
         sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
       });
 
@@ -61,7 +61,7 @@ export const useAnalytics = (eventId?: string) => {
       const countryMap = new Map<string, number>();
       guests?.forEach((guest) => {
         const fields = guest.custom_fields as any;
-        const country = fields?.country_of_interest || fields?.country || "Unknown";
+        const country = fields?.country_of_interest || fields?.country || fields?.["Preferred Country"] || fields?.["Your Preferred Study Country *"] || fields?.["Your Preferred Study Country ?"] || "Unknown";
         countryMap.set(country, (countryMap.get(country) || 0) + 1);
       });
 

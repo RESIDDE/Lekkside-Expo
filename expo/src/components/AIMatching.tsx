@@ -46,8 +46,14 @@ export function AIMatching() {
     setError('');
 
     try {
+      // Fetch available universities to restrict AI recommendations
+      const { data: unisData } = await supabase
+        .from('profiles')
+        .select('university_name, country, programs, has_scholarship, tuition_category')
+        .eq('role', 'university');
+
       const { data, error: functionError } = await supabase.functions.invoke('ai-student-matching', {
-        body: { profile }
+        body: { profile, universities: unisData || [] }
       });
 
       if (functionError) {
@@ -82,12 +88,12 @@ export function AIMatching() {
 
   if (!profile) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
-        <div className="h-20 w-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-6">
+      <div className="bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-12 text-center max-w-2xl mx-auto mt-12">
+        <div className="h-24 w-24 mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 rounded-[2rem] flex items-center justify-center text-blue-500 mb-8 shadow-inner border border-white">
           <BookOpen className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile First</h2>
-        <p className="text-gray-500 max-w-md mx-auto mb-8">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">Complete Your Profile First</h2>
+        <p className="text-lg text-gray-500 max-w-md mx-auto mb-8 leading-relaxed font-medium">
           We need to know more about your academic background and preferences before our AI can find your perfect university matches.
         </p>
       </div>
@@ -95,22 +101,19 @@ export function AIMatching() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12 pb-24">
       {/* Header Section */}
-      <div className="bg-gradient-to-br from-primary to-indigo-600 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden shadow-xl">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl mix-blend-overlay"></div>
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-black/10 rounded-full blur-3xl mix-blend-overlay"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="bg-black rounded-[2.5rem] p-8 md:p-14 text-white relative overflow-hidden shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="max-w-xl text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/20 text-xs font-bold uppercase tracking-widest mb-4">
-              <Handshake className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/10 text-xs font-bold uppercase tracking-widest mb-6">
+              <Handshake className="w-4 h-4 text-white" />
               AI Powered Matchmaking
             </div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 leading-tight">
-              Discover Your Perfect University Match
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
+              Discover Your <br/>Perfect Match.
             </h2>
-            <p className="text-primary-100 text-lg md:text-xl font-light">
+            <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed">
               Our advanced AI analyzes your academic profile, budget, and preferences to find global institutions perfectly suited to your goals.
             </p>
           </div>
@@ -118,18 +121,17 @@ export function AIMatching() {
           <button
             onClick={generateMatches}
             disabled={isGenerating}
-            className="group relative px-8 py-4 bg-white text-primary rounded-2xl font-bold text-lg shadow-2xl hover:shadow-white/20 transition-all hover:scale-105 disabled:opacity-80 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3 overflow-hidden shrink-0"
+            className="group relative px-8 py-5 bg-white text-black rounded-3xl font-bold text-lg shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] transition-all duration-500 hover:scale-105 disabled:opacity-80 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3 overflow-hidden shrink-0"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-slate-50 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span className="relative z-10 flex items-center gap-2">
+            <span className="relative z-10 flex items-center gap-3">
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-6 h-6 animate-spin text-black" />
                   Analyzing Profile...
                 </>
               ) : (
                 <>
-                  <Rocket className="w-5 h-5" />
+                  <Rocket className="w-6 h-6 text-black" />
                   Find My Matches
                 </>
               )}
@@ -139,7 +141,7 @@ export function AIMatching() {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-sm font-medium">
+        <div className="bg-red-50/80 backdrop-blur-xl text-red-600 p-6 rounded-[2rem] border border-red-100/50 shadow-sm font-medium">
           {error}
         </div>
       )}
@@ -186,9 +188,9 @@ export function AIMatching() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.15 }}
-                  className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/40 p-8 hover:border-primary/30 transition-all hover:-translate-y-1 relative overflow-hidden group"
+                  className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-8 md:p-10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 relative overflow-hidden group"
                 >
-                  <div className="absolute top-0 right-0 p-6 flex justify-end items-start pointer-events-none">
+                  <div className="absolute top-0 right-0 p-8 flex justify-end items-start pointer-events-none">
                     <div className="flex flex-col items-end">
                       <div className="text-4xl font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-primary to-indigo-600">
                         {match.matchScore}%
@@ -197,23 +199,23 @@ export function AIMatching() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                      <Building2 className="w-6 h-6" />
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50 shadow-sm">
+                      <Building2 className="w-8 h-8" />
                     </div>
                     <div className="pr-16">
-                      <h3 className="text-xl font-bold font-display text-gray-900 leading-tight">
+                      <h3 className="text-2xl font-bold tracking-tight text-gray-900 leading-tight">
                         {match.name}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-gray-500 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span className="text-sm font-medium">{match.country}</span>
+                      <div className="flex items-center gap-1.5 text-gray-500 mt-1.5">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-semibold">{match.country}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4 mb-6">
-                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                  <div className="space-y-5 mb-8">
+                    <div className="bg-gray-50/80 backdrop-blur-md rounded-3xl p-5 border border-gray-100/50 shadow-inner">
                       <p className="text-sm text-gray-700 leading-relaxed font-medium">
                         "{match.matchReason}"
                       </p>
@@ -249,11 +251,11 @@ export function AIMatching() {
                     </div>
                   </div>
 
-                  <div className="mt-8 flex gap-3">
-                    <button className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors text-sm text-center">
+                  <div className="mt-8 flex gap-4">
+                    <button className="flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-bold py-4 px-4 rounded-2xl transition-all duration-300 text-sm text-center shadow-sm hover:shadow">
                       Save Match
                     </button>
-                    <button className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 group/btn">
+                    <button className="flex-1 bg-gray-900 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-2xl transition-all duration-300 text-sm flex items-center justify-center gap-2 group/btn shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5">
                       Apply Now
                       <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>

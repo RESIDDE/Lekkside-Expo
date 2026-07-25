@@ -1,9 +1,10 @@
-import { Users, Calendar, CheckCircle, Clock, Bell, Video, MessageSquare, Check } from 'lucide-react';
+import { Users, Calendar, CheckCircle, Clock, Bell, Video, MessageSquare, Check, Building2, MonitorSmartphone, Handshake, BookOpen, FileText } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { EventCard } from '@/components/events/EventCard';
 import { CreateEventDialog } from '@/components/events/CreateEventDialog';
 import { useEvents } from '@/hooks/useEvents';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { useEffect, useState, useCallback } from 'react';
@@ -24,6 +25,7 @@ interface Notification {
 
 export default function Dashboard() {
   const { data: events, isLoading } = useEvents();
+  const { metrics, totalGuests, totalLeads, loading: metricsLoading, counts } = useDashboardMetrics();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -112,8 +114,9 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Stats Grid - Bento Style */}
+        {/* Advanced Mission Control - Bento Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Main Stats */}
           <StatsCard
             index={0}
             title="Total Events"
@@ -122,24 +125,101 @@ export default function Dashboard() {
           />
           <StatsCard
             index={1}
-            title="Upcoming"
-            value={upcomingEvents.length}
-            icon={<Clock />}
-          />
-          <StatsCard
-            index={2}
             title="Total Guests"
-            value="—"
-            subtitle="Across all events"
+            value={metricsLoading ? "..." : totalGuests}
+            subtitle="Platform-wide Attendees"
             icon={<Users />}
           />
           <StatsCard
-            index={3}
-            title="Quick Check-in"
-            value="—"
-            subtitle="Today's activity"
-            icon={<CheckCircle />}
+            index={2}
+            title="Total Leads"
+            value={metricsLoading ? "..." : totalLeads}
+            subtitle="Captured by Exhibitors"
+            icon={<Handshake />}
           />
+          <StatsCard
+            index={3}
+            title="Upcoming"
+            value={upcomingEvents.length}
+            subtitle="Events Scheduled"
+            icon={<Clock />}
+          />
+          
+          {/* Quick Access Grid */}
+          <Link to="/universities" className="group col-span-1 md:col-span-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 relative overflow-hidden text-white hover:shadow-lg transition-all hover:-translate-y-1">
+            <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:scale-110 transition-transform duration-500"><Building2 size={80} /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start mb-4">
+                <Building2 size={32} />
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-md">
+                  {metricsLoading ? "..." : counts.universities} Registered
+                </span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold font-heading mb-1">Universities</h3>
+                <p className="text-white/80 font-medium">Manage exhibitors & directory</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/meetings" className="group bg-emerald-500 rounded-3xl p-6 relative overflow-hidden text-white hover:shadow-lg transition-all hover:-translate-y-1">
+            <div className="absolute -bottom-4 -right-4 opacity-20 group-hover:scale-110 transition-transform duration-500"><Video size={100} /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start mb-4">
+                <Video size={28} />
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-semibold backdrop-blur-md">
+                  {metricsLoading ? "..." : counts.meetings} Requests
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold font-heading mb-1">Meetings</h3>
+                <p className="text-white/80 text-sm font-medium">Virtual rooms</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/applications" className="group bg-rose-500 rounded-3xl p-6 relative overflow-hidden text-white hover:shadow-lg transition-all hover:-translate-y-1">
+            <div className="absolute -bottom-4 -right-4 opacity-20 group-hover:scale-110 transition-transform duration-500"><BookOpen size={100} /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start mb-4">
+                <BookOpen size={28} />
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-semibold backdrop-blur-md">
+                  {metricsLoading ? "..." : counts.applications} Apps
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold font-heading mb-1">Applications</h3>
+                <p className="text-white/80 text-sm font-medium">Student submissions</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link to="/screenings" className="group bg-amber-500 rounded-3xl p-6 relative overflow-hidden text-white hover:shadow-lg transition-all hover:-translate-y-1">
+            <div className="absolute -bottom-4 -right-4 opacity-20 group-hover:scale-110 transition-transform duration-500"><FileText size={100} /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start mb-4">
+                <FileText size={28} />
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-semibold backdrop-blur-md">
+                  {metricsLoading ? "..." : counts.screenings} Reviews
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold font-heading mb-1">Screenings</h3>
+                <p className="text-white/80 text-sm font-medium">Review forms</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link to="/analytics" className="group col-span-1 md:col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 relative overflow-hidden text-white hover:shadow-lg transition-all hover:-translate-y-1">
+            <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:scale-110 transition-transform duration-500"><MonitorSmartphone size={80} /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <MonitorSmartphone size={32} className="mb-4" />
+              <div>
+                <h3 className="text-2xl font-bold font-heading mb-1">Analytics</h3>
+                <p className="text-white/80 font-medium">Platform performance & reports</p>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Recent Events Section */}
@@ -173,7 +253,7 @@ export default function Dashboard() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {events.slice(0, 6).map((event, idx) => (
-                <EventCard key={event.id} event={event} index={idx} />
+                <EventCard key={event.id} event={event} index={idx} metrics={metrics[event.id]} />
               ))}
             </motion.div>
           ) : (

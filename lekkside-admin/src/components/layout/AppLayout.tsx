@@ -13,7 +13,9 @@ import {
   Video,
   FileText,
   UserCheck,
-  MessageSquare
+  MessageSquare,
+  Building2,
+  LifeBuoy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,9 +70,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/meetings", label: "Meetings", icon: Video },
-    { href: "/chats", label: "Live Chats", icon: MessageSquare },
     { href: "/screenings", label: "Screenings", icon: UserCheck },
     { href: "/applications", label: "Applications", icon: FileText },
+    { href: "/universities", label: "Universities", icon: Building2 },
+    { href: "/support-inbox", label: "Support Inbox", icon: LifeBuoy },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/profile", label: "Profile", icon: User },
   ];

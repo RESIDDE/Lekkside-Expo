@@ -23,8 +23,9 @@ const Meetings = lazy(() => import("./pages/Meetings"));
 const MeetingRoom = lazy(() => import("./pages/MeetingRoom"));
 const Applications = lazy(() => import("./pages/Applications"));
 const Screenings = lazy(() => import("./pages/Screenings"));
-const Chats = lazy(() => import("./pages/Chats"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Universities = lazy(() => import("./pages/Universities"));
+const SupportInbox = lazy(() => import("./pages/SupportInbox"));
 
 // Optimized query client with caching
 const queryClient = new QueryClient({
@@ -72,9 +73,10 @@ const App = () => (
               />
               <Route path="/meetings" element={<Meetings />} />
               <Route path="/meetings/:roomName" element={<MeetingRoom />} />
-              <Route path="/chats" element={<Chats />} />
               <Route path="/applications" element={<Applications />} />
               <Route path="/screenings" element={<Screenings />} />
+              <Route path="/universities" element={<Universities />} />
+              <Route path="/support-inbox" element={<SupportInbox />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

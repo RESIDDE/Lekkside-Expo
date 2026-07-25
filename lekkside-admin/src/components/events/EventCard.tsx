@@ -11,9 +11,10 @@ type Event = Tables<'events'>;
 interface EventCardProps {
   event: Event;
   index?: number;
+  metrics?: { attendees: number, leads: number };
 }
 
-export function EventCard({ event, index = 0 }: EventCardProps) {
+export function EventCard({ event, index = 0, metrics }: EventCardProps) {
   const { total, checkedIn, percentage } = useGuestStats(event.id);
 
   return (
@@ -67,6 +68,13 @@ export function EventCard({ event, index = 0 }: EventCardProps) {
                 <Users className="w-4 h-4 text-primary/60" />
               </div>
               <span>{checkedIn} <span className="text-xs opacity-60">/ {total}</span> checked in</span>
+            </div>
+
+            <div className="flex items-center text-sm font-medium text-muted-foreground/80 mt-1">
+              <div className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center mr-3">
+                <Users className="w-4 h-4 text-emerald-600/60" />
+              </div>
+              <span>{metrics?.leads || 0} Leads Generated</span>
             </div>
           </div>
 

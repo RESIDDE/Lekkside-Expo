@@ -256,6 +256,15 @@ export default function ExhibitorSignup() {
               });
 
           if (exhibitorError) throw exhibitorError;
+          
+          // Also update their profile to have role = 'university' and university_name = companyName
+          if (!isLoginMode) {
+             await supabase.from('profiles').update({
+               role: 'university',
+               university_name: companyName,
+               full_name: `${firstName} ${lastName}`
+             }).eq('user_id', userId);
+          }
         }
 
         toast({

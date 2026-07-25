@@ -11,7 +11,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { profile } = await req.json();
+    const { profile, universities } = await req.json();
 
     if (!profile) {
       return new Response(
@@ -29,7 +29,14 @@ serve(async (req: Request) => {
       );
     }
 
-    const prompt = `You are an expert AI university admission counselor. Given the following student profile, recommend exactly 3-4 personalized universities that best match their criteria. Return the result ONLY as a valid JSON array of objects. Do not wrap in markdown tags or add any extra text.
+    const prompt = `You are an expert AI university admission counselor. Given the following student profile, recommend exactly 3-4 personalized universities that best match their criteria. 
+    
+IMPORTANT RULES:
+1. You MUST ONLY select universities from the "Available Universities" list provided below. DO NOT recommend any university that is not in this list.
+2. Return the result ONLY as a valid JSON array of objects. Do not wrap in markdown tags or add any extra text.
+
+Available Universities:
+${JSON.stringify(universities, null, 2)}
 
 Student Profile:
 - Highest Qualification: ${profile.highest_qualification}

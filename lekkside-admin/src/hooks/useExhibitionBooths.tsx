@@ -9,6 +9,7 @@ export interface ExhibitionBooth {
   booth_name: string;
   invitation_token: string;
   is_active: boolean;
+  university_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,18 +72,53 @@ export function useCreateBooth() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (booth: {
+    mutationFn: async (payload: {
       event_id: string;
       booth_number: string;
       booth_name: string;
+      university_id?: string;
     }) => {
+      const { university_id, ...booth } = payload;
+      
+      // If a university is being assigned, fetch their auth user_id first
+      let uniUserId: string | undefined;
+      if (university_id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id, contact_email, university_name")
+          .eq("id", university_id)
+          .single();
+        uniUserId = (profile as any)?.user_id;
+      }
+      
       const { data, error } = await supabase
         .from("exhibition_booths")
-        .insert(booth)
+        .insert({ ...booth, university_id: uniUserId || null })
         .select()
         .single();
 
       if (error) throw error;
+      
+      if (university_id && uniUserId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("contact_email, university_name")
+          .eq("id", university_id)
+          .single();
+
+        const { error: exhibitorError } = await supabase
+          .from("exhibitors")
+          .insert({
+            booth_id: data.id,
+            user_id: uniUserId,
+            is_primary: true,
+            email: (profile as any)?.contact_email || null,
+            company_name: (profile as any)?.university_name || "Assigned University"
+          });
+          
+        if (exhibitorError) console.warn("Exhibitor link warning:", exhibitorError);
+      }
+      
       return data as ExhibitionBooth;
     },
     onSuccess: (data) => {
@@ -92,10 +128,11 @@ export function useCreateBooth() {
         description: `Booth ${data.booth_number} has been created successfully.`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Booth creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create booth.",
+        description: error.message || "Failed to create booth.",
         variant: "destructive",
       });
     },

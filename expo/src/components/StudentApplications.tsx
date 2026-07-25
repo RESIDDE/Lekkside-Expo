@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { FileText, Plus, Upload, CreditCard, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { FileText, Plus, Upload, CreditCard, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { PresenceIndicator } from './PresenceIndicator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function StudentApplications({ user }: { user: any }) {
   const [applications, setApplications] = useState<any[]>([]);
@@ -20,7 +21,6 @@ export function StudentApplications({ user }: { user: any }) {
 
   async function fetchData() {
     setLoading(true);
-    // Fetch user's applications
     const { data: apps } = await supabase
       .from('university_applications')
       .select('*, profiles!university_id(full_name, university_name)')
@@ -29,15 +29,12 @@ export function StudentApplications({ user }: { user: any }) {
     
     setApplications(apps || []);
 
-    // Fetch universities
     const { data: unis } = await supabase
       .from('profiles')
       .select('user_id, full_name, university_name, role');
     
-    // Display all for demo purposes, filtering out current user
     setUniversities((unis || []).filter(u => u.user_id !== user.id));
 
-    // Fetch screening status
     const { data: screening } = await supabase
       .from('student_screenings')
       .select('status')
@@ -47,7 +44,6 @@ export function StudentApplications({ user }: { user: any }) {
     if (screening) {
       setScreeningStatus(screening.status || 'pending');
     }
-
     setLoading(false);
   }
 
@@ -73,7 +69,6 @@ export function StudentApplications({ user }: { user: any }) {
   };
 
   const handlePayFee = async (id: string) => {
-    // Mock payment by updating status to paid
     await supabase
       .from('university_applications')
       .update({ payment_status: 'paid', status: 'submitted' })
@@ -83,153 +78,178 @@ export function StudentApplications({ user }: { user: any }) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'accepted': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'rejected': return <XCircle className="h-5 w-5 text-red-500" />;
+      case 'accepted': return <CheckCircle className="h-6 w-6 text-green-500" />;
+      case 'rejected': return <XCircle className="h-6 w-6 text-red-500" />;
       case 'submitted':
-      case 'under_review': return <Clock className="h-5 w-5 text-blue-500" />;
-      default: return <FileText className="h-5 w-5 text-gray-400" />;
+      case 'under_review': return <Clock className="h-6 w-6 text-blue-500" />;
+      default: return <FileText className="h-6 w-6 text-gray-400" />;
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div></div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-12 h-12 border-4 border-gray-800 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+    <div className="space-y-8 pb-24">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gray-900 shadow-2xl p-8 md:p-10 rounded-[2.5rem] border border-gray-800">
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-gray-900">University Applications</h2>
-          <p className="text-gray-500 text-sm mt-1">Track and manage your university applications</p>
+          <h2 className="text-4xl font-bold tracking-tight text-white mb-2 leading-tight">University Applications</h2>
+          <p className="text-gray-400 text-lg font-medium">Track and manage your university applications seamlessly.</p>
           {screeningStatus !== 'approved' && (
-            <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-sm rounded-xl border border-yellow-200 leading-relaxed">
-              <span className="font-semibold">Attention:</span> You must complete your screening and have it approved by an administrator before you can submit applications. Current status: <span className="font-bold capitalize">{screeningStatus || 'Not Submitted'}</span>
+            <div className="mt-6 p-5 bg-amber-500/10 text-amber-100 text-sm rounded-3xl border border-amber-500/20 leading-relaxed font-medium">
+              <span className="font-bold text-amber-400 uppercase tracking-wider text-[10px] block mb-1">Attention Required</span>
+              You must complete your screening and have it approved by an administrator before you can submit applications. Current status: <span className="font-bold text-amber-300 capitalize">{screeningStatus || 'Not Submitted'}</span>
             </div>
           )}
         </div>
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => setIsFormOpen(!isFormOpen)}
           disabled={screeningStatus !== 'approved'}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+          className={`flex-shrink-0 flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold transition-all duration-300 ${
             screeningStatus === 'approved' 
-              ? 'bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+              ? 'bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:-translate-y-0.5' 
+              : 'bg-gray-900 text-gray-600 cursor-not-allowed border border-gray-800'
           }`}
         >
-          <Plus className="h-5 w-5" />
-          Start New Application
+          <Plus className={`h-5 w-5 transition-transform duration-500 ${isFormOpen ? 'rotate-45' : ''}`} />
+          New Application
         </button>
       </div>
 
-      {isFormOpen && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-4">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Start New Application</h3>
-          <form onSubmit={handleStartApplication} className="space-y-4 max-w-md">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Select University</label>
-              <select
-                required
-                value={formData.university_id}
-                onChange={(e) => setFormData({...formData, university_id: e.target.value})}
-                className="w-full rounded-xl border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              >
-                <option value="">Choose a university...</option>
-                {universities.map(uni => (
-                  <option key={uni.user_id} value={uni.user_id}>
-                    {uni.university_name || uni.full_name || 'Unnamed University'}
-                  </option>
-                ))}
-              </select>
+      <AnimatePresence>
+        {isFormOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-black p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl">
+              <h3 className="text-2xl font-bold tracking-tight text-white mb-8">Start New Application</h3>
+              <form onSubmit={handleStartApplication} className="space-y-6 max-w-2xl">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">Select University</label>
+                  <select
+                    required
+                    value={formData.university_id}
+                    onChange={(e) => setFormData({...formData, university_id: e.target.value})}
+                    className="w-full rounded-2xl bg-gray-900 border border-gray-800 px-5 py-4 focus:ring-4 focus:ring-white/10 focus:border-white focus:bg-gray-900 text-white outline-none transition-all font-medium"
+                  >
+                    <option value="" className="text-gray-500">Choose a university...</option>
+                    {universities.map(uni => (
+                      <option key={uni.user_id} value={uni.user_id}>
+                        {uni.university_name || uni.full_name || 'Unnamed University'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">Program Name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. B.Sc Computer Science"
+                    value={formData.program_name}
+                    onChange={(e) => setFormData({...formData, program_name: e.target.value})}
+                    className="w-full rounded-2xl bg-gray-900 border border-gray-800 px-5 py-4 focus:ring-4 focus:ring-white/10 focus:border-white focus:bg-gray-900 text-white outline-none transition-all font-medium placeholder-gray-600"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="submit"
+                    className="px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all shadow-md hover:-translate-y-0.5 flex-1 md:flex-none"
+                  >
+                    Create Application
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsFormOpen(false)}
+                    className="px-8 py-4 text-gray-400 bg-gray-900 hover:bg-gray-800 hover:text-white rounded-full font-bold transition-colors flex-1 md:flex-none"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Program Name</label>
-              <input
-                required
-                type="text"
-                placeholder="e.g. B.Sc Computer Science"
-                value={formData.program_name}
-                onChange={(e) => setFormData({...formData, program_name: e.target.value})}
-                className="w-full rounded-xl border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              />
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Create Application
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-transparent">
         {applications.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="h-16 w-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-              <FileText className="h-8 w-8" />
+          <div className="p-16 text-center bg-gray-900 rounded-[3rem] border border-gray-800 shadow-xl">
+            <div className="h-24 w-24 mx-auto bg-gray-800 rounded-full flex items-center justify-center text-gray-400 mb-6 border border-gray-700">
+              <FileText className="h-10 w-10" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No applications yet</h3>
-            <p className="text-gray-500 mb-6">You haven't started any university applications.</p>
+            <h3 className="text-2xl font-bold tracking-tight text-white mb-3">No applications yet</h3>
+            <p className="text-gray-400 font-medium text-lg max-w-sm mx-auto">You haven't started any university applications. Your journey begins here.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {applications.map((app) => (
-              <div key={app.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1">{getStatusIcon(app.status)}</div>
+          <div className="grid grid-cols-1 gap-6">
+            {applications.map((app, idx) => (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={app.id} 
+                className="bg-gray-900 rounded-[2.5rem] border border-gray-800 shadow-xl hover:border-gray-700 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 p-8"
+              >
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-[1.25rem] bg-gray-800 flex items-center justify-center shrink-0 border border-gray-700 shadow-sm">
+                      {getStatusIcon(app.status)}
+                    </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3 mb-1">
                         <PresenceIndicator userId={app.university_id} />
-                        <h4 className="text-lg font-bold text-gray-900">{app.profiles?.university_name || app.profiles?.full_name || 'Unknown University'}</h4>
+                        <h4 className="text-2xl font-bold tracking-tight text-white">{app.profiles?.university_name || app.profiles?.full_name || 'Unknown University'}</h4>
                       </div>
-                      <p className="text-gray-600 font-medium">{app.program_name}</p>
-                      <p className="text-sm text-gray-400 mt-1">Started on {new Date(app.created_at).toLocaleDateString()}</p>
+                      <p className="text-gray-400 font-semibold">{app.program_name}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      app.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                      app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      app.status === 'under_review' ? 'bg-blue-100 text-blue-700' :
-                      app.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
+                  <div className="flex flex-row md:flex-col items-center md:items-end gap-3 w-full md:w-auto">
+                    <span className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest ${
+                      app.status === 'accepted' ? 'bg-green-900/40 text-green-400 border border-green-800' :
+                      app.status === 'rejected' ? 'bg-red-900/40 text-red-400 border border-red-800' :
+                      app.status === 'under_review' ? 'bg-blue-900/40 text-blue-400 border border-blue-800' :
+                      app.status === 'submitted' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-800' :
+                      'bg-gray-800 text-gray-300 border border-gray-700'
                     }`}>
                       {app.status.replace('_', ' ')}
                     </span>
-                    <span className={`text-xs font-bold uppercase tracking-wider ${
-                      app.payment_status === 'paid' ? 'text-green-600' : 'text-orange-500'
+                    <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                      app.payment_status === 'paid' ? 'text-green-500' : 'text-orange-400'
                     }`}>
                       {app.payment_status === 'paid' ? 'Fee Paid' : 'Payment Pending'}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                    <Upload className="h-4 w-4" />
-                    Upload Documents
-                  </button>
-                  {app.payment_status === 'pending' && (
-                    <button 
-                      onClick={() => handlePayFee(app.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      Pay Application Fee
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-gray-800">
+                  <p className="text-sm text-gray-500 font-medium tracking-wide uppercase">Started on {new Date(app.created_at).toLocaleDateString()}</p>
+                  <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                    <button className="flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-gray-900 border border-gray-700 text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-all flex shadow-sm">
+                      <Upload className="h-4 w-4" />
+                      Documents
                     </button>
-                  )}
+                    {app.payment_status === 'pending' && (
+                      <button 
+                        onClick={() => handlePayFee(app.id)}
+                        className="flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full text-sm font-bold hover:bg-gray-200 transition-all flex"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Pay Fee
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

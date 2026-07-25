@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, Video, MessageSquare, Calendar, Download, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatWindow } from './ChatWindow';
+import { useNavigate } from 'react-router-dom';
 
 interface Program {
   id: string;
@@ -35,8 +35,10 @@ interface UniversityBoothModalProps {
 const DEGREE_OPTIONS = ["Bachelor's", "Master's", 'PhD', 'Diploma', 'Certificate'];
 
 export function UniversityBoothModal({ universityId, onClose }: UniversityBoothModalProps) {
+  const navigate = useNavigate();
   const [university, setUniversity] = useState<University | null>(null);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [assignedBooths, setAssignedBooths] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Filtering state for programs inside the booth
@@ -75,17 +77,17 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           id: profile.id,
           user_id: profile.user_id,
           university_name: profile.university_name || 'Unnamed University',
-          location: profile.location || '',
-          logo_url: profile.logo_url || '',
-          banner_url: profile.banner_url || '',
-          description: profile.description || '',
-          website_url: profile.website_url || '',
-          brochure_url: profile.brochure_url || ''
+          location: (profile as any).location || '',
+          logo_url: (profile as any).logo_url || '',
+          banner_url: (profile as any).banner_url || '',
+          description: (profile as any).description || '',
+          website_url: (profile as any).website_url || '',
+          brochure_url: (profile as any).brochure_url || ''
         });
       }
 
       // Fetch programs
-      const { data: programsData } = await supabase
+      const { data: programsData } = await (supabase as any)
         .from('university_programs')
         .select('*')
         .eq('university_id', universityId)
@@ -95,11 +97,40 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
         setPrograms(programsData as Program[]);
       }
       
+      // Fetch assigned booths
+      const { data: boothsData } = await (supabase as any)
+        .from('exhibitors')
+        .select('booth_id, exhibition_booths(id, booth_name, booth_number, event_id, events(name, date, venue))')
+        .eq('user_id', universityId);
+        
+      if (boothsData) {
+        setAssignedBooths(boothsData.map((b: any) => b.exhibition_booths).filter(Boolean));
+      }
+      
       setLoading(false);
     }
     
     fetchBoothData();
   }, [universityId]);
+
+  const handleUnassignBooth = async (boothId: string) => {
+    if (!window.confirm("Are you sure you want to unassign this booth?")) return;
+    try {
+      const { error } = await (supabase as any)
+        .from('exhibitors')
+        .delete()
+        .eq('user_id', universityId)
+        .eq('booth_id', boothId);
+      
+      if (error) throw error;
+      
+      setAssignedBooths(prev => prev.filter(b => b.id !== boothId));
+      alert('Booth unassigned successfully.');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to unassign booth: ' + err.message);
+    }
+  };
 
   const toggleDegreeFilter = (degree: string) => {
     setSelectedDegrees(prev => 
@@ -124,8 +155,9 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
 
   const handleInteractionRequest = async (type: 'video' | 'chat') => {
     if (type === 'chat') {
-      // Open the chat window directly — ChatWindow handles the notification
-      setIsChatOpen(true);
+      // Navigate to admin chats page with query param
+      navigate(`/chats?universityId=${universityId}`);
+      onClose();
       return;
     }
 
@@ -135,17 +167,20 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('Please log in to request a meeting.'); return; }
 
-      const studentName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'A Student';
-      const studentEmail = user.email || 'unknown@student.com';
+      const studentName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin';
+      const studentEmail = user.email || 'admin@lekkside.com';
 
       await supabase.functions.invoke('notify-university', {
         body: { universityId, studentName, studentEmail, requestType: 'video' }
       });
 
-      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+      // Direct to admin meeting room
+      navigate(`/meetings/admin-${universityId}`);
+      onClose();
     } catch (error) {
       console.error('Failed to request video:', error);
-      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+      navigate(`/meetings/admin-${universityId}`);
+      onClose();
     } finally {
       setIsRequestingVideo(false);
     }
@@ -160,7 +195,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('Please log in to request a meeting.'); return; }
 
-      const { error } = await supabase.from('meeting_requests').insert({
+      const { error } = await (supabase as any).from('meeting_requests').insert({
         university_id: universityId,
         student_id: user.id,
         requested_time: new Date(appointmentDate).toISOString(),
@@ -170,7 +205,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       if (error) throw error;
       
       // Notify the university
-      await supabase.from('notifications').insert({
+      await (supabase as any).from('notifications').insert({
         user_id: universityId,
         title: 'New Meeting Request',
         message: `${user.user_metadata?.full_name || 'A student'} requested a meeting for ${new Date(appointmentDate).toLocaleString()}`,
@@ -199,7 +234,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('Please log in to apply.'); return; }
 
-      const { error } = await supabase.from('university_applications').insert({
+      const { error } = await (supabase as any).from('university_applications').insert({
         university_id: universityId,
         student_id: user.id,
         program_id: applicationProgram,
@@ -209,7 +244,7 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
       if (error) throw error;
       
       // Notify the university
-      await supabase.from('notifications').insert({
+      await (supabase as any).from('notifications').insert({
         user_id: universityId,
         title: 'New Student Application',
         message: `${user.user_metadata?.full_name || 'A student'} has submitted a new application.`,
@@ -374,6 +409,42 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
             </button>
           </section>
 
+          {/* Exhibition Booths Section */}
+          {assignedBooths.length > 0 && (
+            <section className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-indigo-500" /> Assigned Booths
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assignedBooths.map((booth, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex flex-col justify-between relative group">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">
+                          {booth.booth_number}
+                        </span>
+                        {booth.events?.date && (
+                          <span className="text-xs font-medium text-gray-500">
+                            {new Date(booth.events.date).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-1 pr-8">{booth.booth_name}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-1">{booth.events?.name}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleUnassignBooth(booth.id)}
+                      className="absolute top-14 right-4 p-1.5 bg-red-100 text-red-600 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200"
+                      title="Unassign Booth"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* About Section */}
           <section className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -493,17 +564,6 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           </section>
         </div>
       </motion.div>
-
-      {/* Chat Window - renders over the modal */}
-      <AnimatePresence>
-        {isChatOpen && university && (
-          <ChatWindow
-            universityId={universityId}
-            universityName={university.university_name}
-            onClose={() => setIsChatOpen(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Appointment Booking Modal */}
       <AnimatePresence>

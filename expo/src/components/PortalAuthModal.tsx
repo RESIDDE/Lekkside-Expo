@@ -10,7 +10,9 @@ import {
   User,
   Building2,
   GraduationCap,
-  Key
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
@@ -27,10 +29,12 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
-  const [step, setStep] = useState<'login' | 'signup' | 'otp'>('login');
+  const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password'>('login');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -66,6 +70,28 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
+
+    if (step === 'forgot-password') {
+      if (!email.trim()) {
+        setError('Please enter your email address');
+        return;
+      }
+      setLoading(true);
+      try {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/reset-password',
+        });
+        if (resetError) throw resetError;
+        setMessage('Check your email for the password reset link.');
+      } catch (err: any) {
+        console.error('Password reset error:', err);
+        setError(err.message || 'Failed to send password reset email.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     if (step === 'login' || step === 'signup') {
       if (!email.trim() || !password.trim()) {
@@ -113,32 +139,17 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
           if (userRole === 'student') navigate('/student-dashboard');
           else navigate('/university-dashboard');
           return;
-        } else {
-          // Signup
-          const { data, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                full_name: fullName,
-                phone: phone,
-                role: role
-              }
-            }
+        } else if (step === 'signup') {
+          // Send custom OTP
+          const { data, error: sendError } = await supabase.functions.invoke('send-otp', {
+            body: { email, formId: 'portal-signup', eventName: 'Lekkside Portal' }
           });
 
-          if (signUpError) {
-            throw signUpError;
+          if (sendError || data?.error) {
+            throw new Error(data?.error || 'Failed to send verification code. Please try again.');
           }
 
-          // If no session, it means confirmation is required
-          if (!data.session) {
-            setStep('otp');
-          } else {
-            handleClose();
-            if (role === 'student') navigate('/student-dashboard');
-            else navigate('/university-dashboard');
-          }
+          setStep('custom-otp');
         }
       } catch (err: any) {
         console.error('Authentication error:', err);
@@ -146,8 +157,50 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
       } finally {
         setLoading(false);
       }
-    } else {
-      // Verify OTP
+    } else if (step === 'custom-otp') {
+      if (!otp.trim()) {
+        setError('Please enter the OTP');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
+          body: { email, code: otp, formId: 'portal-signup' }
+        });
+
+        if (verifyError || verifyData?.error) {
+          throw new Error(verifyData?.error || 'Invalid OTP. Please try again.');
+        }
+
+        // OTP verified successfully, now create the user
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone: phone,
+              role: role
+            }
+          }
+        });
+
+        if (signUpError) {
+          throw signUpError;
+        }
+
+        handleClose();
+        if (role === 'student') navigate('/student-dashboard');
+        else navigate('/university-dashboard');
+
+      } catch (err: any) {
+        console.error('OTP error:', err);
+        setError(err.message || 'Verification failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    } else if (step === 'otp') {
       if (!otp.trim()) {
         setError('Please enter the OTP');
         return;
@@ -204,10 +257,10 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
           </div>
           
           <h2 className="text-3xl font-bold font-display mb-2 text-gray-900">
-            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create an Account' : 'Verify Email'}
+            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create an Account' : step === 'forgot-password' ? 'Reset Password' : 'Verify Email'}
           </h2>
           <p className="text-sm text-gray-500">
-            {step === 'login' ? 'Sign in to access your portal.' : step === 'signup' ? 'Join the Lekkside Expo portal to manage your experience.' : 'Enter the code sent to your email.'}
+            {step === 'login' ? 'Sign in to access your portal.' : step === 'signup' ? 'Join the Lekkside Expo portal to manage your experience.' : step === 'forgot-password' ? 'Enter your email to receive a password reset link.' : 'Enter the code sent to your email.'}
           </p>
         </div>
 
@@ -251,6 +304,11 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
             {error && (
               <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
                 {error}
+              </div>
+            )}
+            {message && (
+              <div className="p-4 bg-green-50 text-green-600 rounded-xl text-sm font-medium border border-green-100">
+                {message}
               </div>
             )}
 
@@ -312,23 +370,62 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
-                    Password
-                  </label>
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                      Password
+                    </label>
+                    {step === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError('');
+                          setMessage('');
+                          setStep('forgot-password');
+                        }}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full h-14 pl-12 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50"
+                      className="w-full h-14 pl-12 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50"
                       required
                       minLength={6}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
               </>
+            ) : step === 'forgot-password' ? (
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full h-14 pl-12 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50"
+                    required
+                  />
+                </div>
+              </div>
             ) : (
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
@@ -358,12 +455,29 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {step === 'login' ? 'Sign In' : step === 'signup' ? 'Create Account' : 'Verify'}
+                  {step === 'login' ? 'Sign In' : step === 'signup' ? 'Create Account' : step === 'forgot-password' ? 'Send Reset Link' : 'Verify'}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
             
+            {step === 'forgot-password' && (
+              <p className="text-center text-sm text-gray-500 mt-4">
+                Remember your password?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setMessage('');
+                    setStep('login');
+                  }}
+                  className="font-bold text-primary hover:underline"
+                >
+                  Log in
+                </button>
+              </p>
+            )}
+
             {(step === 'login' || step === 'signup') && (
               <p className="text-center text-sm text-gray-500 mt-4">
                 {step === 'login' ? "Don't have an account? " : "Already have an account? "}
