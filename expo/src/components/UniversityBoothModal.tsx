@@ -142,10 +142,12 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
         body: { universityId, studentName, studentEmail, requestType: 'video' }
       });
 
-      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+      const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+      window.open(`${meetingsUrl}/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Failed to request video:', error);
-      window.open(`http://localhost:8080/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
+      const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+      window.open(`${meetingsUrl}/meetings/booth-${universityId}`, '_blank', 'noopener,noreferrer');
     } finally {
       setIsRequestingVideo(false);
     }

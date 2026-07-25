@@ -144,7 +144,8 @@ export function StudentMeetingsManager({ user }: StudentMeetingsManagerProps) {
                   {activeTab === 'accepted' && (
                     <div className="mt-auto">
                       <a 
-                        href={`http://localhost:8080/meetings/booth-${req.university_id}?returnUrl=${encodeURIComponent('http://localhost:8081/student-dashboard')}`}
+                        href={`${import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080'}/meetings/booth-${req.university_id}?returnUrl=${encodeURIComponent(window.location.origin + '/student-dashboard')}`}
+                        target="_blank"
                         className="flex w-full items-center justify-center gap-2 py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl text-sm font-bold tracking-wide transition-colors"
                       >
                         <Video className="w-4 h-4" /> Join Video Meeting

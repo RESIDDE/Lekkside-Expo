@@ -794,7 +794,8 @@ export function UniversityDashboard() {
                                 onClick={() => {
                                   markNotificationRead(n.id);
                                   setShowNotifications(false);
-                                  window.open(`http://localhost:8080/meetings/booth-${user?.id}`, '_blank');
+                                  const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+                                  window.open(`${meetingsUrl}/meetings/booth-${user?.id}`, '_blank');
                                 }}
                                 className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20"
                               >

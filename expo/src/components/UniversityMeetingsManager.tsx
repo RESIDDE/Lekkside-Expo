@@ -73,7 +73,8 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
       // Send notification to student
       let message = '';
       if (newStatus === 'accepted') {
-        message = `Your meeting request was accepted! Join here when it's time: http://localhost:8080/meetings/booth-${user.id}`;
+        const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+        message = `Your meeting request was accepted! Join here when it's time: ${meetingsUrl}/meetings/booth-${user.id}`;
       } else if (newStatus === 'declined') {
         message = `Your meeting request was declined. Please try another time.`;
       }
@@ -252,7 +253,7 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
                     </div>
                   ) : activeTab === 'accepted' ? (
                      <a 
-                      href={`http://localhost:8080/meetings/booth-${user.id}`}
+                      href={`${import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080'}/meetings/booth-${user.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full flex items-center justify-center gap-3 py-3.5 bg-white text-black rounded-[1.25rem] font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]"
