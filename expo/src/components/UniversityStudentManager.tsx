@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, Search, Filter, Mail, Phone, Calendar, Clock, Star, Edit3, X, Loader2, Save, Download, Video, Building2, Users, TrendingUp, StickyNote } from 'lucide-react';
+import { User, Search, Filter, Star, X, Loader2, Save, Download, Building2, Users, TrendingUp, StickyNote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Guest {

@@ -29,7 +29,7 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
-  const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password'>('login');
+  const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password' | 'reset-password-otp'>('login');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -79,14 +79,49 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
       }
       setLoading(true);
       try {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/reset-password',
+        const { data, error: resetError } = await supabase.functions.invoke('send-password-reset-otp', {
+          body: { email }
         });
-        if (resetError) throw resetError;
-        setMessage('Check your email for the password reset link.');
+        if (resetError || data?.error) {
+          throw new Error(data?.error || 'Failed to send password reset email.');
+        }
+        setStep('reset-password-otp');
+        setMessage(data?.message || 'Check your email for the password reset code.');
       } catch (err: any) {
         console.error('Password reset error:', err);
         setError(err.message || 'Failed to send password reset email.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (step === 'reset-password-otp') {
+      if (!otp.trim() || !password.trim()) {
+        setError('Please enter the OTP and your new password');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('reset-password', {
+          body: { email, code: otp, newPassword: password }
+        });
+        
+        if (error || data?.error) {
+          throw new Error(data?.error || 'Failed to reset password.');
+        }
+        
+        setStep('login');
+        setPassword('');
+        setOtp('');
+        setMessage('Password updated successfully! You can now log in.');
+      } catch (err: any) {
+        console.error('Reset password OTP error:', err);
+        setError(err.message || 'Verification failed. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -257,10 +292,10 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
           </div>
           
           <h2 className="text-3xl font-bold font-display mb-2 text-gray-900">
-            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create an Account' : step === 'forgot-password' ? 'Reset Password' : 'Verify Email'}
+            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create an Account' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-password-otp' ? 'New Password' : 'Verify Email'}
           </h2>
           <p className="text-sm text-gray-500">
-            {step === 'login' ? 'Sign in to access your portal.' : step === 'signup' ? 'Join the Lekkside Expo portal to manage your experience.' : step === 'forgot-password' ? 'Enter your email to receive a password reset link.' : 'Enter the code sent to your email.'}
+            {step === 'login' ? 'Sign in to access your portal.' : step === 'signup' ? 'Join the Lekkside Expo portal to manage your experience.' : step === 'forgot-password' ? 'Enter your email to receive a password reset code.' : step === 'reset-password-otp' ? 'Enter the code sent to your email and your new password.' : 'Enter the code sent to your email.'}
           </p>
         </div>
 
@@ -426,6 +461,50 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                   />
                 </div>
               </div>
+            ) : step === 'reset-password-otp' ? (
+              <>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
+                    Verification Code
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="123456"
+                      className="w-full h-14 pl-12 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50 text-center tracking-[0.5em] font-bold text-lg"
+                      required
+                      maxLength={6}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full h-14 pl-12 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50"
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
@@ -455,7 +534,7 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {step === 'login' ? 'Sign In' : step === 'signup' ? 'Create Account' : step === 'forgot-password' ? 'Send Reset Link' : 'Verify'}
+                  {step === 'login' ? 'Sign In' : step === 'signup' ? 'Create Account' : step === 'forgot-password' ? 'Send Reset OTP' : step === 'reset-password-otp' ? 'Update Password' : 'Verify'}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}

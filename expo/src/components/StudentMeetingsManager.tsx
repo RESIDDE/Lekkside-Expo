@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Calendar,
-  CheckCircle,
-  XCircle,
   Clock,
   MessageSquare,
   Building2,

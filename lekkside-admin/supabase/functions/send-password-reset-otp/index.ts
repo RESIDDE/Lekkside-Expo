@@ -55,29 +55,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        fetch: (...args) => fetch(...args),
+      }
+    });
 
-    // Check if user exists
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-    if (userError) {
-      console.error("Error listing users:", userError);
-      return new Response(
-        JSON.stringify({ error: "An error occurred. Please try again." }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const userExists = userData.users.some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    );
-
-    if (!userExists) {
-      console.log(`No user found with email ${email}, returning success anyway`);
-      return new Response(
-        JSON.stringify({ success: true, message: "If an account exists with this email, a reset code has been sent." }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    // Skip checking if user exists for security and to avoid Auth API bugs.
+    // If an account doesn't exist, they still get a dummy email or we pretend success.
 
     // Rate limiting
     const { data: recentCode } = await supabase

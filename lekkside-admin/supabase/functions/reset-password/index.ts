@@ -41,7 +41,16 @@ const handler = async (req: Request): Promise<Response> => {
     // Create Supabase client with service role
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        fetch: (...args) => fetch(...args),
+      }
+    });
 
     // Find valid verification record
     const { data: verification, error: verifyError } = await supabase
@@ -70,22 +79,20 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ verified: true })
       .eq("id", verification.id);
 
-    // Find user by email
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+    // Find user ID by email using our new RPC function to bypass buggy Auth Admin APIs
+    const { data: userId, error: userError } = await supabase.rpc('get_user_id_by_email', {
+      user_email: email.toLowerCase()
+    });
     
     if (userError) {
-      console.error("Error listing users:", userError);
+      console.error("Error finding user:", userError);
       return new Response(
-        JSON.stringify({ error: "An error occurred. Please try again." }),
+        JSON.stringify({ error: "An error occurred checking account status. Please try again." }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const user = userData.users.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    );
-
-    if (!user) {
+    if (!userId) {
       console.log(`No user found with email ${email}`);
       return new Response(
         JSON.stringify({ error: "No account found with this email." }),
@@ -96,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Update user password using admin API and confirm their email
     // (since they successfully received and verified the OTP)
     const { error: updateError } = await supabase.auth.admin.updateUserById(
-      user.id,
+      userId,
       { 
         password: newPassword,
         email_confirm: true

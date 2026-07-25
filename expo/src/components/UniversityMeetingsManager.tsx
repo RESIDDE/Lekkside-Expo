@@ -6,8 +6,6 @@ import {
   XCircle,
   Clock,
   MessageSquare,
-  User,
-  MoreVertical,
   X,
   Loader2
 } from 'lucide-react';

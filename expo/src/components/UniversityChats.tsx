@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import {
   Send, Paperclip, SmilePlus, CheckCheck, Check,
   Loader2, MessageSquare, Search, ChevronLeft,
-  Info, X, MapPin, Mail, Phone, GraduationCap, Globe, DollarSign, Award, FileText, ExternalLink, BookOpen
+  Info, X, MapPin, Mail, Phone, GraduationCap, Globe, DollarSign, Award, FileText, ExternalLink, BookOpen, User
 } from 'lucide-react';
 import { PresenceIndicator } from './PresenceIndicator';
 
