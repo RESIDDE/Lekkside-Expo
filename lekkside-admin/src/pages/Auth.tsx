@@ -13,6 +13,8 @@ import {
   MailCheck,
   Fingerprint,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +48,7 @@ type ForgotPasswordStep = "email" | "otp" | "newPassword";
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +59,9 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetOtp, setResetOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -482,12 +487,19 @@ export default function Auth() {
                           <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                           <Input
                             id="new-password"
-                            type="password"
+                            type={showNewPassword ? "text" : "password"}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                            className="h-14 pl-12 pr-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -501,14 +513,21 @@ export default function Auth() {
                           <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                           <Input
                             id="confirm-new-password"
-                            type="password"
+                            type={showConfirmPassword ? "text" : "password"}
                             value={confirmNewPassword}
                             onChange={(e) =>
                               setConfirmNewPassword(e.target.value)
                             }
                             placeholder="••••••••"
-                            className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                            className="h-14 pl-12 pr-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -646,13 +665,20 @@ export default function Auth() {
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
                         id="signin-password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                        className="h-14 pl-12 pr-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                   <Button
@@ -741,13 +767,20 @@ export default function Auth() {
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="h-14 pl-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
+                        className="h-14 pl-12 pr-12 rounded-2xl bg-muted/20 border-border/40 focus-visible:ring-primary/20 font-semibold"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                   <Button
