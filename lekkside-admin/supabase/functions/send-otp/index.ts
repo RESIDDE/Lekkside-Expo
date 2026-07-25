@@ -59,16 +59,21 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Rate limiting
-    const { data: recentCode } = await supabase
+    let query = supabase
       .from("email_verifications")
       .select("created_at")
       .eq("email", email.toLowerCase())
-      .eq("form_id", formId)
       .gte("created_at", new Date(Date.now() - 60000).toISOString())
       .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
+
+    if (formId === 'portal-signup') {
+      query = query.is("form_id", null);
+    } else {
+      query = query.eq("form_id", formId);
+    }
+
+    const { data: recentCode } = await query.single();
 
     if (recentCode) {
       const waitTime = Math.ceil((60000 - (Date.now() - new Date(recentCode.created_at).getTime())) / 1000);
@@ -81,19 +86,26 @@ const handler = async (req: Request): Promise<Response> => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Clean up old codes
-    await supabase
+    let deleteQuery = supabase
       .from("email_verifications")
       .delete()
       .eq("email", email.toLowerCase())
-      .eq("form_id", formId)
       .eq("verified", false);
+      
+    if (formId === 'portal-signup') {
+      deleteQuery = deleteQuery.is("form_id", null);
+    } else {
+      deleteQuery = deleteQuery.eq("form_id", formId);
+    }
+    
+    await deleteQuery;
 
     const { error: insertError } = await supabase
       .from("email_verifications")
       .insert({
         email: email.toLowerCase(),
         code,
-        form_id: formId,
+        form_id: formId === 'portal-signup' ? null : formId,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       });
 
@@ -135,12 +147,19 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Email send error:", emailError);
 
       // Clean up verification record since email failed
-      await supabase
+      let cleanupQuery = supabase
         .from("email_verifications")
         .delete()
         .eq("email", email.toLowerCase())
-        .eq("form_id", formId)
         .eq("code", code);
+        
+      if (formId === 'portal-signup') {
+        cleanupQuery = cleanupQuery.is("form_id", null);
+      } else {
+        cleanupQuery = cleanupQuery.eq("form_id", formId);
+      }
+      
+      await cleanupQuery;
 
       return new Response(
         JSON.stringify({ error: "Failed to send verification email. Please try again." }),

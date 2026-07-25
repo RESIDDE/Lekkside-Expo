@@ -35,18 +35,23 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find matching verification record
-    const { data: verification, error: fetchError } = await supabase
+    let query = supabase
       .from("email_verifications")
       .select("*")
       .eq("email", email.toLowerCase())
       .eq("code", code)
-      .eq("form_id", formId)
       .eq("verified", false)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
+
+    if (formId === 'portal-signup') {
+      query = query.is("form_id", null);
+    } else {
+      query = query.eq("form_id", formId);
+    }
+
+    const { data: verification, error: fetchError } = await query.single();
 
     if (fetchError || !verification) {
       console.log("Verification not found or expired:", fetchError);

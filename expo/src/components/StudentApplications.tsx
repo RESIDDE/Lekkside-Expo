@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { FileText, Plus, Upload, CreditCard, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { FileText, Plus, Upload, CreditCard, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { PresenceIndicator } from './PresenceIndicator';
 import { motion, AnimatePresence } from 'framer-motion';
 

@@ -174,7 +174,7 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
         }
 
         // OTP verified successfully, now create the user
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
