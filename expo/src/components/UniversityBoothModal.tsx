@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, Video, MessageSquare, Calendar, Download, Send } from 'lucide-react';
+import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, MessageSquare, Calendar, Download, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatWindow } from './ChatWindow';
 
