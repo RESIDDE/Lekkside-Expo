@@ -26,6 +26,7 @@ interface University {
   full_name: string;
   location: string;
   logo_url: string;
+  is_active: boolean;
   // Mock augmented fields
   country: string;
   hasScholarship: boolean;
@@ -98,6 +99,7 @@ export default function Universities() {
             full_name: profile.full_name || '',
             location: profile.location || '',
             logo_url: profile.logo_url || '',
+            is_active: profile.is_active ?? true,
             country,
             hasScholarship: profile.has_scholarship || false,
             programs: Array.isArray(profile.programs) ? profile.programs : [],
@@ -112,6 +114,24 @@ export default function Universities() {
     }
     fetchUniversities();
   }, []);
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setUniversities(prev => 
+        prev.map(u => u.id === id ? { ...u, is_active: !currentStatus } : u)
+      );
+    } catch (err) {
+      console.error('Error toggling active status:', err);
+      alert('Failed to update status.');
+    }
+  };
 
   const filteredUniversities = useMemo(() => {
     return universities.filter(uni => {
@@ -345,8 +365,17 @@ export default function Universities() {
                   {/* Card Header Background */}
                   <div className="h-20 bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-100 relative">
                     {/* Status Badge */}
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm shadow-sm border border-gray-100 rounded-full px-2.5 py-1">
-                      <PresenceIndicator userId={uni.user_id} showText={true} />
+                    <div className="absolute top-3 right-3 flex items-center gap-2">
+                      <div className={`px-2.5 py-1 rounded-full text-xs font-bold border backdrop-blur-sm shadow-sm ${
+                        uni.is_active 
+                          ? 'bg-green-50/90 text-green-700 border-green-200' 
+                          : 'bg-red-50/90 text-red-700 border-red-200'
+                      }`}>
+                        {uni.is_active ? 'Active' : 'Inactive'}
+                      </div>
+                      <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-gray-100 rounded-full px-2.5 py-1">
+                        <PresenceIndicator userId={uni.user_id} showText={true} />
+                      </div>
                     </div>
                   </div>
 
@@ -395,24 +424,19 @@ export default function Universities() {
                   </div>
 
                   {/* Action Footer */}
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500">
+                      Visibility: {uni.is_active ? 'Shown to students' : 'Hidden'}
+                    </span>
                     <button 
-                      onClick={() => toggleCompare(uni)}
-                      className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
-                        compareList.find(p => p.id === uni.id)
-                          ? 'bg-blue-50 border-blue-200 text-blue-600'
-                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                      onClick={() => handleToggleActive(uni.id, uni.is_active)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                        uni.is_active
+                          ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                          : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
                       }`}
-                      title="Compare"
                     >
-                      <Scale className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => setSelectedBoothId(uni.user_id)}
-                      className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-900 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
-                    >
-                      Visit Booth
-                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {uni.is_active ? 'Deactivate' : 'Activate'}
                     </button>
                   </div>
 

@@ -29,8 +29,9 @@ import { UniversityStudentManager } from '../components/UniversityStudentManager
 import { UniversityMeetingsManager } from '../components/UniversityMeetingsManager';
 import { LeadScanner } from '../components/LeadScanner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, GraduationCap } from 'lucide-react';
 import { UniversityChats } from '../components/UniversityChats';
+import { UniversityAllStudents } from '../components/UniversityAllStudents';
 import { formatDistanceToNow } from 'date-fns';
 
 export function UniversityDashboard() {
@@ -48,7 +49,8 @@ export function UniversityDashboard() {
   });
   const [exhibitorData, setExhibitorData] = useState<any>(null);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'leads' | 'meetings' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
+  const [isDeactivated, setIsDeactivated] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'scan' | 'leads' | 'students' | 'meetings' | 'applications' | 'profile' | 'programs' | 'chats'>('overview');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -72,12 +74,16 @@ export function UniversityDashboard() {
       // Check profile setup
       const { data: profile } = await supabase
         .from('profiles')
-        .select('university_name, contact_email')
+        .select('university_name, contact_email, is_active')
         .eq('user_id', session.user.id)
         .maybeSingle();
         
       if (!(profile as any)?.university_name) {
         setShowProfileReminder(true);
+      }
+      
+      if ((profile as any)?.is_active === false) {
+        setIsDeactivated(true);
       }
 
       // Fetch Applications Data
@@ -181,18 +187,21 @@ export function UniversityDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gray-800 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium animate-pulse">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
-
 
 
   const navItems = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'scan' as const, label: 'Scan Leads', icon: Scan },
     { id: 'leads' as const, label: 'Manage Leads', icon: Users },
+    { id: 'students' as const, label: 'Registered Students', icon: GraduationCap },
     { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
     { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
     { id: 'applications' as const, label: 'Applications', icon: FileText },
@@ -497,6 +506,7 @@ export function UniversityDashboard() {
                 { activeTab === 'overview' && 'Exhibitor Command Center' }
                 { activeTab === 'scan' && 'Lead Scanner' }
                 { activeTab === 'leads' && 'Student Leads' }
+                { activeTab === 'students' && 'Registered Students' }
                 { activeTab === 'meetings' && 'Meetings and Appointments' }
                 { activeTab === 'chats' && 'Live Chats' }
                 {activeTab === 'applications' && 'Student Applications'}
@@ -514,7 +524,29 @@ export function UniversityDashboard() {
               </button>
             </header>
 
-            {activeTab === 'overview' && (
+            {isDeactivated ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center justify-center mt-20">
+                <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 text-center">
+                  <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <X className="w-10 h-10 text-red-500" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-3">Account Deactivated</h1>
+                  <p className="text-gray-600 mb-8 leading-relaxed font-medium">
+                    Your university account has been deactivated. You currently do not have access to the dashboard or student data. Please contact Lekkside Support for assistance.
+                  </p>
+                  <div className="space-y-3">
+                    <a 
+                      href="mailto:support@lekkside.com"
+                      className="block w-full py-3.5 px-4 bg-gray-900 text-white rounded-[1.25rem] font-bold hover:bg-gray-800 transition-colors shadow-sm"
+                    >
+                      Contact Support
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'overview' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                 {/* Stats Grid */}
@@ -668,6 +700,12 @@ export function UniversityDashboard() {
               </div>
             )}
 
+            {activeTab === 'students' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+                <UniversityAllStudents user={user} />
+              </div>
+            )}
+
             {activeTab === 'meetings' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
                 <UniversityMeetingsManager user={user} />
@@ -696,6 +734,8 @@ export function UniversityDashboard() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
                 <UniversityProfile user={user} />
               </div>
+            )}
+              </>
             )}
           </div>
         </main>

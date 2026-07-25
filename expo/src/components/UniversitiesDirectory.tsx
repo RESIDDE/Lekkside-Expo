@@ -61,7 +61,8 @@ export function UniversitiesDirectory() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'university');
+        .eq('role', 'university')
+        .eq('is_active', true);
 
       if (!error && data) {
         const augmentedData: University[] = data.map((profile, idx) => {
