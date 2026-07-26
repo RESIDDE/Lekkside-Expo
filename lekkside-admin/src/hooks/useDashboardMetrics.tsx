@@ -57,7 +57,7 @@ export function useDashboardMetrics() {
           (supabase as any).from('booth_leads').select('*', { count: 'exact', head: true }),
           supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'university'),
           (supabase as any).from('chat_conversations').select('*', { count: 'exact', head: true }),
-          supabase.from('meeting_requests').select('*', { count: 'exact', head: true }),
+          (supabase as any).from('meeting_requests').select('*', { count: 'exact', head: true }),
           supabase.from('university_applications').select('*', { count: 'exact', head: true }),
           supabase.from('student_screenings').select('*', { count: 'exact', head: true }),
         ]);

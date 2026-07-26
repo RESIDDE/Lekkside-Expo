@@ -117,7 +117,7 @@ export default function Universities() {
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({ is_active: !currentStatus })
         .eq('id', id);

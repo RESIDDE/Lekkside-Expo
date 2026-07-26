@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Video, Copy, Play, DoorOpen, PlusCircle, Check, Radio, Trash2, History } from "lucide-react";
+import { Video, Copy, Play, DoorOpen, Check, Radio, Trash2, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
 
 export function UniversityVideoMeetings() {
   const [roomName, setRoomName] = useState(() => localStorage.getItem("lekkside_uni_meeting_room") || "");
   const [isCopied, setIsCopied] = useState(false);
-  const [copiedMessage, setCopiedMessage] = useState("");
   const [isLive, setIsLive] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -122,10 +121,8 @@ export function UniversityVideoMeetings() {
     const link = `${meetingsUrl}/meetings/${roomName}`;
     navigator.clipboard.writeText(link);
     setIsCopied(true);
-    setCopiedMessage("Link Copied!");
     setTimeout(() => {
       setIsCopied(false);
-      setCopiedMessage("");
     }, 2000);
   };
 
@@ -318,7 +315,7 @@ export function UniversityVideoMeetings() {
         >
           <div className="relative w-full max-w-sm aspect-square">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-50 rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
-            <div className="absolute inset-8 bg-white rounded-full shadow-2xl flex items-center justify-center p-8 relative z-10 overflow-hidden">
+            <div className="absolute inset-8 bg-white rounded-full shadow-2xl flex items-center justify-center p-8 z-10 overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10" />
                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -ml-10 -mb-10" />
                
