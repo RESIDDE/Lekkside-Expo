@@ -20,6 +20,7 @@ export function UniversityProfile({ user }: { user: any }) {
     banner_url: '',
     description: '',
     website_url: '',
+    brochure_url: '',
     programs: [] as string[],
     degree_levels: [] as string[],
     tuition_category: '',
@@ -29,8 +30,10 @@ export function UniversityProfile({ user }: { user: any }) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [brochureFile, setBrochureFile] = useState<File | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingBrochure, setUploadingBrochure] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export function UniversityProfile({ user }: { user: any }) {
     async function fetchProfile() {
       const { data } = await supabase
         .from('profiles')
-        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, description, website_url, programs, degree_levels, tuition_category, has_scholarship')
+        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, brochure_url, description, website_url, programs, degree_levels, tuition_category, has_scholarship')
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -57,6 +60,7 @@ export function UniversityProfile({ user }: { user: any }) {
           contact_phone: data.contact_phone || '',
           logo_url: data.logo_url || '',
           banner_url: data.banner_url || '',
+          brochure_url: data.brochure_url || '',
           description: data.description || '',
           website_url: data.website_url || '',
           programs: data.programs || [],
@@ -70,7 +74,7 @@ export function UniversityProfile({ user }: { user: any }) {
     fetchProfile();
   }, [user.id]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner' | 'brochure') => {
     const file = e.target.files?.[0];
     if (file) {
       if (type === 'logo' && file.size > 1024 * 1024) {
@@ -81,12 +85,18 @@ export function UniversityProfile({ user }: { user: any }) {
         alert("Banner image must be less than 3MB");
         return;
       }
+      if (type === 'brochure' && file.size > 10 * 1024 * 1024) {
+        alert("Brochure must be less than 10MB");
+        return;
+      }
       if (type === 'logo') {
         setLogoFile(file);
         setLogoPreview(URL.createObjectURL(file));
-      } else {
+      } else if (type === 'banner') {
         setBannerFile(file);
         setBannerPreview(URL.createObjectURL(file));
+      } else if (type === 'brochure') {
+        setBrochureFile(file);
       }
     }
   };
@@ -97,6 +107,7 @@ export function UniversityProfile({ user }: { user: any }) {
     
     let finalLogoUrl = formData.logo_url;
     let finalBannerUrl = formData.banner_url;
+    let finalBrochureUrl = formData.brochure_url;
 
     if (logoFile) {
       setUploadingLogo(true);
@@ -135,6 +146,25 @@ export function UniversityProfile({ user }: { user: any }) {
       }
       setUploadingBanner(false);
     }
+
+    if (brochureFile) {
+      setUploadingBrochure(true);
+      const fileExt = brochureFile.name.split('.').pop();
+      const fileName = `brochure-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `brochures/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(filePath, brochureFile);
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(filePath);
+        finalBrochureUrl = publicUrl;
+      }
+      setUploadingBrochure(false);
+    }
     
     const { error: updateError } = await supabase
       .from('profiles')
@@ -147,6 +177,7 @@ export function UniversityProfile({ user }: { user: any }) {
         contact_phone: formData.contact_phone,
         logo_url: finalLogoUrl,
         banner_url: finalBannerUrl,
+        brochure_url: finalBrochureUrl,
         description: formData.description,
         website_url: formData.website_url,
         programs: formData.programs,
@@ -160,7 +191,8 @@ export function UniversityProfile({ user }: { user: any }) {
       console.error(updateError);
       setToast({ message: 'Failed to save profile. Please try again.', type: 'error' });
     } else {
-      setFormData(prev => ({ ...prev, logo_url: finalLogoUrl, banner_url: finalBannerUrl }));
+      setFormData(prev => ({ ...prev, logo_url: finalLogoUrl, banner_url: finalBannerUrl, brochure_url: finalBrochureUrl }));
+      setBrochureFile(null); // Clear selected file after successful save
       setToast({ message: 'Profile saved successfully!', type: 'success' });
     }
     setSaving(false);
@@ -255,6 +287,21 @@ export function UniversityProfile({ user }: { user: any }) {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  Contact Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.contact_email}
+                  onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
+                  placeholder="university@example.com"
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
                   Contact Phone
                 </label>
                 <input
@@ -265,22 +312,21 @@ export function UniversityProfile({ user }: { user: any }) {
                   className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                Location / Address
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({...formData, location: e.target.value})}
-                placeholder="e.g. Stanford, CA, United States"
-                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
-              />
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
-                The country will be extracted from this field for filtering. Please include the country name.
-              </p>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  Location / Address
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  placeholder="e.g. Stanford, CA, United States"
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
+                />
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
+                  The country will be extracted from this field for filtering. Please include the country name.
+                </p>
+              </div>
             </div>
 
             <div>
@@ -373,6 +419,56 @@ export function UniversityProfile({ user }: { user: any }) {
                   <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
                     Max file size: 3MB. Recommended format: PNG, JPG (e.g. 1920x400).
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                University Brochure (PDF)
+              </label>
+              <div className="flex items-center gap-8">
+                <div className="relative h-20 w-20 rounded-2xl border-2 border-dashed border-gray-700 flex flex-col items-center justify-center bg-black overflow-hidden shadow-inner p-2 text-center">
+                  {(brochureFile || formData.brochure_url) ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <BookOpen className="h-6 w-6 text-green-400" />
+                      <span className="text-[10px] text-gray-300 font-medium truncate w-full max-w-full px-1">
+                        {brochureFile ? brochureFile.name : 'Uploaded'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBrochureFile(null);
+                          setFormData({...formData, brochure_url: ''});
+                        }}
+                        className="absolute top-1 right-1 bg-black/80 backdrop-blur p-1 rounded-full text-white hover:text-red-400 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <BookOpen className="h-8 w-8 text-gray-700" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="cursor-pointer inline-flex items-center gap-3 px-5 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-bold text-white hover:bg-gray-700 transition-colors shadow-sm">
+                    <Upload className="h-4 w-4" />
+                    UPLOAD BROCHURE
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => handleFileChange(e, 'brochure')}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-3 font-bold">
+                    Max file size: 10MB. Format: PDF only. Students can download this from your booth.
+                  </p>
+                  {(brochureFile || formData.brochure_url) && (
+                    <p className="text-xs text-green-400 mt-2 font-medium">
+                      ✓ Brochure attached
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -509,11 +605,11 @@ export function UniversityProfile({ user }: { user: any }) {
           <div className="pt-10 border-t border-gray-800 flex justify-end">
             <button
               type="submit"
-              disabled={saving || uploadingLogo || uploadingBanner}
+              disabled={saving || uploadingLogo || uploadingBanner || uploadingBrochure}
               className="flex items-center gap-3 px-10 py-4 bg-white text-black rounded-[1.25rem] font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:shadow-none"
             >
               <Save className="h-5 w-5" />
-              {saving || uploadingLogo || uploadingBanner ? 'SAVING...' : 'SAVE PROFILE'}
+              {saving || uploadingLogo || uploadingBanner || uploadingBrochure ? 'SAVING...' : 'SAVE PROFILE'}
             </button>
           </div>
         </form>

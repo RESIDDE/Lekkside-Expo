@@ -25,12 +25,14 @@ interface University {
   programs: string[];
   degreeLevels: string[];
   tuitionCategory: string;
+  isLive: boolean;
+  meetingRoomId: string | null;
 }
 
 const PROGRAM_OPTIONS = ['Engineering', 'Business', 'Arts & Humanities', 'Computer Science', 'Medicine', 'Law', 'Sciences'];
 const COUNTRY_OPTIONS = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Nigeria', 'Germany'];
 
-export function UniversitiesDirectory() {
+export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) {
   const [loading, setLoading] = useState(true);
   const [universities, setUniversities] = useState<University[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,11 +60,44 @@ export function UniversitiesDirectory() {
 
   useEffect(() => {
     async function fetchUniversities() {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
         .eq('role', 'university')
         .eq('is_active', true);
+
+      if (eventId) {
+        // Find exhibition booths for this event
+        const { data: boothData } = await supabase
+          .from('exhibition_booths')
+          .select('id')
+          .eq('event_id', eventId);
+        
+        if (boothData && boothData.length > 0) {
+          const boothIds = boothData.map(b => b.id);
+          const { data: exhibitorData } = await supabase
+            .from('exhibitors')
+            .select('user_id')
+            .in('booth_id', boothIds);
+            
+          if (exhibitorData && exhibitorData.length > 0) {
+            const userIds = exhibitorData.map(e => e.user_id);
+            query = query.in('user_id', userIds);
+          } else {
+            // No exhibitors found
+            setUniversities([]);
+            setLoading(false);
+            return;
+          }
+        } else {
+          // No booths found
+          setUniversities([]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data, error } = await query;
 
       if (!error && data) {
         const augmentedData: University[] = data.map((profile, idx) => {
@@ -86,7 +121,9 @@ export function UniversitiesDirectory() {
             hasScholarship: profile.has_scholarship || false,
             programs: Array.isArray(profile.programs) ? profile.programs : [],
             degreeLevels: Array.isArray(profile.degree_levels) ? profile.degree_levels : [],
-            tuitionCategory: profile.tuition_category || 'Contact for details'
+            tuitionCategory: profile.tuition_category || 'Contact for details',
+            isLive: profile.is_live || false,
+            meetingRoomId: profile.meeting_room_id || null
           };
         });
         setUniversities(augmentedData);
@@ -94,7 +131,38 @@ export function UniversitiesDirectory() {
       setLoading(false);
     }
     fetchUniversities();
-  }, []);
+
+    // Subscribe to realtime profile changes for live meetings
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          const updatedProfile = payload.new;
+          if (updatedProfile.role === 'university') {
+            setUniversities(prev => prev.map(uni => 
+              uni.user_id === updatedProfile.user_id 
+                ? { 
+                    ...uni, 
+                    isLive: updatedProfile.is_live || false,
+                    meetingRoomId: updatedProfile.meeting_room_id || null 
+                  }
+                : uni
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId]);
 
   const filteredUniversities = useMemo(() => {
     return universities.filter(uni => {
@@ -267,9 +335,17 @@ export function UniversitiesDirectory() {
 
                   {/* Info */}
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
-                      {uni.university_name}
-                    </h3>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
+                        {uni.university_name}
+                      </h3>
+                      {uni.isLive && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full border border-red-100/50 shadow-sm shadow-red-500/10">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                          Live
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mb-5">
                       <MapPin className="w-4 h-4" />
                       {uni.country}
@@ -290,21 +366,35 @@ export function UniversitiesDirectory() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3 pt-6 border-t border-gray-100">
-                    <button 
-                      onClick={() => setSelectedBoothId(uni.user_id)}
-                      className="flex-1 py-3.5 bg-gray-900 text-white rounded-2xl font-semibold text-sm hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
-                    >
-                      Visit Booth
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => toggleCompare(uni)}
-                      className={`p-3.5 rounded-2xl border transition-all ${isCompared ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'}`}
-                      title={isCompared ? "Remove from compare" : "Compare"}
-                    >
-                      <Scale className="w-5 h-5" />
-                    </button>
+                  <div className="flex flex-col gap-3 pt-6 border-t border-gray-100 mt-auto">
+                    {uni.isLive && uni.meetingRoomId && (
+                      <button 
+                        onClick={() => {
+                          const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+                          window.open(`${meetingsUrl}/meetings/${uni.meetingRoomId}`, "_blank");
+                        }}
+                        className="w-full py-3.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-red-100"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        Join Live Meeting
+                      </button>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setSelectedBoothId(uni.user_id)}
+                        className="flex-1 py-3.5 bg-gray-900 text-white rounded-2xl font-semibold text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        Visit Booth
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => toggleCompare(uni)}
+                        className={`p-3.5 rounded-2xl border transition-all ${isCompared ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'}`}
+                        title={isCompared ? "Remove from compare" : "Compare"}
+                      >
+                        <Scale className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               );

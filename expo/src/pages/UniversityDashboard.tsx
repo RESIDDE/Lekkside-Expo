@@ -33,6 +33,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, GraduationCap } from 'lucide-react';
 import { UniversityChats } from '../components/UniversityChats';
 import { UniversityAllStudents } from '../components/UniversityAllStudents';
+import { AdminLiveEventBanner } from '../components/AdminLiveEventBanner';
 import { formatDistanceToNow } from 'date-fns';
 
 export function UniversityDashboard() {
@@ -503,6 +504,7 @@ export function UniversityDashboard() {
         {/* Scrollable Main Content Area */}
         <main className="flex-1 overflow-y-auto w-full scrollbar-none custom-scrollbar">
           <div className="p-6 md:p-12 lg:p-16 max-w-[1600px] mx-auto w-full">
+            <AdminLiveEventBanner />
             <header className="hidden md:flex justify-between items-center mb-12">
               <h1 className="text-3xl font-bold tracking-tight text-gray-900 leading-tight">
                 { activeTab === 'overview' && 'Exhibitor Command Center' }

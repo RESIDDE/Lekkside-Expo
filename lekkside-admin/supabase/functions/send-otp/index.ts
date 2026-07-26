@@ -84,6 +84,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    const randomSuffix = Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const tempPassword = `Lekkside-${randomSuffix}`;
 
     // Clean up old codes
     let deleteQuery = supabase
@@ -107,6 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
         code,
         form_id: formId === 'portal-signup' ? null : formId,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        temp_password: tempPassword
       });
 
     if (insertError) {
@@ -124,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
       const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
         to: email,
-        subject: `Your verification code for ${eventName || "event registration"}`,
+        subject: `Your verification code and password for ${eventName || "event registration"}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Verify your email</h1>
@@ -134,12 +138,21 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: #f5f5f5; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
               <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1a1a1a;">${code}</span>
             </div>
+            <hr style="border: none; border-top: 1px solid #eaeaea; margin: 24px 0;" />
+            <h2 style="color: #1a1a1a; font-size: 18px; margin-bottom: 12px;">Your Student Portal Login</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 16px;">
+              You can also use the password below to log in to your student portal anytime. We recommend keeping this email safe or changing your password once logged in.
+            </p>
+            <div style="background: #eef2ff; border-radius: 6px; padding: 16px; text-align: center; margin-bottom: 24px; border: 1px solid #c7d2fe;">
+              <strong style="font-size: 16px; color: #4338ca;">Password: </strong>
+              <span style="font-size: 18px; font-family: monospace; color: #1a1a1a;">${tempPassword}</span>
+            </div>
             <p style="color: #999; font-size: 14px;">
               This code expires in 10 minutes. If you didn't request this code, you can safely ignore this email.
             </p>
           </div>
         `,
-        text: `Your verification code is: ${code}\n\nThis code expires in 10 minutes. If you didn't request this code, you can safely ignore this email.`,
+        text: `Your verification code is: ${code}\n\nYour temporary student portal password is: ${tempPassword}\n\nThis code expires in 10 minutes. If you didn't request this code, you can safely ignore this email.`,
       });
 
       console.log(`Email sent successfully via ZeptoMail, ID: ${result.id}`);

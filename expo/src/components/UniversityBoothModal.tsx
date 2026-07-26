@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, MessageSquare, Calendar, Download, Send } from 'lucide-react';
+import { X, Building2, MapPin, Globe, Award, DollarSign, Clock, BookOpen, GraduationCap, Search, Filter, MessageSquare, Calendar, Download, Send, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatWindow } from './ChatWindow';
+import { GuestLoginModal } from './GuestLoginModal';
 
 interface Program {
   id: string;
@@ -25,6 +26,7 @@ interface University {
   description: string;
   website_url: string;
   brochure_url?: string;
+  contact_email?: string;
 }
 
 interface UniversityBoothModalProps {
@@ -59,6 +61,19 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
   const [applicationMessage, setApplicationMessage] = useState('');
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
+  const [showGuestLogin, setShowGuestLogin] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const handleAuthRequired = async (action: () => void) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setPendingAction(() => action);
+      setShowGuestLogin(true);
+      return;
+    }
+    action();
+  };
+
   useEffect(() => {
     async function fetchBoothData() {
       setLoading(true);
@@ -80,7 +95,8 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           banner_url: profile.banner_url || '',
           description: profile.description || '',
           website_url: profile.website_url || '',
-          brochure_url: profile.brochure_url || ''
+          brochure_url: profile.brochure_url || '',
+          contact_email: profile.contact_email || ''
         });
       }
 
@@ -122,8 +138,8 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
     });
   }, [programs, searchQuery, selectedDegrees, requireScholarship]);
 
-  const handleInteractionRequest = async () => {
-    setIsChatOpen(true);
+  const handleInteractionRequest = () => {
+    handleAuthRequired(() => setIsChatOpen(true));
   };
 
   const handleBookAppointment = async (e: React.FormEvent) => {
@@ -271,6 +287,14 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" /> {university.location || 'Location Not Provided'}
                 </span>
+                {university.contact_email && (
+                  <a 
+                    href={`mailto:${university.contact_email}`}
+                    className="flex items-center gap-1 hover:text-white hover:underline"
+                  >
+                    <Mail className="w-4 h-4" /> {university.contact_email}
+                  </a>
+                )}
                 {university.website_url && (
                   <a 
                     href={university.website_url} 
@@ -629,6 +653,23 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           </div>
         )}
       </AnimatePresence>
+
+      {showGuestLogin && (
+        <GuestLoginModal
+          initialEmail={new URLSearchParams(window.location.search).get('guest_email') || ''}
+          onSuccess={() => {
+            setShowGuestLogin(false);
+            if (pendingAction) {
+              pendingAction();
+              setPendingAction(null);
+            }
+          }}
+          onClose={() => {
+            setShowGuestLogin(false);
+            setPendingAction(null);
+          }}
+        />
+      )}
     </div>
   );
 }

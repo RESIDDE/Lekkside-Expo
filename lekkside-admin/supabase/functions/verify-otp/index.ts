@@ -77,8 +77,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email verified successfully:", email);
 
+    // Auto-login workaround: Assign the generated temporary password to the user
+    // We grab this from the verification row that was created by send-otp
+    const tempPassword = verification.temp_password || (crypto.randomUUID() + crypto.randomUUID());
+    
+    // Try to create the user with this password
+    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password: tempPassword,
+      email_confirm: true,
+    });
+
+    if (createError) {
+      // If user already exists, we need to update their password instead.
+      // generateLink is a safe way to get the user object by email without sending an email
+      const { data: linkData } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: email.toLowerCase(),
+      });
+      
+      if (linkData?.user?.id) {
+        await supabase.auth.admin.updateUserById(linkData.user.id, { password: tempPassword });
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: "Email verified successfully" }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Email verified successfully",
+        password: tempPassword // Send password back for immediate auto-login
+      }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {

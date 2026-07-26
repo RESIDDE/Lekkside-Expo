@@ -590,6 +590,9 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          is_live: boolean | null
+          last_meeting_room_id: string | null
+          meeting_room_id: string | null
           role: string | null
           university_name: string | null
           updated_at: string
@@ -599,6 +602,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_live?: boolean | null
+          last_meeting_room_id?: string | null
+          meeting_room_id?: string | null
           role?: string | null
           university_name?: string | null
           updated_at?: string
@@ -608,6 +614,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_live?: boolean | null
+          last_meeting_room_id?: string | null
+          meeting_room_id?: string | null
           role?: string | null
           university_name?: string | null
           updated_at?: string

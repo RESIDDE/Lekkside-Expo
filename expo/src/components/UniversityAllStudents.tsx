@@ -187,9 +187,9 @@ export function UniversityAllStudents({ user }: { user: any }) {
           <AnimatePresence>
             {students.map((student, idx) => {
               const screening = Array.isArray(student.student_screenings) ? student.student_screenings[0] : student.student_screenings;
-              const photoUrl = student.logo_url || screening?.passport_url;
-              const country = screening?.preferred_destination || 'Not specified';
-              const studyLevel = screening?.highest_qualification || 'Not specified';
+              const photoUrl = student.logo_url || screening?.passport_url || student.custom_fields?.['Attendee Photo'];
+              const country = screening?.preferred_destination || student.custom_fields?.['Which country do you want to study in?'] || student.custom_fields?.['Preferred Destination'] || 'Not specified';
+              const studyLevel = screening?.highest_qualification || student.custom_fields?.['What is your highest level of education?'] || student.custom_fields?.['Highest Educational Qualification'] || 'Not specified';
 
               return (
                 <motion.div
@@ -387,7 +387,7 @@ export function UniversityAllStudents({ user }: { user: any }) {
                                 </div>
                                 <div>
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intended Course</p>
-                                  <p className="font-bold text-gray-900">{s?.intended_course || 'Not specified'}</p>
+                                  <p className="font-bold text-gray-900">{s?.intended_course || selectedStudent.custom_fields?.['Intended Course of Study'] || selectedStudent.custom_fields?.['What level of study are you looking for?'] || 'Not specified'}</p>
                                 </div>
                               </div>
                               
@@ -397,7 +397,7 @@ export function UniversityAllStudents({ user }: { user: any }) {
                                 </div>
                                 <div>
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Preferred Destination</p>
-                                  <p className="font-bold text-gray-900">{s?.preferred_destination || 'Not specified'}</p>
+                                  <p className="font-bold text-gray-900">{s?.preferred_destination || selectedStudent.custom_fields?.['Which country do you want to study in?'] || selectedStudent.custom_fields?.['Preferred Destination'] || 'Not specified'}</p>
                                 </div>
                               </div>
 
@@ -408,7 +408,7 @@ export function UniversityAllStudents({ user }: { user: any }) {
                                 <div>
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Highest Education Level</p>
                                   <p className="font-bold text-gray-900">
-                                    {s?.highest_qualification || 'Not specified'} 
+                                    {s?.highest_qualification || selectedStudent.custom_fields?.['What is your highest level of education?'] || selectedStudent.custom_fields?.['Highest Educational Qualification'] || 'Not specified'} 
                                     {s?.gpa && <span className="text-gray-500 font-medium ml-2">(GPA: {s.gpa})</span>}
                                   </p>
                                 </div>
@@ -421,7 +421,7 @@ export function UniversityAllStudents({ user }: { user: any }) {
                                 <div>
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Budget / Scholarship</p>
                                   <p className="font-bold text-gray-900">
-                                    {s?.budget || 'Not specified'}
+                                    {s?.budget || selectedStudent.custom_fields?.['What is your budget for tuition fees?'] || selectedStudent.custom_fields?.['Budget for Studies'] || 'Not specified'}
                                     {s?.scholarship && (
                                       <span className="text-gray-500 font-medium text-sm ml-2">({s.scholarship})</span>
                                     )}

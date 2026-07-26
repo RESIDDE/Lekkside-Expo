@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   LogOut,
   LayoutDashboard,
@@ -22,6 +22,7 @@ import { AIMatching } from '../components/AIMatching';
 import { UniversitiesDirectory } from '../components/UniversitiesDirectory';
 import { LekksideSupportChat } from '../components/LekksideSupportChat';
 import { StudentChats } from '../components/StudentChats';
+import { AdminLiveEventBanner } from '../components/AdminLiveEventBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function StudentDashboard() {
@@ -31,11 +32,19 @@ export function StudentDashboard() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const eventId = searchParams.get('event');
 
   useEffect(() => {
     async function checkUser() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        const guestEmail = searchParams.get('guest_email');
+        if (guestEmail) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         navigate('/');
         return;
       }
@@ -43,7 +52,7 @@ export function StudentDashboard() {
       setLoading(false);
     }
     checkUser();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -58,14 +67,19 @@ export function StudentDashboard() {
     );
   }
 
+  const guestEmail = searchParams.get('guest_email');
+  const displayEmail = user?.email || guestEmail;
+
   const navItems = [
     { id: 'exhibition-hall' as const, label: 'Exhibition Hall', icon: LayoutDashboard },
-    { id: 'screening' as const, label: 'Screening', icon: ClipboardList },
-    { id: 'applications' as const, label: 'Applications', icon: FileText },
-    { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
-    { id: 'ai-matches' as const, label: 'AI Matches', icon: Handshake },
-    { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
-    { id: 'support' as const, label: 'Lekkside Support', icon: MessageCircleQuestion },
+    ...(user ? [
+      { id: 'screening' as const, label: 'Screening', icon: ClipboardList },
+      { id: 'applications' as const, label: 'Applications', icon: FileText },
+      { id: 'meetings' as const, label: 'Meetings and Appointments', icon: Calendar },
+      { id: 'ai-matches' as const, label: 'AI Matches', icon: Handshake },
+      { id: 'chats' as const, label: 'Live Chats', icon: MessageSquare },
+      { id: 'support' as const, label: 'Lekkside Support', icon: MessageCircleQuestion },
+    ] : [])
   ];
 
   return (
@@ -142,12 +156,12 @@ export function StudentDashboard() {
             <div className={`bg-gray-100/50 rounded-2xl p-2 ${isCollapsed ? "" : "flex items-center gap-3"}`}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center flex-shrink-0 mx-auto">
                 <span className="text-gray-600 font-semibold text-sm">
-                  {user?.email?.charAt(0).toUpperCase()}
+                  {displayEmail?.charAt(0).toUpperCase()}
                 </span>
               </div>
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{user?.email}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{displayEmail}</p>
                 </div>
               )}
               <button
@@ -211,10 +225,10 @@ export function StudentDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
       <main className="flex-1 relative z-10 flex flex-col overflow-hidden pt-16 md:pt-0">
         <div className="flex-1 overflow-y-auto w-full">
           <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-full">
+            <AdminLiveEventBanner />
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -224,7 +238,7 @@ export function StudentDashboard() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="h-full"
               >
-                {activeTab === 'exhibition-hall' && <UniversitiesDirectory />}
+                {activeTab === 'exhibition-hall' && <UniversitiesDirectory eventId={eventId} />}
                 {activeTab === 'screening' && <ScreeningForm />}
                 {activeTab === 'applications' && <StudentApplications user={user} />}
                 {activeTab === 'meetings' && <StudentMeetingsManager user={user} />}
