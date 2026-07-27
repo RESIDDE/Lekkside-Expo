@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, Search, Filter, Star, X, Loader2, Save, Download, Building2, Users, TrendingUp, StickyNote } from 'lucide-react';
+import { User, Search, Filter, Star, X, Loader2, Save, Download, Building2, Users, TrendingUp, StickyNote, MessageSquare, Video, Send, CheckSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Guest {
@@ -46,9 +46,29 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
   const [saving, setSaving] = useState(false);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
 
+  // Selection State
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [studentProfilesMap, setStudentProfilesMap] = useState<Record<string, { user_id: string, full_name: string }>>({});
+  
+  // Action Modal State
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'chat' | 'video' | 'custom'>('custom');
+  const [messageText, setMessageText] = useState('');
+  const [sendingProgress, setSendingProgress] = useState({ sending: false, progress: 0 });
+  const [videoRoomId, setVideoRoomId] = useState<string | null>(null);
+
   // Resolve boothId by querying exhibition_booths directly
   useEffect(() => {
     if (!user?.id) return;
+
+    // Fetch user profile for video room id
+    const fetchProfile = async () => {
+      const { data } = await supabase.from('profiles').select('meeting_room_id, last_meeting_room_id').eq('user_id', user.id).single();
+      if (data) {
+        setVideoRoomId(data.last_meeting_room_id || data.meeting_room_id || null);
+      }
+    };
+    fetchProfile();
 
     const resolveBoothId = async () => {
       const { data: boothData } = await supabase
@@ -83,13 +103,22 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
       // First get all approved student emails
       const { data: approvedProfiles } = await supabase
         .from('profiles')
-        .select('contact_email, student_screenings!inner(status)')
+        .select('user_id, full_name, contact_email, student_screenings!inner(status)')
         .eq('role', 'student')
         .eq('student_screenings.status', 'approved');
         
+      const emailToProfileMap: Record<string, { user_id: string, full_name: string }> = {};
       const approvedEmails = (approvedProfiles || [])
-        .map(p => p.contact_email)
-        .filter(Boolean);
+        .map(p => {
+          if (p.contact_email) {
+            emailToProfileMap[p.contact_email] = { user_id: p.user_id, full_name: p.full_name || '' };
+            return p.contact_email;
+          }
+          return null;
+        })
+        .filter(Boolean) as string[];
+        
+      setStudentProfilesMap(emailToProfileMap);
 
       // Fetch all event attendees (guests) who are approved
       let guestsQuery = supabase
@@ -270,6 +299,105 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
     return matchesSearch;
   });
 
+  const toggleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+    );
+  };
+  
+  const toggleSelectAll = () => {
+    if (selectedStudentIds.length === filteredAttendees.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(filteredAttendees.map(a => a.id));
+    }
+  };
+
+  const handleOpenActionModal = (type: 'chat' | 'video' | 'custom') => {
+    setActionType(type);
+    if (type === 'chat') {
+      setMessageText("Hello! We would love to chat with you. Please join our live chat!");
+    } else if (type === 'video') {
+      const meetingsUrl = import.meta.env.VITE_MEETINGS_URL || 'http://localhost:8080';
+      const link = videoRoomId ? `${meetingsUrl}/meetings/${videoRoomId}` : '[Your Video Room Link]';
+      setMessageText(`Hello! We would love to meet you face-to-face. Please join our video room here: ${link}`);
+    } else {
+      setMessageText("");
+    }
+    setShowActionModal(true);
+  };
+
+  const handleSendBulkAction = async () => {
+    if (!messageText.trim() || selectedStudentIds.length === 0) return;
+    setSendingProgress({ sending: true, progress: 0 });
+    
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || authUser?.id;
+      if (!currentUserId) throw new Error("Could not find user session.");
+
+      const selectedGuests = attendees.filter(a => selectedStudentIds.includes(a.id));
+      
+      for (let i = 0; i < selectedGuests.length; i++) {
+        const guest = selectedGuests[i];
+        const profile = studentProfilesMap[guest.email];
+        if (profile) {
+          const studentId = profile.user_id;
+          const studentName = profile.full_name || `${guest.first_name} ${guest.last_name}`;
+          
+          // Chat sending logic
+          const { data: convData } = await supabase
+            .from('chat_conversations')
+            .select('id')
+            .eq('university_id', currentUserId)
+            .eq('student_id', studentId)
+            .maybeSingle();
+            
+          let convId = convData?.id;
+          
+          if (!convId) {
+             const { data: newConv, error: convError } = await supabase
+               .from('chat_conversations')
+               .insert({
+                  university_id: currentUserId,
+                  student_id: studentId,
+                  student_name: studentName,
+                  student_email: guest.email,
+                  last_message: messageText.trim(),
+                  last_message_at: new Date().toISOString()
+               })
+               .select('id')
+               .single();
+             if (!convError) convId = newConv?.id;
+          } else {
+             await supabase.from('chat_conversations').update({
+               last_message: messageText.trim(),
+               last_message_at: new Date().toISOString()
+             }).eq('id', convId);
+          }
+          
+          if (convId) {
+            await supabase.from('chat_messages').insert({
+              conversation_id: convId,
+              sender_id: currentUserId,
+              content: messageText.trim()
+            });
+          }
+        }
+        setSendingProgress({ sending: true, progress: Math.round(((i + 1) / selectedGuests.length) * 100) });
+      }
+      
+      setShowActionModal(false);
+      setSelectedStudentIds([]);
+      alert(`Invitations sent successfully to ${selectedGuests.length} students!`);
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while sending invitations.');
+    } finally {
+      setSendingProgress({ sending: false, progress: 0 });
+    }
+  };
+
   const relevantCount = leads.filter((l) => l.is_relevant).length;
   const notRelevantCount = leads.filter((l) => !l.is_relevant).length;
 
@@ -393,10 +521,56 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
             </button>
           </div>
 
+          <AnimatePresence>
+            {selectedStudentIds.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-[1.5rem] p-4 flex items-center justify-between shadow-inner">
+                  <div className="flex items-center gap-3 text-blue-400 font-bold text-sm">
+                    <CheckSquare className="w-5 h-5" />
+                    {selectedStudentIds.length} Student{selectedStudentIds.length !== 1 && 's'} Selected
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button 
+                      onClick={() => handleOpenActionModal('chat')}
+                      className="flex items-center gap-2 px-4 py-2 bg-black border border-blue-500/30 text-blue-400 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-blue-500/10 transition-colors shadow-inner"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" /> Live Chat
+                    </button>
+                    <button 
+                      onClick={() => handleOpenActionModal('video')}
+                      className="flex items-center gap-2 px-4 py-2 bg-black border border-purple-500/30 text-purple-400 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-purple-500/10 transition-colors shadow-inner"
+                    >
+                      <Video className="w-3.5 h-3.5" /> Video Meeting
+                    </button>
+                    <button 
+                      onClick={() => handleOpenActionModal('custom')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                    >
+                      <Send className="w-3.5 h-3.5" /> Custom Message
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="overflow-x-auto rounded-[1.5rem] border border-gray-800 bg-black shadow-inner">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-gray-900/50 border-b border-gray-800">
+                  <th className="p-5 w-10">
+                    <input 
+                      type="checkbox"
+                      checked={filteredAttendees.length > 0 && selectedStudentIds.length === filteredAttendees.length}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded bg-black border-gray-700 text-blue-500 focus:ring-blue-500/20 cursor-pointer"
+                    />
+                  </th>
                   <th className="p-5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Name</th>
                   <th className="p-5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Email</th>
                   <th className="p-5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Phone</th>
@@ -408,7 +582,7 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
               <tbody className="divide-y divide-gray-800 bg-transparent text-sm">
                 {filteredAttendees.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-16 text-center text-gray-500 font-medium">
+                    <td colSpan={7} className="p-16 text-center text-gray-500 font-medium">
                       <div className="flex flex-col items-center gap-4">
                         <div className="p-4 bg-gray-900 rounded-full border border-gray-800"><Filter className="w-6 h-6" /></div>
                         No attendees found matching your criteria.
@@ -420,6 +594,14 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
                     const lead = leads.find((l) => l.guest_id === attendee.id);
                     return (
                       <tr key={attendee.id} className="hover:bg-gray-900/50 transition-colors group">
+                        <td className="p-5 w-10">
+                          <input 
+                            type="checkbox"
+                            checked={selectedStudentIds.includes(attendee.id)}
+                            onChange={() => toggleSelectStudent(attendee.id)}
+                            className="w-4 h-4 rounded bg-black border-gray-700 text-blue-500 focus:ring-blue-500/20 cursor-pointer"
+                          />
+                        </td>
                         <td className="p-5">
                           <div className="font-bold text-white text-base tracking-wide">{attendee.first_name} {attendee.last_name}</div>
                           <div className="flex gap-2 mt-2 flex-wrap">
@@ -484,6 +666,79 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
           </div>
         </div>
       </div>
+
+      {/* Action Dialog */}
+      <AnimatePresence>
+        {showActionModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !sendingProgress.sending && setShowActionModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-gray-900 border border-gray-800 rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between p-8 border-b border-gray-800 bg-black">
+                <div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">SEND INVITATION</h3>
+                  <p className="text-sm text-gray-400 font-bold tracking-wide mt-1">To {selectedStudentIds.length} selected student(s)</p>
+                </div>
+                {!sendingProgress.sending && (
+                  <button 
+                    onClick={() => setShowActionModal(false)}
+                    className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors border border-gray-800"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                )}
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Message Content</label>
+                  <textarea
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    disabled={sendingProgress.sending}
+                    placeholder="Type your message..."
+                    className="w-full p-5 bg-black border border-gray-800 rounded-[1.25rem] focus:ring-2 focus:ring-white/20 outline-none text-white placeholder-gray-600 min-h-[160px] resize-y custom-scrollbar disabled:opacity-50"
+                  />
+                </div>
+                
+                {sendingProgress.sending && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      <span>Sending...</span>
+                      <span>{sendingProgress.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-blue-500 h-full transition-all duration-300"
+                        style={{ width: `${sendingProgress.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-8 border-t border-gray-800 bg-black">
+                <button
+                  onClick={handleSendBulkAction}
+                  disabled={sendingProgress.sending || !messageText.trim()}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-white text-black rounded-[1.25rem] font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50"
+                >
+                  {sendingProgress.sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  {sendingProgress.sending ? 'SENDING...' : 'SEND MESSAGE'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Notes Dialog */}
       <AnimatePresence>

@@ -73,7 +73,7 @@ export default function Universities() {
 
   useEffect(() => {
     async function fetchUniversities() {
-      const { data: settingsData } = await supabase.from('system_settings').select('*').limit(1).maybeSingle();
+      const { data: settingsData } = await (supabase as any).from('system_settings').select('*').limit(1).maybeSingle();
       if (settingsData) {
         setGlobalVideoEnabled(settingsData.video_rooms_enabled);
       }
