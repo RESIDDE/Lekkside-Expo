@@ -53,9 +53,10 @@ const EMOJIS = ['😊', '👍', '🎓', '📚', '✅', '❤️', '🙏', '🤝',
 
 interface UniversityChatsProps {
   user: any;
+  isApproved?: boolean;
 }
 
-export function UniversityChats({ user }: UniversityChatsProps) {
+export function UniversityChats({ user, isApproved }: UniversityChatsProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -275,6 +276,20 @@ export function UniversityChats({ user }: UniversityChatsProps) {
 
   const isImage = (type?: string) => type?.startsWith('image/');
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+
+  if (isApproved === false) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex flex-col items-center justify-center bg-gray-900 border border-gray-800 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex-1 min-h-0 text-center p-8" style={{ height: 'calc(100vh - 200px)' }}>
+          <div className="w-24 h-24 bg-black rounded-[2rem] flex items-center justify-center mb-6 text-gray-600 border border-gray-800 shadow-inner">
+            <MessageSquare className="w-12 h-12 text-red-400/50" />
+          </div>
+          <h3 className="text-2xl font-bold text-white tracking-tight mb-2">ACCESS RESTRICTED</h3>
+          <p className="text-sm font-medium text-gray-400 max-w-sm">Your account must be approved by an administrator to access live chats.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">

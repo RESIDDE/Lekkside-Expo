@@ -13,9 +13,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface UniversityMeetingsManagerProps {
   user: any;
+  isApproved?: boolean;
 }
 
-export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerProps) {
+export function UniversityMeetingsManager({ user, isApproved }: UniversityMeetingsManagerProps) {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'accepted' | 'declined' | 'rescheduled'>('pending');
@@ -144,6 +145,18 @@ export function UniversityMeetingsManager({ user }: UniversityMeetingsManagerPro
       <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400">
         <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
         <p>Loading meetings...</p>
+      </div>
+    );
+  }
+
+  if (isApproved === false) {
+    return (
+      <div className="bg-gray-900 rounded-[2.5rem] border border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center p-8">
+        <div className="w-24 h-24 bg-black rounded-[2rem] flex items-center justify-center mb-6 text-gray-600 border border-gray-800 shadow-inner">
+          <Calendar className="w-12 h-12 text-red-400/50" />
+        </div>
+        <h3 className="text-2xl font-bold text-white tracking-tight mb-2">ACCESS RESTRICTED</h3>
+        <p className="text-sm font-medium text-gray-400 max-w-sm">Your account must be approved by an administrator to access meetings and appointments.</p>
       </div>
     );
   }

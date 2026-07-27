@@ -3,7 +3,7 @@ import { Video, Copy, Play, DoorOpen, Check, Radio, Trash2, History } from "luci
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
 
-export function UniversityVideoMeetings() {
+export function UniversityVideoMeetings({ videoEnabled }: { videoEnabled?: boolean }) {
   const [roomName, setRoomName] = useState(() => localStorage.getItem("lekkside_uni_meeting_room") || "");
   const [isCopied, setIsCopied] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -134,6 +134,22 @@ export function UniversityVideoMeetings() {
     setIsCopiedLast(true);
     setTimeout(() => setIsCopiedLast(false), 2000);
   };
+
+  if (videoEnabled === false) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 overflow-y-auto">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-12 max-w-lg text-center">
+          <div className="mx-auto w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+            <Video className="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-3">Video Rooms Disabled</h3>
+          <p className="text-sm font-medium text-gray-500">
+            Video meeting functionality is currently disabled. Please contact the administrator for access.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-8 overflow-y-auto">

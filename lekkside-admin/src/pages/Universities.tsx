@@ -27,6 +27,7 @@ interface University {
   location: string;
   logo_url: string;
   is_active: boolean;
+  video_access_enabled: boolean;
   // Mock augmented fields
   country: string;
   hasScholarship: boolean;
@@ -44,6 +45,7 @@ export default function Universities() {
   const [loading, setLoading] = useState(true);
   const [universities, setUniversities] = useState<University[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalVideoEnabled, setGlobalVideoEnabled] = useState(false);
   
   // Filter States
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -71,6 +73,11 @@ export default function Universities() {
 
   useEffect(() => {
     async function fetchUniversities() {
+      const { data: settingsData } = await supabase.from('system_settings').select('*').limit(1).maybeSingle();
+      if (settingsData) {
+        setGlobalVideoEnabled(settingsData.video_rooms_enabled);
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -100,6 +107,7 @@ export default function Universities() {
             location: profile.location || '',
             logo_url: profile.logo_url || '',
             is_active: profile.is_active ?? true,
+            video_access_enabled: profile.video_access_enabled ?? false,
             country,
             hasScholarship: profile.has_scholarship || false,
             programs: Array.isArray(profile.programs) ? profile.programs : [],
@@ -130,6 +138,39 @@ export default function Universities() {
     } catch (err) {
       console.error('Error toggling active status:', err);
       alert('Failed to update status.');
+    }
+  };
+
+  const handleToggleVideoAccess = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ video_access_enabled: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setUniversities(prev => 
+        prev.map(u => u.id === id ? { ...u, video_access_enabled: !currentStatus } : u)
+      );
+    } catch (err) {
+      console.error('Error toggling video access:', err);
+      alert('Failed to update video access status.');
+    }
+  };
+
+  const handleToggleGlobalVideo = async () => {
+    try {
+      const newStatus = !globalVideoEnabled;
+      const { error } = await (supabase as any)
+        .from('system_settings')
+        .update({ video_rooms_enabled: newStatus })
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+      setGlobalVideoEnabled(newStatus);
+    } catch(err) {
+       console.error(err);
+       alert('Failed to update global video setting');
     }
   };
 
@@ -269,12 +310,30 @@ export default function Universities() {
         
       {/* Header & Search */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Participating Institutions</h2>
-          <p className="text-sm text-gray-500 mt-1">Browse and filter universities to find your perfect match</p>
+        <div className="flex flex-col md:flex-row justify-between w-full md:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Participating Institutions</h2>
+            <p className="text-sm text-gray-500 mt-1">Browse and filter universities to find your perfect match</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-700">Global Video Rooms:</span>
+            <button
+              onClick={handleToggleGlobalVideo}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                globalVideoEnabled ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                  globalVideoEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input 
@@ -425,9 +484,16 @@ export default function Universities() {
 
                   {/* Action Footer */}
                   <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500">
-                      Visibility: {uni.is_active ? 'Shown to students' : 'Hidden'}
-                    </span>
+                    <button 
+                      onClick={() => handleToggleVideoAccess(uni.id, uni.video_access_enabled)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
+                        uni.video_access_enabled
+                          ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200'
+                      }`}
+                    >
+                      {uni.video_access_enabled ? 'Video Access: ON' : 'Video Access: OFF'}
+                    </button>
                     <button 
                       onClick={() => handleToggleActive(uni.id, uni.is_active)}
                       className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${

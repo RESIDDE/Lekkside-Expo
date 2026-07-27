@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Mail, Phone, MapPin, BookOpen, GraduationCap, DollarSign, Calendar, X, User, UserCircle2, MessageSquare, Send, Loader2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
-export function UniversityAllStudents({ user }: { user: any }) {
+export function UniversityAllStudents({ user, isApproved }: { user: any, isApproved?: boolean }) {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
@@ -160,14 +160,25 @@ export function UniversityAllStudents({ user }: { user: any }) {
           <h2 className="text-2xl font-bold text-gray-900">All Registered Students</h2>
           <p className="text-gray-500 font-medium">{students.length} students enrolled</p>
         </div>
-        <button
-          onClick={() => setShowBulkModal(true)}
-          disabled={students.length === 0 || loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
-        >
-          <MessageSquare className="w-5 h-5" />
-          Bulk Message All
-        </button>
+        <div className="relative group">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            disabled={students.length === 0 || loading || !isApproved}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all w-full sm:w-auto justify-center ${
+              !isApproved 
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed'
+            }`}
+          >
+            <MessageSquare className="w-5 h-5" />
+            Bulk Message All
+          </button>
+          {!isApproved && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              Messaging is disabled until an admin approves your account.
+            </div>
+          )}
+        </div>
       </div>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -312,13 +323,25 @@ export function UniversityAllStudents({ user }: { user: any }) {
                             {selectedStudent.contact_phone}
                           </a>
                         )}
-                        <button 
-                          onClick={() => setShowMessageInput(!showMessageInput)}
-                          className="flex items-center gap-2 text-sm font-bold text-white transition-colors bg-blue-600 px-5 py-2 rounded-xl shadow-md hover:bg-blue-700 hover:shadow-lg shadow-blue-500/20"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          Message
-                        </button>
+                        <div className="relative group/msg">
+                          <button 
+                            onClick={() => isApproved && setShowMessageInput(!showMessageInput)}
+                            disabled={!isApproved}
+                            className={`flex items-center gap-2 text-sm font-bold transition-colors px-5 py-2 rounded-xl shadow-md ${
+                              !isApproved 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                : 'text-white bg-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-500/20'
+                            }`}
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Message
+                          </button>
+                          {!isApproved && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover/msg:opacity-100 transition-opacity pointer-events-none z-50">
+                              Messaging is disabled until approved.
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

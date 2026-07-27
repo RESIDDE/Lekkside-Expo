@@ -56,6 +56,8 @@ export function UniversityDashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [videoEnabled, setVideoEnabled] = useState(false);
   const navigate = useNavigate();
 
   // Notifications state
@@ -76,7 +78,7 @@ export function UniversityDashboard() {
       // Check profile setup
       const { data: profile } = await supabase
         .from('profiles')
-        .select('university_name, contact_email, is_active')
+        .select('university_name, contact_email, is_active, video_access_enabled')
         .eq('user_id', session.user.id)
         .maybeSingle();
         
@@ -84,9 +86,22 @@ export function UniversityDashboard() {
         setShowProfileReminder(true);
       }
       
-      if ((profile as any)?.is_active === false) {
+      const profileActive = (profile as any)?.is_active;
+      if (profileActive === false) {
         setIsDeactivated(true);
       }
+      setIsApproved(profileActive === true);
+
+      // Fetch global settings
+      const { data: systemSettings } = await supabase
+        .from('system_settings')
+        .select('video_rooms_enabled')
+        .limit(1)
+        .maybeSingle();
+      
+      const globalVideoEnabled = systemSettings?.video_rooms_enabled ?? false;
+      const exhibitorVideoEnabled = (profile as any)?.video_access_enabled ?? false;
+      setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
 
       // Fetch Applications Data
       const { data: applications } = await supabase
@@ -706,25 +721,25 @@ export function UniversityDashboard() {
 
             {activeTab === 'students' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-                <UniversityAllStudents user={user} />
+                <UniversityAllStudents user={user} isApproved={isApproved} />
               </div>
             )}
 
             {activeTab === 'meetings' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
-                <UniversityMeetingsManager user={user} />
+                <UniversityMeetingsManager user={user} isApproved={isApproved} />
               </div>
             )}
 
             {activeTab === 'video-meetings' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto h-[calc(100vh-100px)]">
-                <UniversityVideoMeetings />
+                <UniversityVideoMeetings videoEnabled={videoEnabled} />
               </div>
             )}
 
             {activeTab === 'chats' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <UniversityChats user={user} />
+                <UniversityChats user={user} isApproved={isApproved} />
               </div>
             )}
 

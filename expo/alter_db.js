@@ -13,9 +13,9 @@ const env = Object.fromEntries(
 
 const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_SERVICE_ROLE_KEY);
 
-async function checkGuests() {
-  const { data, error } = await supabase.from('guests').select('*').limit(1);
+async function checkProfiles() {
+  const { data, error } = await supabase.from('profiles').select('*').limit(1);
   console.log(data);
 }
 
-checkGuests();
+checkProfiles();
