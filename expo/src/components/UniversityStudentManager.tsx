@@ -105,6 +105,7 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
         .from('profiles')
         .select('user_id, full_name, contact_email, student_screenings!inner(status)')
         .eq('role', 'student')
+        .eq('is_active', true)
         .eq('student_screenings.status', 'approved');
         
       const emailToProfileMap: Record<string, { user_id: string, full_name: string }> = {};

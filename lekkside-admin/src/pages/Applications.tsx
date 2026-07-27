@@ -16,10 +16,14 @@ export default function Applications() {
   async function fetchData() {
     setLoading(true);
     
-    const { data: apps } = await supabase
+    const { data: apps, error } = await supabase
       .from('university_applications')
-      .select('*, student:profiles!university_applications_student_id_fkey(full_name), university:profiles!university_applications_university_id_fkey(full_name, university_name)')
+      .select('*, student:profiles!student_id(full_name), university:profiles!university_id(full_name, university_name)')
       .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching applications:", error);
+    }
     
     setApplications(apps || []);
     setLoading(false);

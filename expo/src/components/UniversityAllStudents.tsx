@@ -30,6 +30,7 @@ export function UniversityAllStudents({ user, isApproved }: { user: any, isAppro
             student_screenings!inner (*)
           `)
           .eq('role', 'student')
+          .eq('is_active', true)
           .eq('student_screenings.status', 'approved')
           .order('created_at', { ascending: false });
 
