@@ -4,6 +4,7 @@ export interface EmailOptions {
   from: string;
   to: string | string[];
   replyTo?: string;
+  bcc?: string | string[];
   subject: string;
   html?: string;
   text?: string;
@@ -34,6 +35,7 @@ export const sendEmail = async (options: EmailOptions) => {
       from: options.from,
       to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
       replyTo: options.replyTo,
+      bcc: options.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(", ") : options.bcc) : undefined,
       subject: options.subject,
       text: options.text,
       html: options.html,

@@ -22,6 +22,9 @@ export interface ContactMessage {
   created_at: string;
   updated_at: string | null;
   source: 'email' | 'contact_form' | null;
+  is_important: boolean;
+  is_archived: boolean;
+  is_deleted: boolean;
 }
 
 export function useMessages() {
@@ -145,11 +148,54 @@ export function useMessages() {
     }
   });
 
+  const toggleImportant = useMutation({
+    mutationFn: async ({ id, is_important }: { id: string, is_important: boolean }) => {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ is_important })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
+    }
+  });
+
+  const toggleArchive = useMutation({
+    mutationFn: async ({ id, is_archived }: { id: string, is_archived: boolean }) => {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ is_archived })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
+    }
+  });
+
+  const deleteMessage = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ is_deleted: true })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
+      toast.success("Message deleted");
+    }
+  });
+
   return {
     messages,
     isLoading,
     isRefetching: isFetching && !isLoading,
     replyToMessage,
-    markAsRead
+    markAsRead,
+    toggleImportant,
+    toggleArchive,
+    deleteMessage
   };
 }

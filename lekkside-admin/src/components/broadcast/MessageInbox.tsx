@@ -28,7 +28,10 @@ function MessageItem({
   replyText, 
   setReplyText, 
   handleReply, 
-  isPending 
+  isPending,
+  onToggleImportant,
+  onToggleArchive,
+  onDelete
 }: { 
   msg: ContactMessage, 
   expandedId: string | null, 
@@ -36,7 +39,10 @@ function MessageItem({
   replyText: string,
   setReplyText: (val: string) => void,
   handleReply: (msg: ContactMessage) => void,
-  isPending: boolean
+  isPending: boolean,
+  onToggleImportant: (id: string, current: boolean) => void,
+  onToggleArchive: (id: string, current: boolean) => void,
+  onDelete: (id: string) => void
 }) {
   const isExpanded = expandedId === msg.id;
   const isUnread = msg.status === 'unread';
@@ -54,7 +60,10 @@ function MessageItem({
         >
           <div className="flex-none flex items-center gap-3 w-16">
             <div className="w-4 h-4 rounded border border-gray-300 opacity-30 group-hover:opacity-100 transition-opacity"></div>
-            <Star className={`h-4 w-4 ${isUnread ? 'text-gray-400' : 'text-gray-300'} hover:text-yellow-400 transition-colors cursor-pointer`} />
+            <Star 
+              className={`h-4 w-4 ${msg.is_important ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'} hover:text-yellow-400 transition-colors cursor-pointer`} 
+              onClick={(e) => { e.stopPropagation(); onToggleImportant(msg.id, msg.is_important); }}
+            />
           </div>
           
           <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -78,8 +87,24 @@ function MessageItem({
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-[22px] font-normal text-gray-800">{msg.subject || "(No Subject)"}</h2>
             <div className="flex items-center gap-2 text-gray-500">
-              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-gray-100"><Archive className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-gray-100"><Trash2 className="h-5 w-5" /></Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full h-10 w-10 hover:bg-gray-100"
+                onClick={(e) => { e.stopPropagation(); onToggleArchive(msg.id, msg.is_archived); }}
+              >
+                <Archive className={`h-5 w-5 ${msg.is_archived ? 'text-blue-600' : ''}`} />
+              </Button>
+              {!msg.is_deleted && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full h-10 w-10 hover:bg-gray-100"
+                  onClick={(e) => { e.stopPropagation(); onDelete(msg.id); }}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -193,7 +218,7 @@ function MessageItem({
 
 export function MessageInbox() {
   const queryClient = useQueryClient();
-  const { messages, isLoading, isRefetching, replyToMessage, markAsRead } = useMessages();
+  const { messages, isLoading, isRefetching, replyToMessage, markAsRead, toggleImportant, toggleArchive, deleteMessage } = useMessages();
   const [replyText, setReplyText] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -227,6 +252,16 @@ export function MessageInbox() {
       }
     }
   };
+  
+  const handleToggleImportant = (id: string, current: boolean) => toggleImportant.mutate({ id, is_important: !current });
+  const handleToggleArchive = (id: string, current: boolean) => {
+    toggleArchive.mutate({ id, is_archived: !current });
+    if (expandedId === id) setExpandedId(null);
+  };
+  const handleDelete = (id: string) => {
+    deleteMessage.mutate(id);
+    if (expandedId === id) setExpandedId(null);
+  };
 
   const refreshMessages = () => {
     queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
@@ -241,11 +276,14 @@ export function MessageInbox() {
   }
 
   const allMessages = messages || [];
-  const broadcastReplies = allMessages.filter(m => !m.source || m.source === 'email');
-  const contactForms = allMessages.filter(m => m.source === 'contact_form');
+  const inboxBroadcasts = allMessages.filter(m => (!m.source || m.source === 'email') && !m.is_archived && !m.is_deleted);
+  const inboxContacts = allMessages.filter(m => m.source === 'contact_form' && !m.is_archived && !m.is_deleted);
+  const importantMessages = allMessages.filter(m => m.is_important && !m.is_deleted);
+  const archivedMessages = allMessages.filter(m => m.is_archived && !m.is_deleted);
+  const trashMessages = allMessages.filter(m => m.is_deleted);
 
-  const unreadBroadcasts = broadcastReplies.filter(m => m.status === 'unread').length;
-  const unreadContacts = contactForms.filter(m => m.status === 'unread').length;
+  const unreadBroadcasts = inboxBroadcasts.filter(m => m.status === 'unread').length;
+  const unreadContacts = inboxContacts.filter(m => m.status === 'unread').length;
 
   return (
     <div className="w-full flex flex-col h-[calc(100vh-120px)] min-h-[600px] bg-white rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.05)] border border-gray-200 overflow-hidden font-sans mt-2">
@@ -282,14 +320,14 @@ export function MessageInbox() {
       </div>
 
       <Tabs defaultValue="broadcasts" className="w-full flex-1 flex flex-col min-h-0">
-        <div className="flex items-center bg-white px-2 border-b border-gray-100 shadow-sm z-10 relative">
+        <div className="flex items-center bg-white px-2 border-b border-gray-100 shadow-sm z-10 relative overflow-x-auto">
           <TabsList className="bg-transparent p-0 h-14 gap-2">
             <TabsTrigger 
               value="broadcasts" 
-              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-6 py-4 bg-transparent hover:bg-gray-50 gap-3 text-gray-600 transition-colors"
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-4 py-4 bg-transparent hover:bg-gray-50 gap-2 text-gray-600 transition-colors"
             >
-              <Mail className="h-5 w-5" />
-              <span className="font-medium text-[15px]">Broadcast Replies</span>
+              <Mail className="h-4 w-4" />
+              <span className="font-medium text-[14px]">Broadcasts</span>
               {unreadBroadcasts > 0 && (
                 <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-0.5 rounded-full ml-1 border-none">
                   {unreadBroadcasts} new
@@ -298,21 +336,42 @@ export function MessageInbox() {
             </TabsTrigger>
             <TabsTrigger 
               value="contact" 
-              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-6 py-4 bg-transparent hover:bg-gray-50 gap-3 text-gray-600 transition-colors"
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-4 py-4 bg-transparent hover:bg-gray-50 gap-2 text-gray-600 transition-colors"
             >
-              <User className="h-5 w-5" />
-              <span className="font-medium text-[15px]">Contact Forms</span>
+              <User className="h-4 w-4" />
+              <span className="font-medium text-[14px]">Contact Forms</span>
               {unreadContacts > 0 && (
                 <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-0.5 rounded-full ml-1 border-none">
                   {unreadContacts} new
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger 
+              value="important" 
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-4 py-4 bg-transparent hover:bg-gray-50 gap-2 text-gray-600 transition-colors"
+            >
+              <Star className="h-4 w-4" />
+              <span className="font-medium text-[14px]">Important</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="archived" 
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-4 py-4 bg-transparent hover:bg-gray-50 gap-2 text-gray-600 transition-colors"
+            >
+              <Archive className="h-4 w-4" />
+              <span className="font-medium text-[14px]">Archived</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="trash" 
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-4 py-4 bg-transparent hover:bg-gray-50 gap-2 text-gray-600 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="font-medium text-[14px]">Trash</span>
+            </TabsTrigger>
           </TabsList>
         </div>
         
         <TabsContent value="broadcasts" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
-          {broadcastReplies.length === 0 ? (
+          {inboxBroadcasts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
               <Mail className="h-16 w-16 mb-4 text-gray-300" />
               <p className="text-lg font-medium text-gray-500">Your inbox is empty</p>
@@ -320,7 +379,7 @@ export function MessageInbox() {
             </div>
           ) : (
             <div className="flex flex-col pb-4">
-              {broadcastReplies.map(msg => (
+              {inboxBroadcasts.map(msg => (
                 <MessageItem 
                   key={msg.id} 
                   msg={msg} 
@@ -330,6 +389,9 @@ export function MessageInbox() {
                   setReplyText={setReplyText}
                   handleReply={handleReply}
                   isPending={replyToMessage.isPending}
+                  onToggleImportant={handleToggleImportant}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -337,7 +399,7 @@ export function MessageInbox() {
         </TabsContent>
         
         <TabsContent value="contact" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
-          {contactForms.length === 0 ? (
+          {inboxContacts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
               <User className="h-16 w-16 mb-4 text-gray-300" />
               <p className="text-lg font-medium text-gray-500">No contact forms</p>
@@ -345,7 +407,7 @@ export function MessageInbox() {
             </div>
           ) : (
             <div className="flex flex-col pb-4">
-              {contactForms.map(msg => (
+              {inboxContacts.map(msg => (
                 <MessageItem 
                   key={msg.id} 
                   msg={msg} 
@@ -355,6 +417,91 @@ export function MessageInbox() {
                   setReplyText={setReplyText}
                   handleReply={handleReply}
                   isPending={replyToMessage.isPending}
+                  onToggleImportant={handleToggleImportant}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="important" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
+          {importantMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+              <Star className="h-16 w-16 mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-500">No important messages</p>
+              <p className="text-sm mt-1">Starred messages will appear here.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col pb-4">
+              {importantMessages.map(msg => (
+                <MessageItem 
+                  key={msg.id} 
+                  msg={msg} 
+                  expandedId={expandedId}
+                  toggleExpand={toggleExpand}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  handleReply={handleReply}
+                  isPending={replyToMessage.isPending}
+                  onToggleImportant={handleToggleImportant}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="archived" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
+          {archivedMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+              <Archive className="h-16 w-16 mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-500">No archived messages</p>
+            </div>
+          ) : (
+            <div className="flex flex-col pb-4">
+              {archivedMessages.map(msg => (
+                <MessageItem 
+                  key={msg.id} 
+                  msg={msg} 
+                  expandedId={expandedId}
+                  toggleExpand={toggleExpand}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  handleReply={handleReply}
+                  isPending={replyToMessage.isPending}
+                  onToggleImportant={handleToggleImportant}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="trash" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
+          {trashMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+              <Trash2 className="h-16 w-16 mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-500">Trash is empty</p>
+            </div>
+          ) : (
+            <div className="flex flex-col pb-4">
+              {trashMessages.map(msg => (
+                <MessageItem 
+                  key={msg.id} 
+                  msg={msg} 
+                  expandedId={expandedId}
+                  toggleExpand={toggleExpand}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  handleReply={handleReply}
+                  isPending={replyToMessage.isPending}
+                  onToggleImportant={handleToggleImportant}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -364,4 +511,3 @@ export function MessageInbox() {
     </div>
   );
 }
-

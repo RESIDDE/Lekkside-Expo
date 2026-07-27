@@ -34,6 +34,7 @@ try {
         from: "Lekkside Support <noreply@lekksideexpo.com>",
         to: [to_email],
         replyTo: "support@lekksideexpo.com",
+        bcc: ["info@lekkside.com"],
         subject: `Re: ${subject}`,
         html: `
           <!DOCTYPE html>
