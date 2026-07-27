@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,7 +27,29 @@ export interface ContactMessage {
 export function useMessages() {
   const queryClient = useQueryClient();
 
-  const { data: messages, isLoading } = useQuery({
+  useEffect(() => {
+    const channel = supabase
+      .channel('contact-messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contact_messages',
+        },
+        () => {
+          // Whenever a new message or update arrives, invalidate the query to refresh
+          queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  const { data: messages, isLoading, isFetching } = useQuery({
     queryKey: ["contact_messages"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -125,6 +148,7 @@ export function useMessages() {
   return {
     messages,
     isLoading,
+    isRefetching: isFetching && !isLoading,
     replyToMessage,
     markAsRead
   };

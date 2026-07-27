@@ -193,7 +193,7 @@ function MessageItem({
 
 export function MessageInbox() {
   const queryClient = useQueryClient();
-  const { messages, isLoading, replyToMessage, markAsRead } = useMessages();
+  const { messages, isLoading, isRefetching, replyToMessage, markAsRead } = useMessages();
   const [replyText, setReplyText] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -252,8 +252,14 @@ export function MessageInbox() {
       
       <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={refreshMessages} className="text-gray-600 rounded-full hover:bg-gray-100">
-            <RefreshCcw className="h-5 w-5" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={refreshMessages} 
+            disabled={isRefetching}
+            className="text-gray-600 rounded-full hover:bg-gray-100"
+          >
+            <RefreshCcw className={`h-5 w-5 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
           <Button variant="ghost" size="icon" className="text-gray-600 rounded-full hover:bg-gray-100">
             <MoreVertical className="h-5 w-5" />
