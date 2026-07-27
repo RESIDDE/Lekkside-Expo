@@ -13,7 +13,11 @@ export function StudentApplications({ user }: { user: any }) {
     university_id: '',
     program_name: ''
   });
+  const [isEditingId, setIsEditingId] = useState<string | null>(null);
   const [screeningStatus, setScreeningStatus] = useState<string | null>(null);
+  const [requestEditModalOpen, setRequestEditModalOpen] = useState(false);
+  const [selectedAppId, setSelectedAppId] = useState('');
+  const [editRequestMessage, setEditRequestMessage] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -31,7 +35,8 @@ export function StudentApplications({ user }: { user: any }) {
 
     const { data: unis } = await supabase
       .from('profiles')
-      .select('user_id, full_name, university_name, role');
+      .select('user_id, full_name, university_name, role')
+      .eq('role', 'university');
     
     setUniversities((unis || []).filter(u => u.user_id !== user.id));
 
@@ -51,20 +56,41 @@ export function StudentApplications({ user }: { user: any }) {
     e.preventDefault();
     if (!formData.university_id || !formData.program_name) return;
 
-    const { error } = await supabase
-      .from('university_applications')
-      .insert({
-        student_id: user.id,
-        university_id: formData.university_id,
-        program_name: formData.program_name,
-        status: 'draft',
-        payment_status: 'pending'
-      });
+    if (isEditingId) {
+      const { error } = await supabase
+        .from('university_applications')
+        .update({
+          university_id: formData.university_id,
+          program_name: formData.program_name,
+        })
+        .eq('id', isEditingId);
 
-    if (!error) {
-      setIsFormOpen(false);
-      setFormData({ university_id: '', program_name: '' });
-      fetchData();
+      if (error) {
+        alert("Failed to update application: " + error.message);
+      } else {
+        setIsFormOpen(false);
+        setIsEditingId(null);
+        setFormData({ university_id: '', program_name: '' });
+        fetchData();
+      }
+    } else {
+      const { error } = await supabase
+        .from('university_applications')
+        .insert({
+          student_id: user.id,
+          university_id: formData.university_id,
+          program_name: formData.program_name,
+          status: 'draft',
+          payment_status: 'pending'
+        });
+
+      if (error) {
+        alert("Failed to create application: " + error.message);
+      } else {
+        setIsFormOpen(false);
+        setFormData({ university_id: '', program_name: '' });
+        fetchData();
+      }
     }
   };
 
@@ -73,6 +99,28 @@ export function StudentApplications({ user }: { user: any }) {
       .from('university_applications')
       .update({ payment_status: 'paid', status: 'submitted' })
       .eq('id', id);
+    fetchData();
+  };
+
+  const handleSubmitEditRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAppId || !editRequestMessage) return;
+
+    const { error } = await supabase
+      .from('university_applications')
+      .update({ 
+        edit_request_status: 'pending', 
+        edit_request_message: editRequestMessage 
+      })
+      .eq('id', selectedAppId);
+    
+    if (error) {
+      alert("Failed to submit request: " + error.message);
+    }
+    
+    setRequestEditModalOpen(false);
+    setSelectedAppId('');
+    setEditRequestMessage('');
     fetchData();
   };
 
@@ -109,7 +157,11 @@ export function StudentApplications({ user }: { user: any }) {
           )}
         </div>
         <button
-          onClick={() => setIsFormOpen(!isFormOpen)}
+          onClick={() => {
+            setIsEditingId(null);
+            setFormData({ university_id: '', program_name: '' });
+            setIsFormOpen(!isFormOpen);
+          }}
           disabled={screeningStatus !== 'approved'}
           className={`flex-shrink-0 flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold transition-all duration-300 ${
             screeningStatus === 'approved' 
@@ -130,8 +182,10 @@ export function StudentApplications({ user }: { user: any }) {
             exit={{ opacity: 0, y: -20, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-black p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl">
-              <h3 className="text-2xl font-bold tracking-tight text-white mb-8">Start New Application</h3>
+            <div className="bg-black p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl" id="application-form">
+              <h3 className="text-2xl font-bold tracking-tight text-white mb-8">
+                {isEditingId ? 'Edit Application' : 'Start New Application'}
+              </h3>
               <form onSubmit={handleStartApplication} className="space-y-6 max-w-2xl">
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">Select University</label>
@@ -165,11 +219,15 @@ export function StudentApplications({ user }: { user: any }) {
                     type="submit"
                     className="px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all shadow-md hover:-translate-y-0.5 flex-1 md:flex-none"
                   >
-                    Create Application
+                    {isEditingId ? 'Save Changes' : 'Create Application'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsFormOpen(false)}
+                    onClick={() => {
+                      setIsFormOpen(false);
+                      setIsEditingId(null);
+                      setFormData({ university_id: '', program_name: '' });
+                    }}
                     className="px-8 py-4 text-gray-400 bg-gray-900 hover:bg-gray-800 hover:text-white rounded-full font-bold transition-colors flex-1 md:flex-none"
                   >
                     Cancel
@@ -233,7 +291,45 @@ export function StudentApplications({ user }: { user: any }) {
 
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-gray-800">
                   <p className="text-sm text-gray-500 font-medium tracking-wide uppercase">Started on {new Date(app.created_at).toLocaleDateString()}</p>
+                  
+                  {app.edit_request_status && (
+                    <div className="flex-1 w-full md:w-auto px-4 py-2 rounded-xl bg-gray-800 border border-gray-700">
+                      <p className={`text-xs font-bold uppercase tracking-widest ${
+                        app.edit_request_status === 'pending' ? 'text-yellow-500' :
+                        app.edit_request_status === 'approved' ? 'text-green-500' :
+                        'text-red-500'
+                      }`}>
+                        Edit Request: {app.edit_request_status}
+                      </p>
+                      {app.edit_request_status === 'pending' && <p className="text-xs text-gray-400 mt-1 truncate">"{app.edit_request_message}"</p>}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                    {app.status === 'draft' && (
+                      <button 
+                        onClick={() => {
+                          setIsEditingId(app.id);
+                          setFormData({ university_id: app.university_id, program_name: app.program_name });
+                          setIsFormOpen(true);
+                          document.getElementById('application-form')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full text-sm font-bold hover:bg-gray-200 transition-all flex shadow-sm"
+                      >
+                        Edit Application
+                      </button>
+                    )}
+                    {app.status !== 'draft' && !app.edit_request_status && (
+                      <button 
+                        onClick={() => {
+                          setSelectedAppId(app.id);
+                          setRequestEditModalOpen(true);
+                        }}
+                        className="flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-gray-300 rounded-full text-sm font-bold hover:bg-gray-700 transition-all flex"
+                      >
+                        Request Edit Access
+                      </button>
+                    )}
                     <button className="flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-gray-900 border border-gray-700 text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-all flex shadow-sm">
                       <Upload className="h-4 w-4" />
                       Documents
@@ -254,6 +350,55 @@ export function StudentApplications({ user }: { user: any }) {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {requestEditModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl max-w-md w-full"
+            >
+              <h3 className="text-2xl font-bold text-white mb-4">Request Update Access</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                Please explain why you need to edit this application. An administrator will review your request.
+              </p>
+              <form onSubmit={handleSubmitEditRequest} className="space-y-6">
+                <div>
+                  <textarea
+                    required
+                    rows={4}
+                    placeholder="e.g. I need to upload an updated transcript..."
+                    value={editRequestMessage}
+                    onChange={(e) => setEditRequestMessage(e.target.value)}
+                    className="w-full rounded-2xl bg-black border border-gray-800 p-4 focus:ring-2 focus:ring-white/20 focus:border-white text-white outline-none resize-none font-medium placeholder-gray-600"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all shadow-md"
+                  >
+                    Send Request
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequestEditModalOpen(false);
+                      setEditRequestMessage('');
+                      setSelectedAppId('');
+                    }}
+                    className="flex-1 px-6 py-3 bg-gray-800 text-gray-300 rounded-full font-bold hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

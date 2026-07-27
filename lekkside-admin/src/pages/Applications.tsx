@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { FileText, CheckCircle, XCircle, Clock, Search, ChevronDown, Building2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { FileText, CheckCircle, XCircle, Clock, Search, ChevronDown, Building2, Trash2, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Applications() {
   const [applications, setApplications] = useState<any[]>([]);
@@ -29,6 +29,24 @@ export default function Applications() {
     await supabase
       .from('university_applications')
       .update({ status: newStatus })
+      .eq('id', id);
+    
+    fetchData();
+  };
+
+  const handleEditRequest = async (id: string, action: 'approve' | 'deny' | 'delete') => {
+    let updates: any = {};
+    if (action === 'approve') {
+      updates = { edit_request_status: null, edit_request_message: null, status: 'draft' };
+    } else if (action === 'deny') {
+      updates = { edit_request_status: 'denied' };
+    } else if (action === 'delete') {
+      updates = { edit_request_status: null, edit_request_message: null };
+    }
+
+    await supabase
+      .from('university_applications')
+      .update(updates)
       .eq('id', id);
     
     fetchData();
@@ -143,6 +161,48 @@ export default function Applications() {
                         <p className="text-xs text-muted-foreground mt-1">Applied on {new Date(app.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
+
+                    <AnimatePresence>
+                      {app.edit_request_status === 'pending' && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mb-1">
+                                Update Access Request
+                              </p>
+                              <p className="text-sm text-foreground/80 italic">"{app.edit_request_message}"</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleEditRequest(app.id, 'approve')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-lg text-xs font-semibold transition-colors"
+                              >
+                                <Check className="w-4 h-4" /> Approve
+                              </button>
+                              <button 
+                                onClick={() => handleEditRequest(app.id, 'deny')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg text-xs font-semibold transition-colors"
+                              >
+                                <X className="w-4 h-4" /> Deny
+                              </button>
+                              <button 
+                                onClick={() => handleEditRequest(app.id, 'delete')}
+                                className="flex items-center gap-1.5 p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete Request"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                   </div>
                 ))}
               </div>
