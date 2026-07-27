@@ -3,28 +3,19 @@ import fs from 'fs';
 
 const envContent = fs.readFileSync('../lekkside-admin/.env', 'utf-8');
 const env = Object.fromEntries(
-  envContent.split('\n').filter(line => line && !line.startsWith('#')).map(line => line.split('='))
+  envContent.split('\n').filter(line => line && !line.startsWith('#'))
+    .map(line => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) return [match[1].trim(), match[2].trim().replace(/^["']|["']$/g, '')];
+      return [];
+    })
 );
 
-const supabaseUrl = env['VITE_SUPABASE_URL'];
-const supabaseKey = env['VITE_SUPABASE_PUBLISHABLE_KEY'];
+const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_SERVICE_ROLE_KEY);
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function fixPolicies() {
-  const query = `
-    DROP POLICY IF EXISTS "Students can update their own applications" ON university_applications;
-    CREATE POLICY "Students can update their own applications" 
-    ON university_applications 
-    FOR UPDATE 
-    USING (auth.uid() = student_id);
-  `;
-  const { error } = await supabase.rpc('exec_sql', { query });
-  if (error) {
-    console.error('Error fixing policies:', error);
-  } else {
-    console.log('Successfully fixed policies.');
-  }
+async function checkGuests() {
+  const { data, error } = await supabase.from('guests').select('*').limit(1);
+  console.log(data);
 }
 
-fixPolicies();
+checkGuests();

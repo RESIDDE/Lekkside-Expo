@@ -27,9 +27,10 @@ export function UniversityAllStudents({ user }: { user: any }) {
           .from('profiles')
           .select(`
             *,
-            student_screenings (*)
+            student_screenings!inner (*)
           `)
           .eq('role', 'student')
+          .eq('student_screenings.status', 'approved')
           .order('created_at', { ascending: false });
 
         if (error) throw error;

@@ -80,12 +80,31 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
     try {
       setLoading(true);
 
-      // Fetch all event attendees (guests)
-      const { data: guests, error: guestsError } = await supabase
+      // First get all approved student emails
+      const { data: approvedProfiles } = await supabase
+        .from('profiles')
+        .select('contact_email, student_screenings!inner(status)')
+        .eq('role', 'student')
+        .eq('student_screenings.status', 'approved');
+        
+      const approvedEmails = (approvedProfiles || [])
+        .map(p => p.contact_email)
+        .filter(Boolean);
+
+      // Fetch all event attendees (guests) who are approved
+      let guestsQuery = supabase
         .from('guests')
         .select('*')
         .eq('event_id', boothInfo.event_id)
         .order('last_name');
+        
+      if (approvedEmails.length > 0) {
+        guestsQuery = guestsQuery.in('email', approvedEmails);
+      } else {
+        guestsQuery = guestsQuery.in('email', ['__nonexistent__']);
+      }
+
+      const { data: guests, error: guestsError } = await guestsQuery;
 
       if (guestsError) throw guestsError;
       setAttendees(guests || []);

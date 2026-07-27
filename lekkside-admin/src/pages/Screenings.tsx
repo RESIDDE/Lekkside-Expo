@@ -65,9 +65,9 @@ export default function Screenings() {
           
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Student Screenings</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Student Registrations</h1>
               <p className="text-muted-foreground mt-2">
-                Review and approve student screenings before they can submit applications.
+                Review and approve student registrations before they can appear to exhibitors.
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function Screenings() {
               <div className="bg-primary/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserCheck className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">No screenings found</h3>
+              <h3 className="text-lg font-semibold text-gray-900">No registrations found</h3>
               <p className="text-gray-500 mt-2">Try adjusting your search terms</p>
             </div>
           ) : (
