@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { 
-  MessageSquare, Search, Send, User, CheckCheck, Check, Clock
+  MessageSquare, Search, Send, User, CheckCheck, Check, Clock,
+  Trash2, Archive
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 interface Conversation {
@@ -16,6 +18,7 @@ interface Conversation {
   last_message: string;
   last_message_at: string;
   created_at: string;
+  status: string;
 }
 
 interface Message {
@@ -36,9 +39,29 @@ export default function SupportInbox() {
   const [newMessage, setNewMessage] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("active");
+  const [matchingMessageConvIds, setMatchingMessageConvIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setMatchingMessageConvIds(new Set());
+      return;
+    }
+    const search = async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('conversation_id')
+        .ilike('content', `%${searchQuery}%`);
+      if (data) {
+        setMatchingMessageConvIds(new Set(data.map(d => d.conversation_id)));
+      }
+    };
+    const timer = setTimeout(search, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user));
@@ -140,10 +163,26 @@ export default function SupportInbox() {
     }).eq('id', activeConv.id);
   };
 
-  const filteredConversations = conversations.filter(c => 
-    c.student_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    c.student_email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const updateStatus = async (status: string) => {
+    if (!activeConv) return;
+    await supabase.from('chat_conversations').update({ status }).eq('id', activeConv.id);
+    setActiveConv({ ...activeConv, status });
+  };
+
+  const deleteMessage = async (msgId: string) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    await supabase.from('chat_messages').delete().eq('id', msgId);
+    setMessages(prev => prev.filter(m => m.id !== msgId));
+  };
+
+  const filteredConversations = conversations.filter(c => {
+    const matchesTab = (c.status || 'active') === activeTab;
+    const matchesSearch = !searchQuery.trim() || 
+      c.student_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      c.student_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      matchingMessageConvIds.has(c.id);
+    return matchesTab && matchesSearch;
+  });
 
   return (
     <AppLayout>
@@ -159,12 +198,19 @@ export default function SupportInbox() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search students..." 
+              placeholder="Search students or messages..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-slate-100/50 border-none rounded-xl"
             />
           </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="active" className="flex-1 text-xs">Active</TabsTrigger>
+              <TabsTrigger value="resolved" className="flex-1 text-xs">Resolved</TabsTrigger>
+              <TabsTrigger value="archived" className="flex-1 text-xs">Archived</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
@@ -204,6 +250,23 @@ export default function SupportInbox() {
                 <p className="text-xs text-muted-foreground">{activeConv.student_email}</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              {(activeConv.status || 'active') !== 'resolved' && (
+                <Button variant="outline" size="sm" onClick={() => updateStatus('resolved')} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 h-8">
+                  <CheckCheck className="w-4 h-4 mr-1.5" /> Resolve
+                </Button>
+              )}
+              {(activeConv.status || 'active') !== 'archived' && (
+                <Button variant="outline" size="sm" onClick={() => updateStatus('archived')} className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 h-8">
+                  <Archive className="w-4 h-4 mr-1.5" /> Archive
+                </Button>
+              )}
+              {(activeConv.status || 'active') !== 'active' && (
+                <Button variant="outline" size="sm" onClick={() => updateStatus('active')} className="h-8">
+                  Move to Active
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
@@ -211,8 +274,17 @@ export default function SupportInbox() {
               const isMine = msg.sender_id === currentUser?.id;
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] rounded-2xl p-3 shadow-sm ${isMine ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-white border rounded-bl-sm'}`}>
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <div className={`max-w-[75%] group rounded-2xl p-3 shadow-sm relative ${isMine ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-white border rounded-bl-sm'}`}>
+                    <div className="flex justify-between items-start gap-3">
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                      <button 
+                        onClick={() => deleteMessage(msg.id)} 
+                        className={`opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ${isMine ? 'text-primary-foreground/70 hover:text-white' : 'text-muted-foreground hover:text-destructive'}`}
+                        title="Delete message"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <div className={`text-[10px] mt-1 flex items-center gap-1 ${isMine ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
                       {format(new Date(msg.created_at), 'h:mm a')}
                       {isMine && (

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { AccessToken } from "npm:livekit-server-sdk@2.17.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,26 @@ serve(async (req) => {
     const randomPostfix = Math.random().toString(36).substring(2, 6);
     const identity = `${participantName}__${randomPostfix}`;
 
+    // Check if the request includes a valid Supabase authorization header
+    let isAdmin = false;
+    const authHeader = req.headers.get('Authorization');
+    
+    if (authHeader) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+      
+      if (supabaseUrl && supabaseAnonKey) {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        
+        if (user) {
+          isAdmin = true;
+          console.log(`User ${user.id} authenticated as admin for room ${roomName}`);
+        }
+      }
+    }
+
     const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
       identity,
       name: participantName,
@@ -52,6 +73,7 @@ serve(async (req) => {
       canPublish: true,
       canPublishData: true,
       canSubscribe: true,
+      roomAdmin: isAdmin,
     });
 
     const token = await at.toJwt();

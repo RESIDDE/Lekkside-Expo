@@ -1,10 +1,12 @@
 
 
 import React from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { decodePassphrase } from '../integrations/livekit/lib/client-utils';
 import { KeyboardShortcuts } from '../integrations/livekit/lib/KeyboardShortcuts';
 import { RecordingIndicator } from '../integrations/livekit/lib/RecordingIndicator';
 import { SettingsMenu } from '../integrations/livekit/lib/SettingsMenu';
+import { ModerationPanel } from '../integrations/livekit/lib/ModerationPanel';
 import { ConnectionDetails } from '../integrations/livekit/lib/types';
 import {
   formatChatMessageLinks,
@@ -66,10 +68,18 @@ export default function MeetingRoom() {
     if (region) {
       url.searchParams.append('region', region);
     }
-    const connectionDetailsResp = await fetch(url.toString());
+    
+    // Get current session for Authorization header
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers: Record<string, string> = {};
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
+    const connectionDetailsResp = await fetch(url.toString(), { headers });
     const connectionDetailsData = await connectionDetailsResp.json();
     setConnectionDetails(connectionDetailsData);
-  }, []);
+  }, [roomName]);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
@@ -235,7 +245,7 @@ function VideoConferenceComponent(props: {
   }, [lowPowerMode]);
 
   return (
-    <div className="lk-room-container" style={{ flex: 1 }}>
+    <div className="lk-room-container" style={{ flex: 1, position: 'relative' }}>
       <RoomContext.Provider value={room}>
         <KeyboardShortcuts />
         <VideoConference
@@ -243,6 +253,7 @@ function VideoConferenceComponent(props: {
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
         />
         <RecordingIndicator />
+        <ModerationPanel />
       </RoomContext.Provider>
     </div>
   );
