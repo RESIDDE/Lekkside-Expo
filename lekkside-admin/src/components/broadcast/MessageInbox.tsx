@@ -3,50 +3,24 @@ import { useMessages, ContactMessage, ThreadReply } from "@/hooks/useMessages";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, 
   Mail, 
   User, 
-  Clock, 
-  ChevronDown, 
-  ChevronUp,
   Send,
-  MessageSquare,
   RefreshCcw,
+  Search,
+  MoreVertical,
+  Star,
+  Archive,
+  Trash2,
+  Reply,
+  CornerUpLeft
 } from "lucide-react";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 
-const ADMIN_AVATAR_COLOR = "bg-indigo-100 text-indigo-600";
-const GUEST_AVATAR_COLOR = "bg-slate-100 text-slate-500";
-
-function ThreadMessage({ reply, isLast }: { reply: ThreadReply; isLast: boolean }) {
-  const isAdmin = reply.from === "admin";
-  return (
-    <div className={`flex gap-3 ${isAdmin ? "flex-row-reverse" : "flex-row"}`}>
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isAdmin ? ADMIN_AVATAR_COLOR : GUEST_AVATAR_COLOR}`}>
-        {isAdmin ? "A" : <User className="h-4 w-4" />}
-      </div>
-      <div className={`max-w-[75%] flex flex-col gap-1 ${isAdmin ? "items-end" : "items-start"}`}>
-        <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap leading-relaxed ${
-          isAdmin 
-            ? "bg-indigo-500 text-white rounded-tr-sm" 
-            : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm"
-        }`}>
-          {reply.text}
-        </div>
-        <span className="text-[10px] text-muted-foreground px-1">
-          {reply.name || (isAdmin ? "Admin" : "Guest")} · {format(new Date(reply.timestamp), "MMM d, h:mm a")}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// Extracted component to prevent unmounting/loss of focus on every keystroke
 function MessageItem({ 
   msg, 
   expandedId, 
@@ -64,124 +38,156 @@ function MessageItem({
   handleReply: (msg: ContactMessage) => void,
   isPending: boolean
 }) {
-  const totalMessages = 1 + (msg.replies?.length || 0);
-  const lastActivity = msg.replies?.length 
-    ? msg.replies[msg.replies.length - 1].timestamp 
-    : msg.created_at;
-
   const isExpanded = expandedId === msg.id;
+  const isUnread = msg.status === 'unread';
+
+  const messageDate = new Date(msg.created_at);
+  const isToday = new Date().toDateString() === messageDate.toDateString();
+  const dateStr = isToday ? format(messageDate, "h:mm a") : format(messageDate, "MMM d");
 
   return (
-    <Card 
-      className={`overflow-hidden transition-all duration-200 ${
-        isExpanded ? "ring-1 ring-primary/20 shadow-md" : "hover:bg-slate-50/50"
-      } ${msg.status === 'unread' ? "border-l-4 border-l-primary" : ""}`}
-    >
-      <CardHeader 
-        className="p-4 cursor-pointer select-none"
-        onClick={() => toggleExpand(msg.id, msg.status)}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-              msg.status === 'unread' ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-500"
-            }`}>
-              <User className="h-5 w-5" />
+    <div className="border-b border-gray-100 last:border-none flex flex-col transition-colors bg-white">
+      {!isExpanded ? (
+        <div 
+          className={`flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:shadow-[inset_1px_0_0_#dadce0,inset_-1px_0_0_#dadce0,0_1px_2px_0_rgba(60,64,67,.3),0_1px_3px_1px_rgba(60,64,67,.15)] hover:z-10 relative group ${isUnread ? 'bg-white font-bold text-gray-900' : 'bg-gray-50/50 text-gray-700 font-medium'}`}
+          onClick={() => toggleExpand(msg.id, msg.status)}
+        >
+          <div className="flex-none flex items-center gap-3 w-16">
+            <div className="w-4 h-4 rounded border border-gray-300 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+            <Star className={`h-4 w-4 ${isUnread ? 'text-gray-400' : 'text-gray-300'} hover:text-yellow-400 transition-colors cursor-pointer`} />
+          </div>
+          
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <div className={`w-40 truncate ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
+              {msg.name}
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={`font-medium ${msg.status === 'unread' ? "text-gray-900" : "text-gray-600"}`}>
-                  {msg.name}
-                </h3>
-                <Badge variant={msg.status === 'replied' ? "default" : msg.status === 'read' ? "secondary" : "outline"} className="text-[10px]">
-                  {msg.status}
-                </Badge>
-                {totalMessages > 1 && (
-                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-slate-100 rounded-full px-2 py-0.5">
-                    <MessageSquare className="h-3 w-3" />
-                    {totalMessages}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 truncate max-w-[300px]">
-                {msg.subject || "(No Subject)"}
-              </p>
+            
+            <div className="flex-1 truncate">
+              <span className={isUnread ? 'text-gray-900' : 'text-gray-800'}>{msg.subject || "(No Subject)"}</span>
+              <span className="text-gray-400 mx-2">-</span>
+              <span className="text-gray-500 font-normal">{msg.message}</span>
             </div>
           </div>
-          <div className="text-right flex flex-col items-end gap-1">
-            <div className="flex items-center text-[10px] text-muted-foreground gap-1">
-              <Clock className="h-3 w-3" />
-              {format(new Date(lastActivity), "MMM d, h:mm a")}
-            </div>
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          
+          <div className={`flex-none w-20 text-right text-xs whitespace-nowrap ${isUnread ? 'text-gray-900 font-bold' : 'text-gray-500 font-normal'}`}>
+            {dateStr}
           </div>
         </div>
-      </CardHeader>
-      
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CardContent className="px-4 pb-4 pt-0 border-t border-slate-100">
-              <div className="mt-4 space-y-4 bg-slate-50/60 rounded-xl p-4 min-h-[80px]">
-                <ThreadMessage
-                  reply={{
-                    from: "guest",
-                    name: msg.name,
-                    text: msg.message,
-                    timestamp: msg.created_at,
-                  }}
-                  isLast={!msg.replies?.length}
-                />
+      ) : (
+        <div className="bg-white m-4 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)] overflow-hidden">
+          <div className="flex items-center justify-between p-6 pb-4">
+            <h2 className="text-[22px] font-normal text-gray-800">{msg.subject || "(No Subject)"}</h2>
+            <div className="flex items-center gap-2 text-gray-500">
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-gray-100"><Archive className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-gray-100"><Trash2 className="h-5 w-5" /></Button>
+            </div>
+          </div>
 
-                {(msg.replies || []).map((reply, idx) => (
-                  <ThreadMessage
-                    key={idx}
-                    reply={reply}
-                    isLast={idx === (msg.replies?.length || 0) - 1}
-                  />
-                ))}
+          <div className="px-6 pb-6 space-y-6">
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-lg flex-shrink-0">
+                {msg.name.charAt(0).toUpperCase()}
               </div>
-
-              <div className="mt-4 space-y-2">
-                <Textarea
-                  id={`reply-textarea-${msg.id}`}
-                  placeholder={`Reply to ${msg.name.split(' ')[0]}...`}
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      handleReply(msg);
-                    }
-                  }}
-                  className="min-h-[90px] bg-white resize-none text-sm"
-                />
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-muted-foreground">⌘ + Enter to send</p>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleReply(msg)}
-                    disabled={isPending || !replyText.trim()}
-                    className="gap-2"
-                  >
-                    {isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                    Send Reply
-                  </Button>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <div>
+                    <span className="font-bold text-gray-900 mr-2">{msg.name}</span>
+                    <span className="text-xs text-gray-500">&lt;{msg.email}&gt;</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    {format(messageDate, "MMM d, yyyy, h:mm a")}
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><CornerUpLeft className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreVertical className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500 mb-6">to me</div>
+                <div className="whitespace-pre-wrap text-[15px] text-gray-800 leading-relaxed font-sans">
+                  {msg.message}
                 </div>
               </div>
-            </CardContent>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
+            </div>
+
+            {(msg.replies || []).map((reply, idx) => {
+              const isAdmin = reply.from === 'admin';
+              return (
+                <div key={idx} className="flex gap-4 border-t pt-6">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-lg flex-shrink-0 ${isAdmin ? 'bg-indigo-600 text-white' : 'bg-blue-600 text-white'}`}>
+                    {isAdmin ? 'A' : msg.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <span className="font-bold text-gray-900 mr-2">{isAdmin ? 'Admin' : msg.name}</span>
+                        {!isAdmin && <span className="text-xs text-gray-500">&lt;{msg.email}&gt;</span>}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        {format(new Date(reply.timestamp), "MMM d, yyyy, h:mm a")}
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><CornerUpLeft className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreVertical className="h-4 w-4" /></Button>
+                        </div>
+                      </div>
+                    </div>
+                    {!isAdmin && <div className="text-sm text-gray-500 mb-6">to me</div>}
+                    {isAdmin && <div className="text-sm text-gray-500 mb-6">to {msg.name}</div>}
+                    <div className="whitespace-pre-wrap text-[15px] text-gray-800 leading-relaxed font-sans">
+                      {reply.text}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="mt-8 flex gap-4">
+               <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium text-lg flex-shrink-0">
+                  A
+               </div>
+               <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all bg-white">
+                 <div className="bg-gray-50/50 px-4 py-2 border-b text-sm text-gray-600 font-medium flex items-center gap-2">
+                   <Reply className="h-4 w-4" />
+                   Reply
+                 </div>
+                 <Textarea
+                   placeholder="Write your reply..."
+                   value={replyText}
+                   onChange={(e) => setReplyText(e.target.value)}
+                   onKeyDown={(e) => {
+                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                       handleReply(msg);
+                     }
+                   }}
+                   className="min-h-[160px] border-none focus-visible:ring-0 rounded-none p-4 resize-none text-[15px]"
+                 />
+                 <div className="p-3 flex justify-between items-center bg-gray-50/30">
+                   <span className="text-xs text-gray-400 px-2 flex items-center gap-1">
+                     Press <kbd className="bg-white border rounded px-1.5 py-0.5 font-sans shadow-sm">⌘</kbd> + <kbd className="bg-white border rounded px-1.5 py-0.5 font-sans shadow-sm">Enter</kbd> to send
+                   </span>
+                   <div className="flex gap-2">
+                     <Button 
+                       variant="ghost"
+                       onClick={() => toggleExpand(msg.id, msg.status)}
+                       className="text-gray-600 rounded-full px-6 hover:bg-gray-200"
+                     >
+                       Discard
+                     </Button>
+                     <Button 
+                       onClick={() => handleReply(msg)}
+                       disabled={isPending || !replyText.trim()}
+                       className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-full shadow-sm"
+                     >
+                       {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                       Send
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -228,8 +234,8 @@ export function MessageInbox() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -242,43 +248,72 @@ export function MessageInbox() {
   const unreadContacts = contactForms.filter(m => m.status === 'unread').length;
 
   return (
-    <div className="w-full flex flex-col pt-2">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Message Inbox</h2>
-        <Button variant="outline" size="sm" onClick={refreshMessages} className="gap-2">
-          <RefreshCcw className="h-4 w-4" />
-          Refresh
-        </Button>
+    <div className="w-full flex flex-col h-[calc(100vh-120px)] min-h-[600px] bg-white rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.05)] border border-gray-200 overflow-hidden font-sans mt-2">
+      
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={refreshMessages} className="text-gray-600 rounded-full hover:bg-gray-100">
+            <RefreshCcw className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-gray-600 rounded-full hover:bg-gray-100">
+            <MoreVertical className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        <div className="flex-1 max-w-2xl px-4">
+          <div className="relative bg-gray-100 rounded-full flex items-center px-4 py-2 focus-within:bg-white focus-within:shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)] focus-within:ring-1 focus-within:ring-gray-200 transition-all">
+            <Search className="h-5 w-5 text-gray-500 mr-3" />
+            <input 
+              type="text" 
+              placeholder="Search mail" 
+              className="bg-transparent border-none outline-none w-full text-gray-700 placeholder-gray-500 text-[15px]"
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 w-20">
+        </div>
       </div>
 
-      <Tabs defaultValue="broadcasts" className="w-full">
-        <TabsList className="grid w-full max-w-[400px] grid-cols-2">
-          <TabsTrigger value="broadcasts" className="flex items-center gap-2">
-            Broadcast Replies
-            {unreadBroadcasts > 0 && (
-              <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
-                {unreadBroadcasts}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="contact" className="flex items-center gap-2">
-            Contact Forms
-            {unreadContacts > 0 && (
-              <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
-                {unreadContacts}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="broadcasts" className="w-full flex-1 flex flex-col min-h-0">
+        <div className="flex items-center bg-white px-2 border-b border-gray-100 shadow-sm z-10 relative">
+          <TabsList className="bg-transparent p-0 h-14 gap-2">
+            <TabsTrigger 
+              value="broadcasts" 
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-6 py-4 bg-transparent hover:bg-gray-50 gap-3 text-gray-600 transition-colors"
+            >
+              <Mail className="h-5 w-5" />
+              <span className="font-medium text-[15px]">Broadcast Replies</span>
+              {unreadBroadcasts > 0 && (
+                <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-0.5 rounded-full ml-1 border-none">
+                  {unreadBroadcasts} new
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="contact" 
+              className="data-[state=active]:border-b-4 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:shadow-none data-[state=active]:bg-transparent rounded-none px-6 py-4 bg-transparent hover:bg-gray-50 gap-3 text-gray-600 transition-colors"
+            >
+              <User className="h-5 w-5" />
+              <span className="font-medium text-[15px]">Contact Forms</span>
+              {unreadContacts > 0 && (
+                <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-0.5 rounded-full ml-1 border-none">
+                  {unreadContacts} new
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
-        <TabsContent value="broadcasts" className="mt-4">
+        <TabsContent value="broadcasts" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
           {broadcastReplies.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>No messages here.</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+              <Mail className="h-16 w-16 mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-500">Your inbox is empty</p>
+              <p className="text-sm mt-1">Replies to your broadcasts will appear here.</p>
             </div>
           ) : (
-            <div className="space-y-3 py-4">
+            <div className="flex flex-col pb-4">
               {broadcastReplies.map(msg => (
                 <MessageItem 
                   key={msg.id} 
@@ -295,14 +330,15 @@ export function MessageInbox() {
           )}
         </TabsContent>
         
-        <TabsContent value="contact" className="mt-4">
+        <TabsContent value="contact" className="m-0 flex-1 overflow-y-auto bg-gray-50/30">
           {contactForms.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>No messages here.</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+              <User className="h-16 w-16 mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-500">No contact forms</p>
+              <p className="text-sm mt-1">Messages from the contact form will appear here.</p>
             </div>
           ) : (
-            <div className="space-y-3 py-4">
+            <div className="flex flex-col pb-4">
               {contactForms.map(msg => (
                 <MessageItem 
                   key={msg.id} 
@@ -322,3 +358,4 @@ export function MessageInbox() {
     </div>
   );
 }
+

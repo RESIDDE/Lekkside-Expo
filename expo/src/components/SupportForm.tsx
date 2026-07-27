@@ -32,7 +32,7 @@ export function SupportForm() {
       // 2. Persist to Database for Admin Inbox
       const { error: dbError } = await supabase
         .from('contact_messages')
-        .insert([formData]);
+        .insert([{ ...formData, source: 'contact_form' }]);
 
       if (dbError) throw dbError;
       
