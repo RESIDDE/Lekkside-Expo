@@ -27,10 +27,12 @@ interface University {
   tuitionCategory: string;
   isLive: boolean;
   meetingRoomId: string | null;
+  institution_type: string;
 }
 
 const PROGRAM_OPTIONS = ['Engineering', 'Business', 'Arts & Humanities', 'Computer Science', 'Medicine', 'Law', 'Sciences'];
 const COUNTRY_OPTIONS = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Nigeria', 'Germany'];
+const INSTITUTION_TYPES = ['University', 'High School', 'College', 'Language School', 'Pathway Provider', 'Education Organisation'];
 
 export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) {
   const [loading, setLoading] = useState(true);
@@ -40,10 +42,11 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
   // Filter States
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [requireScholarship, setRequireScholarship] = useState(false);
   const [selectedBoothId, setSelectedBoothId] = useState<string | null>(null);
   const [compareList, setCompareList] = useState<University[]>([]);
-  const [activeFilterCategory, setActiveFilterCategory] = useState<'all' | 'programs' | 'countries'>('all');
+  const [activeFilterCategory, setActiveFilterCategory] = useState<'all' | 'programs' | 'countries' | 'types'>('all');
 
   const toggleCompare = (uni: University) => {
     setCompareList(prev => {
@@ -123,7 +126,8 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
             degreeLevels: Array.isArray(profile.degree_levels) ? profile.degree_levels : [],
             tuitionCategory: profile.tuition_category || 'Contact for details',
             isLive: profile.is_live || false,
-            meetingRoomId: profile.meeting_room_id || null
+            meetingRoomId: profile.meeting_room_id || null,
+            institution_type: profile.institution_type || 'University'
           };
         });
         setUniversities(augmentedData);
@@ -169,10 +173,11 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
       if (searchQuery && !uni.university_name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedCountries.length > 0 && !selectedCountries.includes(uni.country)) return false;
       if (selectedPrograms.length > 0 && !uni.programs.some(p => selectedPrograms.includes(p))) return false;
+      if (selectedTypes.length > 0 && !selectedTypes.includes(uni.institution_type)) return false;
       if (requireScholarship && !uni.hasScholarship) return false;
       return true;
     });
-  }, [universities, searchQuery, selectedCountries, selectedPrograms, requireScholarship]);
+  }, [universities, searchQuery, selectedCountries, selectedPrograms, selectedTypes, requireScholarship]);
 
   const toggleFilter = (setState: React.Dispatch<React.SetStateAction<string[]>>, option: string) => {
     setState(prev => prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]);
@@ -181,6 +186,7 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
   const clearFilters = () => {
     setSelectedCountries([]);
     setSelectedPrograms([]);
+    setSelectedTypes([]);
     setRequireScholarship(false);
     setSearchQuery('');
   };
@@ -246,6 +252,12 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
             >
               Countries
             </button>
+            <button 
+              onClick={() => setActiveFilterCategory('types')}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${activeFilterCategory === 'types' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Institution Type
+            </button>
           </div>
           
           <button 
@@ -282,6 +294,15 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
                 className={`flex-shrink-0 px-5 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-300 ${selectedCountries.includes(country) ? 'bg-gray-900 text-white border-gray-900' : 'bg-white/60 backdrop-blur-sm border-gray-200/80 text-gray-600 hover:bg-white hover:border-gray-300 shadow-sm'}`}
               >
                 {country}
+              </button>
+            ))}
+            {activeFilterCategory === 'types' && INSTITUTION_TYPES.map(type => (
+              <button 
+                key={type}
+                onClick={() => toggleFilter(setSelectedTypes, type)}
+                className={`flex-shrink-0 px-5 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-300 ${selectedTypes.includes(type) ? 'bg-gray-900 text-white border-gray-900' : 'bg-white/60 backdrop-blur-sm border-gray-200/80 text-gray-600 hover:bg-white hover:border-gray-300 shadow-sm'}`}
+              >
+                {type}
               </button>
             ))}
           </motion.div>
@@ -347,7 +368,9 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mb-5">
-                      <MapPin className="w-4 h-4" />
+                      <Building2 className="w-4 h-4 text-gray-400" />
+                      <span className="mr-2">{uni.institution_type}</span>
+                      <MapPin className="w-4 h-4 text-gray-400" />
                       {uni.country}
                     </div>
 

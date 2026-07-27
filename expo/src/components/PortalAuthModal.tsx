@@ -29,6 +29,7 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
+  const [institutionType, setInstitutionType] = useState('University');
   const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password' | 'reset-password-otp'>('login');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -216,7 +217,8 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
             data: {
               full_name: fullName,
               phone: phone,
-              role: role
+              role: role,
+              ...(role === 'university' ? { institution_type: institutionType } : {})
             }
           }
         });
@@ -400,6 +402,30 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                         className="w-full h-14 pl-12 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50"
                         required
                       />
+                    </div>
+                  </div>
+                )}
+
+                {step === 'signup' && role === 'university' && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 px-1">
+                      Institution Type
+                    </label>
+                    <div className="relative">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <select
+                        value={institutionType}
+                        onChange={(e) => setInstitutionType(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50 appearance-none font-medium"
+                        required
+                      >
+                        <option value="University">University</option>
+                        <option value="High School">High School</option>
+                        <option value="College">College</option>
+                        <option value="Language School">Language School</option>
+                        <option value="Pathway Provider">Pathway Provider</option>
+                        <option value="Education Organisation">Education Organisation</option>
+                      </select>
                     </div>
                   </div>
                 )}

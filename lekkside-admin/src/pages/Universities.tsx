@@ -34,6 +34,7 @@ interface University {
   programs: string[];
   degreeLevels: string[];
   tuitionCategory: string;
+  institution_type: string;
 }
 
 const PROGRAM_OPTIONS = ['Engineering', 'Business', 'Arts & Humanities', 'Computer Science', 'Medicine', 'Law', 'Sciences'];
@@ -112,7 +113,8 @@ export default function Universities() {
             hasScholarship: profile.has_scholarship || false,
             programs: Array.isArray(profile.programs) ? profile.programs : [],
             degreeLevels: Array.isArray(profile.degree_levels) ? profile.degree_levels : [],
-            tuitionCategory: profile.tuition_category || 'Contact for details'
+            tuitionCategory: profile.tuition_category || 'Contact for details',
+            institution_type: profile.institution_type || 'University'
           };
         });
 
@@ -156,6 +158,26 @@ export default function Universities() {
     } catch (err) {
       console.error('Error toggling video access:', err);
       alert('Failed to update video access status.');
+    }
+  };
+
+  const handleDeleteExhibitor = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete the exhibitor "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setUniversities(prev => prev.filter(u => u.id !== id));
+    } catch (err) {
+      console.error('Error deleting exhibitor:', err);
+      alert('Failed to delete exhibitor. Please ensure you have the required permissions.');
     }
   };
 
@@ -312,8 +334,8 @@ export default function Universities() {
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between w-full md:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Participating Institutions</h2>
-            <p className="text-sm text-gray-500 mt-1">Browse and filter universities to find your perfect match</p>
+            <h2 className="text-xl font-bold text-gray-900">Participating Exhibitors</h2>
+            <p className="text-sm text-gray-500 mt-1">Browse, filter, and manage exhibitors</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -338,7 +360,7 @@ export default function Universities() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input 
               type="text" 
-              placeholder="Search universities..." 
+              placeholder="Search exhibitors..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -453,6 +475,8 @@ export default function Universities() {
                     </h3>
                     
                     <div className="flex items-center text-gray-500 text-sm mb-4">
+                      <Building2 className="w-3.5 h-3.5 mr-1" />
+                      <span className="mr-3">{uni.institution_type}</span>
                       <MapPin className="w-3.5 h-3.5 mr-1" />
                       {uni.country}
                     </div>
@@ -483,26 +507,34 @@ export default function Universities() {
                   </div>
 
                   {/* Action Footer */}
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <button 
+                        onClick={() => handleToggleVideoAccess(uni.id, uni.video_access_enabled)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
+                          uni.video_access_enabled
+                            ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200'
+                        }`}
+                      >
+                        {uni.video_access_enabled ? 'Video Access: ON' : 'Video Access: OFF'}
+                      </button>
+                      <button 
+                        onClick={() => handleToggleActive(uni.id, uni.is_active)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                          uni.is_active
+                            ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200'
+                            : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
+                        }`}
+                      >
+                        {uni.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
                     <button 
-                      onClick={() => handleToggleVideoAccess(uni.id, uni.video_access_enabled)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
-                        uni.video_access_enabled
-                          ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200'
-                      }`}
+                      onClick={() => handleDeleteExhibitor(uni.id, uni.university_name)}
+                      className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-colors border border-red-100 flex items-center justify-center"
                     >
-                      {uni.video_access_enabled ? 'Video Access: ON' : 'Video Access: OFF'}
-                    </button>
-                    <button 
-                      onClick={() => handleToggleActive(uni.id, uni.is_active)}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                        uni.is_active
-                          ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                          : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
-                      }`}
-                    >
-                      {uni.is_active ? 'Deactivate' : 'Activate'}
+                      Delete Exhibitor
                     </button>
                   </div>
 
