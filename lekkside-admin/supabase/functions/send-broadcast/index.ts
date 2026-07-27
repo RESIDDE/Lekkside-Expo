@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendEmail } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -104,9 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ status: "sending" })
       .eq("id", broadcastId);
 
-    const { sendEmail } = await import("../_shared/email.ts");
-
-    let sentCount = 0;
+let sentCount = 0;
     const projectUrl = Deno.env.get("SUPABASE_URL");
     const trackBaseUrl = `${projectUrl}/functions/v1/track-broadcast`;
 

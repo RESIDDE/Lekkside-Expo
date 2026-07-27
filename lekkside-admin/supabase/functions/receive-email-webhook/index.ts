@@ -81,14 +81,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if there's already an existing thread from this email (within last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: existing } = await supabaseAdmin
+    const { data: threads } = await supabaseAdmin
       .from("contact_messages")
-      .select("id, replies")
+      .select("id, subject, replies")
       .eq("email", senderEmail.toLowerCase())
       .gte("created_at", thirtyDaysAgo)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .order("created_at", { ascending: false });
+
+    let existing = null;
+    const normalizedSubject = emailSubject.replace(/^(\[Reply\]\s*|Re:\s*|Fwd:\s*|FW:\s*)*/gi, "").trim().toLowerCase();
+
+    if (threads && threads.length > 0) {
+      existing = threads.find(t => {
+        if (!t.subject) return false;
+        const threadNormalized = t.subject.replace(/^(\[Reply\]\s*|Re:\s*|Fwd:\s*|FW:\s*)*/gi, "").trim().toLowerCase();
+        return threadNormalized === normalizedSubject || 
+               threadNormalized.includes(normalizedSubject) || 
+               normalizedSubject.includes(threadNormalized);
+      });
+    }
 
     const newReply = {
       from: "guest",

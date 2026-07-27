@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendEmail } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,9 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send via ZeptoMail
-    const { sendEmail } = await import("../_shared/email.ts");
-    
-    try {
+try {
       const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
         to: email,

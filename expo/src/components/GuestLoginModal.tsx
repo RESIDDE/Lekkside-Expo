@@ -53,16 +53,12 @@ export function GuestLoginModal({ initialEmail = '', onSuccess, onClose }: Guest
     setStatus('sending');
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          data: {
-            role: 'student'
-          }
-        }
+      const { data, error: sendError } = await supabase.functions.invoke('send-otp', {
+        body: { email: email.trim(), formId: 'portal-signup' }
       });
 
-      if (signInError) throw signInError;
+      if (sendError) throw sendError;
+      if (data?.error) throw new Error(data.error);
       
       setStatus('sent');
     } catch (err: any) {
@@ -80,13 +76,20 @@ export function GuestLoginModal({ initialEmail = '', onSuccess, onClose }: Guest
     setStatus('verifying');
 
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: otp.trim(),
-        type: 'email'
+      const { data, error: verifyError } = await supabase.functions.invoke('verify-otp', {
+        body: { email: email.trim(), code: otp.trim(), formId: 'portal-signup' }
       });
 
       if (verifyError) throw verifyError;
+      if (!data?.success) throw new Error(data?.error || 'Invalid code. Please try again.');
+
+      if (data?.password) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: data.password
+        });
+        if (signInError) throw signInError;
+      }
 
       handleClose();
       onSuccess();

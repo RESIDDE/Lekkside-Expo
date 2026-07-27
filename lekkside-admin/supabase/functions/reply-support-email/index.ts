@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { sendEmail } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,9 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending reply to ${to_email}`);
 
-    const { sendEmail } = await import("../_shared/email.ts");
-
-    try {
+try {
       const result = await sendEmail({
         from: "Lekkside Support <noreply@lekksideexpo.com>",
         to: [to_email],

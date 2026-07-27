@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { sendEmail } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -142,9 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
     const plainText = `REGISTRATION CONFIRMED\n\nThank you, ${firstName}!\n\nYou're registered for: ${eventName}\n${eventDate ? `Date: ${formattedDate} at ${formattedTime}` : ""}\n${eventVenue ? `Venue: ${eventVenue}` : ""}\n\nName: ${firstName} ${lastName}\nEmail: ${email}\n${phone ? `Phone: ${phone}` : ""}\n\nConfirmation Number: ${confirmationNumber}\n\nPlease save this number for check-in.\n\nLekkside Check-in Portal`;
 
     // Send via ZeptoMail
-    const { sendEmail } = await import("../_shared/email.ts");
-
-    try {
+try {
       const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
         to: email,

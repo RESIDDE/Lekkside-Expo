@@ -36,8 +36,12 @@ export function StudentDashboard() {
   const eventId = searchParams.get('event');
 
   useEffect(() => {
+    let mounted = true;
+
     async function checkUser() {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+      
       if (!session) {
         const guestEmail = searchParams.get('guest_email');
         if (guestEmail) {
@@ -51,7 +55,28 @@ export function StudentDashboard() {
       setUser(session.user);
       setLoading(false);
     }
+    
     checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      
+      if (session) {
+        setUser(session.user);
+      } else {
+        const guestEmail = searchParams.get('guest_email');
+        if (guestEmail) {
+          setUser(null);
+        } else {
+          navigate('/');
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate, searchParams]);
 
   const handleSignOut = async () => {
