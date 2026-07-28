@@ -107,6 +107,7 @@ function MeetingRoomInner() {
       setIsModerator(true);
     }
     
+    localStorage.setItem(`livekit_token_${roomName}`, connectionDetailsData.participantToken);
     setConnectionDetails(connectionDetailsData);
   }, [roomName, region, setIsModerator]);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { RoomServiceClient } from "npm:livekit-server-sdk@2.17.0";
+import { jwtVerify } from "npm:jose@5.2.2";
 import { verifyHostJwt } from "../_shared/host-jwt.ts";
 
 const corsHeaders = {
@@ -14,7 +15,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, roomName, hostSecret, identity, permissions } = body;
+    const { action, roomName, hostSecret, livekitToken, identity, permissions } = body;
 
     if (!roomName || !action) {
       return new Response(
@@ -31,24 +32,51 @@ serve(async (req) => {
     if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) {
       throw new Error("LiveKit credentials not set in environment");
     }
-
-    // Security check: verify requester is the host
-    if (!hostSecret || !MEET_HOST_SECRET) {
-      return new Response(
-        JSON.stringify({ error: 'hostSecret is missing' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
     
-    const isModerator = await verifyHostJwt(hostSecret, roomName, MEET_HOST_SECRET);
-    if (!isModerator) {
+    const svc = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+
+    let isAuthorized = false;
+    let isOriginalHost = false;
+
+    if (hostSecret && MEET_HOST_SECRET) {
+      isOriginalHost = await verifyHostJwt(hostSecret, roomName, MEET_HOST_SECRET);
+      if (isOriginalHost) isAuthorized = true;
+    } 
+    
+    if (!isAuthorized && livekitToken) {
+      try {
+        const { payload } = await jwtVerify(livekitToken, new TextEncoder().encode(LIVEKIT_API_SECRET));
+        if (payload.video && typeof payload.video === 'object' && (payload.video as any).room === roomName) {
+          const requesterIdentity = payload.sub;
+          if (requesterIdentity) {
+             const participant = await svc.getParticipant(roomName, requesterIdentity);
+             if (participant && participant.metadata) {
+                let isMod = false;
+                try { isMod = JSON.parse(participant.metadata).isModerator; } catch (e) {}
+                if (isMod) isAuthorized = true;
+             }
+          }
+        }
+      } catch (e) {
+        // invalid token
+      }
+      
+      if (isAuthorized && !isOriginalHost) {
+        if (action !== 'updateParticipant') {
+           return new Response(
+             JSON.stringify({ error: 'Promoted moderators can only mute/unmute participants' }),
+             { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+           );
+        }
+      }
+    }
+
+    if (!isAuthorized) {
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired hostSecret' }),
+        JSON.stringify({ error: 'Unauthorized: Invalid hostSecret or livekitToken' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const svc = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
     // Handle actions
     if (action === 'updateParticipant') {

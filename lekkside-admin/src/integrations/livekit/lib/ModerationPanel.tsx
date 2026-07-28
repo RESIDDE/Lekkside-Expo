@@ -24,6 +24,7 @@ export function ModerationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [participantToRemove, setParticipantToRemove] = useState<string | null>(null);
   const { isModerator } = useModerator();
+  const isOriginalHost = !!localStorage.getItem(`host_secret_${room.name}`);
 
   const handleModerationAction = async (action: string, payload: any) => {
     try {
@@ -32,6 +33,7 @@ export function ModerationPanel() {
       if (!session) throw new Error("Not authenticated");
       
       const hostSecret = localStorage.getItem(`host_secret_${room.name}`) || undefined;
+      const livekitToken = localStorage.getItem(`livekit_token_${room.name}`) || undefined;
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/livekit-moderation`, {
         method: 'POST',
@@ -43,6 +45,7 @@ export function ModerationPanel() {
           action,
           roomName: room.name,
           hostSecret,
+          livekitToken,
           ...payload
         })
       });
@@ -123,7 +126,7 @@ export function ModerationPanel() {
             Participants
           </h3>
           <div className="flex items-center gap-1">
-            {isModerator && (
+            {isOriginalHost && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -191,7 +194,7 @@ export function ModerationPanel() {
                   <div className="flex gap-1 items-center">
                     {isModerator ? (
                       <>
-                        {!isLocal && !isHostOrMod && (
+                        {!isLocal && !isHostOrMod && isOriginalHost && (
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -213,7 +216,7 @@ export function ModerationPanel() {
                         >
                           {cannotPublish ? <Mic className="w-3.5 h-3.5 text-red-500" /> : <MicOff className="w-3.5 h-3.5" />}
                         </Button>
-                        {!isLocal && (
+                        {!isLocal && isOriginalHost && (
                           <Button 
                             variant="ghost" 
                             size="icon" 
