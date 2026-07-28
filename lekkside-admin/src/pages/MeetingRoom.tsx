@@ -7,6 +7,8 @@ import { KeyboardShortcuts } from '../integrations/livekit/lib/KeyboardShortcuts
 import { RecordingIndicator } from '../integrations/livekit/lib/RecordingIndicator';
 import { SettingsMenu } from '../integrations/livekit/lib/SettingsMenu';
 import { ModerationPanel } from '../integrations/livekit/lib/ModerationPanel';
+import { ReactionsOverlay } from '../integrations/livekit/lib/ReactionsOverlay';
+import { ReactionControls } from '../integrations/livekit/lib/ReactionControls';
 import { ConnectionDetails } from '../integrations/livekit/lib/types';
 import { ModeratorProvider, useModerator } from '../integrations/livekit/lib/ModeratorContext';
 import {
@@ -207,6 +209,8 @@ function VideoConferenceComponent(props: {
 
   const room = React.useMemo(() => new Room(roomOptions), []);
 
+  const { setIsModerator } = useModerator();
+
   React.useEffect(() => {
     if (e2eeEnabled) {
       keyProvider
@@ -227,7 +231,24 @@ function VideoConferenceComponent(props: {
     } else {
       setE2eeSetupComplete(true);
     }
-  }, [e2eeEnabled, room, e2eePassphrase]);
+
+    const handleMetadataChanged = (metadata: string | undefined, participant: any) => {
+      if (participant.identity === room.localParticipant.identity && metadata) {
+        try {
+          const data = JSON.parse(metadata);
+          if (data.isModerator) {
+            setIsModerator(true);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+    room.on(RoomEvent.ParticipantMetadataChanged, handleMetadataChanged);
+    return () => {
+      room.off(RoomEvent.ParticipantMetadataChanged, handleMetadataChanged);
+    }
+  }, [e2eeEnabled, room, e2eePassphrase, setIsModerator]);
 
   const connectOptions = React.useMemo((): RoomConnectOptions => {
     return {
@@ -311,6 +332,8 @@ function VideoConferenceComponent(props: {
         />
         <RecordingIndicator />
         <ModerationPanel />
+        <ReactionsOverlay />
+        <ReactionControls />
       </RoomContext.Provider>
     </div>
   );
