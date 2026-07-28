@@ -58,6 +58,7 @@ export default function MeetingRoom() {
   const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
     undefined,
   );
+  const [hasLeft, setHasLeft] = React.useState(false);
 
   const handlePreJoinSubmit = React.useCallback(async (values: LocalUserChoices) => {
     setPreJoinChoices(values);
@@ -84,7 +85,28 @@ export default function MeetingRoom() {
 
   return (
     <main data-lk-theme="default" className="meeting-room-container">
-      {connectionDetails === undefined || preJoinChoices === undefined ? (
+      {hasLeft ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#000', color: '#fff', fontFamily: 'system-ui, sans-serif' }}>
+          <div style={{ backgroundColor: '#111', padding: '40px 60px', borderRadius: '24px', textAlign: 'center', border: '1px solid #333' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Meeting Ended</h2>
+            <p style={{ color: '#aaa', marginBottom: '32px' }}>You have successfully left the video meeting.</p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => window.close()} 
+                style={{ padding: '12px 24px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background-color 0.2s' }}
+              >
+                Close Window
+              </button>
+              <button 
+                onClick={() => window.location.reload()} 
+                style={{ padding: '12px 24px', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Rejoin Meeting
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : connectionDetails === undefined || preJoinChoices === undefined ? (
         <div style={{ display: 'grid', placeItems: 'center', flex: 1 }}>
           <PreJoin
             defaults={preJoinDefaults}
@@ -101,6 +123,10 @@ export default function MeetingRoom() {
             hq: hq,
             singlePeerConnection: singlePeerConnection,
           }}
+          onLeave={() => {
+            window.close();
+            setHasLeft(true);
+          }}
         />
       )}
     </main>
@@ -115,6 +141,7 @@ function VideoConferenceComponent(props: {
     codec: VideoCodec;
     singlePeerConnection: boolean;
   };
+  onLeave?: () => void;
 }) {
   const keyProvider = new ExternalE2EEKeyProvider();
   const { worker, e2eePassphrase } = useSetupE2EE();
@@ -223,10 +250,14 @@ function VideoConferenceComponent(props: {
     const returnUrl = params.get('returnUrl');
     if (returnUrl) {
       window.location.href = returnUrl;
+    } else if (props.onLeave) {
+      props.onLeave();
     } else {
-      navigate('/meetings');
+      window.close();
+      // Force reload to current URL if window close fails, or show message
+      document.body.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #000; color: #fff; font-family: system-ui, sans-serif;"><div style="background-color: #111; padding: 40px 60px; border-radius: 24px; text-align: center; border: 1px solid #333;"><h2 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">Meeting Ended</h2><p style="color: #aaa; margin-bottom: 32px;">You have successfully left the video meeting.</p><div style="display: flex; gap: 16px; justify-content: center;"><button onclick="window.close()" style="padding: 12px 24px; background-color: #333; color: #fff; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Close Window</button><button onclick="window.location.reload()" style="padding: 12px 24px; background-color: #fff; color: #000; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Rejoin Meeting</button></div></div></div>';
     }
-  }, [navigate]);
+  }, [props.onLeave]);
   const handleError = React.useCallback((error: Error) => {
     console.error(error);
     alert(`Encountered an unexpected error, check the console logs for details: ${error.message}`);
