@@ -3,18 +3,17 @@ import { useParticipants, useRoomContext } from '@livekit/components-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, MicOff, VideoOff, UserX, Lock, Unlock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useModerator } from './ModeratorContext';
 
 export function ModerationPanel() {
   const room = useRoomContext();
   const participants = useParticipants();
   const [isLocked, setIsLocked] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isModerator } = useModerator();
 
-  // If the user isn't an admin, we might not want to render this, or they won't have permission.
-  // The room context tells us if we have admin rights.
-  const canAdmin = room.localParticipant.permissions?.roomAdmin;
-
-  if (!canAdmin) {
+  // If the user isn't an admin, we don't render this.
+  if (!isModerator) {
     return null;
   }
 
@@ -23,6 +22,8 @@ export function ModerationPanel() {
       setIsProcessing(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
+      
+      const hostSecret = localStorage.getItem(`host_secret_${room.name}`) || undefined;
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/livekit-moderation`, {
         method: 'POST',
@@ -33,6 +34,7 @@ export function ModerationPanel() {
         body: JSON.stringify({
           action,
           roomName: room.name,
+          hostSecret,
           ...payload
         })
       });
