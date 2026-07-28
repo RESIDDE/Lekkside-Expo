@@ -125,7 +125,7 @@ export default function Meetings() {
     setRoomName(`${randomWord}-${randomChars}`);
   };
 
-  const joinMeeting = (e: React.FormEvent) => {
+  const joinMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomName.trim()) {
       toast({
@@ -135,6 +135,33 @@ export default function Meetings() {
       });
       return;
     }
+
+    try {
+      setIsUpdating(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-livekit-meeting`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ roomName })
+      });
+      
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.hostSecret) {
+          localStorage.setItem(`host_secret_${roomName}`, data.hostSecret);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to create meeting:', err);
+    } finally {
+      setIsUpdating(false);
+    }
+
     saveLastRoom(roomName);
     navigate(`/meetings/${roomName}`);
   };

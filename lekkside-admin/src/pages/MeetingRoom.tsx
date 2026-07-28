@@ -8,6 +8,7 @@ import { RecordingIndicator } from '../integrations/livekit/lib/RecordingIndicat
 import { SettingsMenu } from '../integrations/livekit/lib/SettingsMenu';
 import { ModerationPanel } from '../integrations/livekit/lib/ModerationPanel';
 import { ConnectionDetails } from '../integrations/livekit/lib/types';
+import { ModeratorProvider, useModerator } from '../integrations/livekit/lib/ModeratorContext';
 import {
   formatChatMessageLinks,
   LocalUserChoices,
@@ -38,7 +39,16 @@ const CONN_DETAILS_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1
 const SHOW_SETTINGS_MENU = true;
 
 export default function MeetingRoom() {
+  return (
+    <ModeratorProvider>
+      <MeetingRoomInner />
+    </ModeratorProvider>
+  );
+}
+
+function MeetingRoomInner() {
   const { roomName } = useParams<{ roomName: string }>();
+  const { setIsModerator } = useModerator();
   
   // Default options that can be adjusted later
   const region = undefined;
@@ -72,15 +82,31 @@ export default function MeetingRoom() {
     
     // Get current session for Authorization header
     const { data: { session } } = await supabase.auth.getSession();
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (session?.access_token) {
       headers['Authorization'] = `Bearer ${session.access_token}`;
     }
 
-    const connectionDetailsResp = await fetch(url.toString(), { headers });
+    const hostSecret = localStorage.getItem(`host_secret_${roomName}`) || undefined;
+
+    const connectionDetailsResp = await fetch(url.toString(), { 
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        roomName,
+        participantName: values.username,
+        ...(region && { region }),
+        ...(hostSecret && { hostSecret })
+      })
+    });
     const connectionDetailsData = await connectionDetailsResp.json();
+    
+    if (connectionDetailsData.isModerator) {
+      setIsModerator(true);
+    }
+    
     setConnectionDetails(connectionDetailsData);
-  }, [roomName]);
+  }, [roomName, region, setIsModerator]);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
