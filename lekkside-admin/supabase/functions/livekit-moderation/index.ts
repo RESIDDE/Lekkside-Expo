@@ -44,21 +44,28 @@ serve(async (req) => {
     } 
     
     if (!isAuthorized && livekitToken) {
+      let payload: any = null;
       try {
-        const { payload } = await jwtVerify(livekitToken, new TextEncoder().encode(LIVEKIT_API_SECRET));
-        if (payload.video && typeof payload.video === 'object' && (payload.video as any).room === roomName) {
-          const requesterIdentity = payload.sub;
-          if (requesterIdentity) {
-             const participant = await svc.getParticipant(roomName, requesterIdentity);
-             if (participant && participant.metadata) {
-                let isMod = false;
-                try { isMod = JSON.parse(participant.metadata).isModerator; } catch (e) {}
-                if (isMod) isAuthorized = true;
-             }
-          }
+        const result = await jwtVerify(livekitToken, new TextEncoder().encode(LIVEKIT_API_SECRET));
+        payload = result.payload;
+      } catch (e: any) {
+        if (e?.code === 'ERR_JWT_EXPIRED' && e?.payload) {
+          payload = e.payload;
+        } else {
+          console.error("JWT verify error:", e);
         }
-      } catch (e) {
-        // invalid token
+      }
+
+      if (payload && payload.video && typeof payload.video === 'object' && (payload.video as any).room === roomName) {
+        const requesterIdentity = payload.sub;
+        if (requesterIdentity) {
+           const participant = await svc.getParticipant(roomName, requesterIdentity);
+           if (participant && participant.metadata) {
+              let isMod = false;
+              try { isMod = JSON.parse(participant.metadata).isModerator; } catch (e) {}
+              if (isMod) isAuthorized = true;
+           }
+        }
       }
       
       if (isAuthorized && !isOriginalHost) {
