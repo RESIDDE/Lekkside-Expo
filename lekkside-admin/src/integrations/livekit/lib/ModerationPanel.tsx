@@ -23,8 +23,19 @@ export function ModerationPanel() {
   const [isAllMuted, setIsAllMuted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [participantToRemove, setParticipantToRemove] = useState<string | null>(null);
-  const { isModerator } = useModerator();
+  const { isModerator: contextIsModerator } = useModerator();
   const isOriginalHost = !!localStorage.getItem(`host_secret_${room.name}`);
+
+  let isModerator = contextIsModerator || isOriginalHost;
+  try {
+    if (room.localParticipant.metadata) {
+      const meta = JSON.parse(room.localParticipant.metadata);
+      if (meta.isModerator) isModerator = true;
+    }
+  } catch (e) {}
+  if ((room.localParticipant.permissions as any)?.roomAdmin) {
+    isModerator = true;
+  }
 
   const handleModerationAction = async (action: string, payload: any) => {
     try {
