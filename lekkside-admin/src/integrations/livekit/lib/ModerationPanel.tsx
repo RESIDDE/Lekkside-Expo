@@ -41,7 +41,7 @@ export function ModerationPanel() {
     try {
       setIsProcessing(true);
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       const hostSecret = localStorage.getItem(`host_secret_${room.name}`) || undefined;
       const livekitToken = localStorage.getItem(`livekit_token_${room.name}`) || undefined;
@@ -50,7 +50,7 @@ export function ModerationPanel() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           action,
