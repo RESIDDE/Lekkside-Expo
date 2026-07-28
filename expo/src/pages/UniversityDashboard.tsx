@@ -188,7 +188,58 @@ export function UniversityDashboard() {
         filter: `user_id=eq.${user.id}`
       }, () => fetchNotifications(user.id))
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      
+    // Subscribe to profile changes realtime (e.g., video_access_enabled toggled by admin)
+    const profileChannel = supabase
+      .channel(`uni-profile-${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'profiles',
+        filter: `user_id=eq.${user.id}`
+      }, async (payload) => {
+        const newProfile = payload.new as any;
+        setIsApproved(newProfile.is_active === true);
+        if (newProfile.is_active === false) {
+          setIsDeactivated(true);
+        }
+        
+        // Refetch system settings to accurately set videoEnabled
+        const { data: systemSettings } = await supabase
+          .from('system_settings')
+          .select('video_rooms_enabled')
+          .limit(1)
+          .maybeSingle();
+          
+        const globalVideoEnabled = systemSettings?.video_rooms_enabled ?? false;
+        const exhibitorVideoEnabled = newProfile.video_access_enabled ?? false;
+        setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
+      })
+      .subscribe();
+      
+    // Subscribe to system settings changes realtime
+    const settingsChannel = supabase
+      .channel(`system-settings-changes`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'system_settings'
+      }, async (payload) => {
+        const newSettings = payload.new as any;
+        const globalVideoEnabled = newSettings.video_rooms_enabled ?? false;
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('video_access_enabled')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        const exhibitorVideoEnabled = (profile as any)?.video_access_enabled ?? false;
+        setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
+      })
+      .subscribe();
+
+    return () => { 
+      supabase.removeChannel(channel); 
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(settingsChannel);
+    };
   }, [user, fetchNotifications]);
 
   const markNotificationRead = async (id: string) => {

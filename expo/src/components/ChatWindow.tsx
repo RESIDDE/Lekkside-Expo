@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   X, Send, Paperclip, SmilePlus, CheckCheck, Check,
-  Loader2, MessageSquare
+  Loader2, MessageSquare, Video
 } from 'lucide-react';
 import { PresenceIndicator } from './PresenceIndicator';
 
@@ -228,6 +228,36 @@ export function ChatWindow({ universityId, universityName, onClose, inline = fal
 
   const isImage = (type?: string) => type?.startsWith('image/');
 
+  const renderMessageContent = (content: string, isMe: boolean) => {
+    if (!content) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        if (part.includes('/meetings/')) {
+          return (
+            <div key={index} className="flex flex-col gap-3 my-2">
+              <a 
+                href={part} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors shadow-inner ${
+                  isMe ? 'bg-black border border-gray-800 text-white hover:bg-gray-800' : 'bg-white text-black hover:bg-gray-200'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                Join Video Meeting
+              </a>
+            </div>
+          );
+        }
+        return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="underline break-all">{part}</a>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   return (
     <motion.div
       initial={inline ? undefined : { opacity: 0, y: 40 }}
@@ -301,7 +331,7 @@ export function ChatWindow({ universityId, universityName, onClose, inline = fal
                             <Paperclip className="w-3.5 h-3.5" /> {msg.file_name}
                           </a>
                         )
-                      ) : msg.content}
+                      ) : renderMessageContent(msg.content, isMe)}
                     </div>
                     <div className={`flex items-center gap-1.5 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">{format(new Date(msg.created_at), 'HH:mm')}</span>

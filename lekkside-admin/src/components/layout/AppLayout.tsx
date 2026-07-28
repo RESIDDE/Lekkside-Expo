@@ -70,7 +70,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/meetings", label: "Meetings", icon: Video },
-    { href: "/screenings", label: "Student Registrations", icon: UserCheck },
+    { href: "/screenings", label: "Student Registration/Screening", icon: UserCheck },
     { href: "/applications", label: "Applications", icon: FileText },
     { href: "/universities", label: "Universities", icon: Building2 },
     { href: "/support-inbox", label: "Support Inbox", icon: LifeBuoy },

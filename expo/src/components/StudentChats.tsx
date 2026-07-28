@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import {
   Send, Paperclip, SmilePlus, CheckCheck, Check,
   Loader2, MessageSquare, Search, ChevronLeft,
-  Info, X, MapPin, Mail, Phone, Globe, ExternalLink, User
+  Info, X, MapPin, Mail, Phone, Globe, ExternalLink, User, Video
 } from 'lucide-react';
 import { PresenceIndicator } from './PresenceIndicator';
 
@@ -281,6 +281,37 @@ export function StudentChats({ user }: StudentChatsProps) {
   );
 
   const isImage = (type?: string) => type?.startsWith('image/');
+  
+  const renderMessageContent = (content: string, isMe: boolean) => {
+    if (!content) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        if (part.includes('/meetings/')) {
+          return (
+            <div key={index} className="flex flex-col gap-3 my-2">
+              <a 
+                href={part} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors shadow-inner ${
+                  isMe ? 'bg-black border border-gray-800 text-white hover:bg-gray-800' : 'bg-white text-black hover:bg-gray-200'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                Join Video Meeting
+              </a>
+            </div>
+          );
+        }
+        return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="underline break-all">{part}</a>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
   return (
@@ -413,7 +444,7 @@ export function StudentChats({ user }: StudentChatsProps) {
                             isImage(msg.file_type)
                               ? <img src={msg.file_url} alt={msg.file_name} className="max-w-full rounded-xl max-h-56 object-cover border border-gray-800/20" />
                               : <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 underline ${isMe ? 'text-black' : 'text-gray-300'} font-bold`}><Paperclip className="w-4 h-4" />{msg.file_name}</a>
-                          ) : msg.content}
+                          ) : renderMessageContent(msg.content, isMe)}
                         </div>
                         <div className={`flex items-center gap-1.5 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
                           <span className="text-[10px] font-bold text-gray-500">{format(new Date(msg.created_at), 'HH:mm')}</span>

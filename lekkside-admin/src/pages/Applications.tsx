@@ -18,7 +18,17 @@ export default function Applications() {
     
     const { data: apps, error } = await supabase
       .from('university_applications')
-      .select('*, student:profiles!student_id(full_name), university:profiles!university_id(full_name, university_name)')
+      .select(`
+        *,
+        student:profiles!university_applications_student_id_fkey(
+          full_name,
+          student_screenings(status)
+        ),
+        university:profiles!university_applications_university_id_fkey(
+          full_name,
+          university_name
+        )
+      `)
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -142,12 +152,29 @@ export default function Applications() {
                           <p className="text-sm text-muted-foreground mt-1">Program: <span className="font-medium text-foreground">{app.program_name}</span></p>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className={`text-xs font-bold uppercase tracking-wider ${
-                          app.payment_status === 'paid' ? 'text-green-600' : 'text-orange-500'
-                        }`}>
-                          {app.payment_status === 'paid' ? 'Fee Paid' : 'Payment Pending'}
-                        </span>
+                      <div className="flex flex-col items-end gap-3">
+                        <div className="flex gap-2">
+                          <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                            app.payment_status === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-500'
+                          }`}>
+                            {app.payment_status === 'paid' ? 'Fee Paid' : 'Payment Pending'}
+                          </span>
+                          
+                          {(() => {
+                            const screenings = app.student?.student_screenings;
+                            const status = Array.isArray(screenings) ? screenings[0]?.status : screenings?.status;
+                            const displayStatus = status || 'pending';
+                            return (
+                              <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                                displayStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
+                                displayStatus === 'rejected' ? 'bg-red-500/10 text-red-600' :
+                                'bg-yellow-500/10 text-yellow-600'
+                              }`}>
+                                {displayStatus} Screening
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <div className="relative group">
                           <select
                             value={app.status}

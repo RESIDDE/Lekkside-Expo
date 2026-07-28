@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, Search, Filter, Star, X, Loader2, Save, Download, Building2, Users, TrendingUp, StickyNote, MessageSquare, Video, Send, CheckSquare } from 'lucide-react';
+import { User, Search, Filter, Star, X, Loader2, Save, Download, Building2, Users, TrendingUp, StickyNote, MessageSquare, Video, Send, CheckSquare, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Guest {
@@ -56,6 +56,7 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
   const [messageText, setMessageText] = useState('');
   const [sendingProgress, setSendingProgress] = useState({ sending: false, progress: 0 });
   const [videoRoomId, setVideoRoomId] = useState<string | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Resolve boothId by querying exhibition_booths directly
   useEffect(() => {
@@ -636,11 +637,11 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
                             </span>
                           )}
                         </td>
-                        <td className="p-5 text-right">
-                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <td className="p-5 text-right relative">
+                          <div className={`flex items-center justify-end gap-2 transition-opacity ${activeDropdown === attendee.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                             <button
                               onClick={() => toggleLeadRelevance(attendee.id, lead?.is_relevant || false)}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-inner ${
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shadow-inner ${
                                 lead?.is_relevant 
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'
                                   : 'bg-black border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
@@ -652,10 +653,67 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
                             
                             <button
                               onClick={() => handleOpenNotes(attendee)}
-                              className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-gray-700 transition-colors shadow-inner"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-gray-700 transition-colors shadow-inner"
                             >
                               <StickyNote className="w-3.5 h-3.5" /> NOTES
                             </button>
+                            
+                            <div className="relative">
+                              <button
+                                onClick={() => setActiveDropdown(activeDropdown === attendee.id ? null : attendee.id)}
+                                className="flex items-center gap-1 px-2 py-2 bg-black border border-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-inner"
+                              >
+                                <span className="text-[10px] font-bold uppercase tracking-widest pl-1">INVITE</span>
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeDropdown === attendee.id ? 'rotate-180' : ''}`} />
+                              </button>
+                              
+                              <AnimatePresence>
+                                {activeDropdown === attendee.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+                                  >
+                                    <div className="flex flex-col">
+                                      <button 
+                                        onClick={() => {
+                                          setSelectedStudentIds([attendee.id]);
+                                          handleOpenActionModal('chat');
+                                          setActiveDropdown(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-left w-full"
+                                      >
+                                        <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-400"><MessageSquare className="w-3.5 h-3.5" /></div>
+                                        <span className="text-xs font-bold text-gray-300">Live Chat</span>
+                                      </button>
+                                      <button 
+                                        onClick={() => {
+                                          setSelectedStudentIds([attendee.id]);
+                                          handleOpenActionModal('video');
+                                          setActiveDropdown(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-left border-t border-gray-800/50 w-full"
+                                      >
+                                        <div className="p-1.5 rounded-md bg-purple-500/10 text-purple-400"><Video className="w-3.5 h-3.5" /></div>
+                                        <span className="text-xs font-bold text-gray-300">Video Meeting</span>
+                                      </button>
+                                      <button 
+                                        onClick={() => {
+                                          setSelectedStudentIds([attendee.id]);
+                                          handleOpenActionModal('custom');
+                                          setActiveDropdown(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-left border-t border-gray-800/50 w-full"
+                                      >
+                                        <div className="p-1.5 rounded-md bg-white/10 text-white"><Send className="w-3.5 h-3.5" /></div>
+                                        <span className="text-xs font-bold text-gray-300">Custom Message</span>
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
                           </div>
                         </td>
                       </tr>
