@@ -41,7 +41,7 @@ export function ModerationPanel() {
     try {
       setIsProcessing(true);
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       const hostSecret = localStorage.getItem(`host_secret_${room.name}`) || undefined;
       const livekitToken = localStorage.getItem(`livekit_token_${room.name}`) || undefined;
