@@ -23,7 +23,7 @@ export function ReactionControls() {
       window.dispatchEvent(event);
       
       // Let's also just directly fire it to the room event emitter so the overlay catches it
-      room.emit('dataReceived', data, room.localParticipant, undefined, 'reactions');
+      room.emit('dataReceived', data, room.localParticipant as any, undefined, 'reactions');
       
     } catch (e) {
       console.error('Failed to send reaction', e);
@@ -31,9 +31,9 @@ export function ReactionControls() {
   };
 
   return (
-    <div className="absolute bottom-6 right-6 z-50 flex items-end gap-2">
+    <div className="absolute bottom-[18px] left-1/2 ml-[100px] sm:ml-[120px] md:ml-[140px] z-50 flex flex-col items-center">
       {isOpen && (
-        <div className="bg-background border rounded-full shadow-lg p-2 flex gap-2 animate-in fade-in slide-in-from-right-4">
+        <div className="absolute bottom-[56px] left-1/2 -translate-x-1/2 bg-background border rounded-full shadow-lg p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 whitespace-nowrap">
           {EMOJIS.map(emoji => (
             <Button
               key={emoji}
@@ -51,12 +51,13 @@ export function ReactionControls() {
         </div>
       )}
       <Button 
-        variant="default" 
+        variant="outline" 
         size="icon"
-        className="h-12 w-12 rounded-full shadow-lg"
+        className="h-10 w-10 shadow bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white"
         onClick={() => setIsOpen(!isOpen)}
+        title="Reactions"
       >
-        <Smile className="w-6 h-6" />
+        <Smile className="w-5 h-5" />
       </Button>
     </div>
   );

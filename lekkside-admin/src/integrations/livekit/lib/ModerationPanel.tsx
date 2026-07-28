@@ -178,11 +178,11 @@ export function ModerationPanel() {
               } catch (e) {
                 // ignore parse error
               }
-              const isHostOrMod = p.permissions?.roomAdmin || isMod;
+              const isHostOrMod = (p.permissions as any)?.roomAdmin || isMod;
               
               return (
-                <div key={p.identity} className="flex items-center justify-between p-2 rounded-lg border bg-card text-card-foreground text-sm">
-                  <span className="truncate pr-2 font-medium flex items-center gap-1">
+                <div key={p.identity} className="flex items-center justify-between p-2 rounded-lg border bg-card text-foreground text-sm">
+                  <span className="truncate pr-2 font-medium flex items-center gap-1 text-foreground">
                     {p.name?.trim() || p.identity}
                     {isLocal && <span className="text-muted-foreground text-xs font-normal">(You)</span>}
                     {isHostOrMod && <span className="text-[10px] uppercase font-bold text-primary border border-primary/30 bg-primary/10 px-1 rounded ml-1">Host</span>}

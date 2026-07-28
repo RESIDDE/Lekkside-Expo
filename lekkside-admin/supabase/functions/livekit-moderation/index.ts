@@ -56,7 +56,7 @@ serve(async (req) => {
       await svc.updateParticipant(roomName, identity, undefined, permissions);
     } else if (action === 'updateMetadata') {
       if (!identity || typeof body.metadata !== 'string') throw new Error('identity and metadata string are required for updateMetadata');
-      await svc.updateParticipant(roomName, identity, body.metadata, undefined);
+      await svc.updateParticipant(roomName, identity, body.metadata);
     } else if (action === 'removeParticipant') {
       if (!identity) throw new Error('identity is required for removeParticipant');
       await svc.removeParticipant(roomName, identity);
