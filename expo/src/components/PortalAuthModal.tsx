@@ -209,22 +209,54 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
           throw new Error(verifyData?.error || 'Invalid OTP. Please try again.');
         }
 
-        // OTP verified successfully, now create the user
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
+        // OTP verified successfully. The edge function may have already created the user
+        // with a temporary password to bypass native email confirmations.
+        const tempPassword = verifyData?.password;
+
+        if (tempPassword) {
+          // Sign in with the temporary password
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password: tempPassword
+          });
+
+          if (signInError) throw signInError;
+
+          // Now that we're authenticated, update the user with their chosen password and metadata
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: password,
             data: {
               full_name: fullName,
               phone: phone,
               role: role,
               ...(role === 'university' ? { institution_type: institutionType } : {})
             }
-          }
-        });
+          });
 
-        if (signUpError) {
-          throw signUpError;
+          if (updateError) throw updateError;
+        } else {
+          // Fallback: if verify-otp didn't create the user, try signing up normally
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                phone: phone,
+                role: role,
+                ...(role === 'university' ? { institution_type: institutionType } : {})
+              }
+            }
+          });
+
+          if (signUpError) {
+            if (signUpError.message.toLowerCase().includes('already registered')) {
+              const { error: fallbackSignInError } = await supabase.auth.signInWithPassword({ email, password });
+              if (fallbackSignInError) throw signUpError;
+            } else {
+              throw signUpError;
+            }
+          }
         }
 
         handleClose();

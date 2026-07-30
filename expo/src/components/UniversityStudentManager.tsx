@@ -49,10 +49,9 @@ export function UniversityStudentManager({ user, boothId: passedBoothId }: { use
   // Selection State
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [studentProfilesMap, setStudentProfilesMap] = useState<Record<string, { user_id: string, full_name: string }>>({});
-  
   // Action Modal State
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<'chat' | 'video' | 'custom'>('custom');
+  const [_actionType, setActionType] = useState<'chat' | 'video' | 'custom'>('custom');
   const [messageText, setMessageText] = useState('');
   const [sendingProgress, setSendingProgress] = useState({ sending: false, progress: 0 });
   const [videoRoomId, setVideoRoomId] = useState<string | null>(null);
