@@ -101,7 +101,7 @@ export function UniversityDashboard() {
       
       const globalVideoEnabled = systemSettings?.video_rooms_enabled ?? false;
       const exhibitorVideoEnabled = (profile as any)?.video_access_enabled ?? false;
-      setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
+      setVideoEnabled(globalVideoEnabled || exhibitorVideoEnabled);
 
       // Fetch Applications Data
       const { data: applications } = await supabase
@@ -211,7 +211,7 @@ export function UniversityDashboard() {
           
         const globalVideoEnabled = systemSettings?.video_rooms_enabled ?? false;
         const exhibitorVideoEnabled = newProfile.video_access_enabled ?? false;
-        setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
+        setVideoEnabled(globalVideoEnabled || exhibitorVideoEnabled);
       })
       .subscribe();
       
@@ -231,7 +231,7 @@ export function UniversityDashboard() {
           .maybeSingle();
           
         const exhibitorVideoEnabled = (profile as any)?.video_access_enabled ?? false;
-        setVideoEnabled(globalVideoEnabled && exhibitorVideoEnabled);
+        setVideoEnabled(globalVideoEnabled || exhibitorVideoEnabled);
       })
       .subscribe();
 

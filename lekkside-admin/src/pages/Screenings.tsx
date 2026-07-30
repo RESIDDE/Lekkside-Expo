@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { UserCheck, CheckCircle, XCircle, Clock, Search, ChevronDown, FileText, ShieldAlert, ShieldCheck, Calendar } from 'lucide-react';
+import { UserCheck, CheckCircle, XCircle, Clock, Search, ChevronDown, FileText, ShieldAlert, ShieldCheck, Calendar, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Screenings() {
@@ -77,6 +77,30 @@ export default function Screenings() {
       
     fetchData();
   };
+
+  const handleDeleteProfile = async (profileId: string) => {
+    if (!window.confirm("Are you sure you want to delete this registration? This action cannot be undone.")) return;
+    setLoading(true);
+    
+    // First try a hard delete
+    const { error } = await supabase.from('profiles').delete().eq('id', profileId);
+    
+    if (error) {
+      console.warn("Hard delete failed:", error);
+      // Fallback to soft delete by changing role and deactivating
+      const { error: updateError } = await supabase.from('profiles').update({ 
+        role: 'deleted_student',
+        is_active: false 
+      }).eq('id', profileId);
+      
+      if (updateError) {
+        alert("Failed to delete registration. Hard delete error: " + error.message + " | Soft delete error: " + updateError.message);
+      }
+    }
+    
+    await fetchData();
+  };
+
 
   const getStatusIcon = (status: string | null | undefined) => {
     switch (status) {
@@ -171,6 +195,47 @@ export default function Screenings() {
             </div>
           </div>
 
+          <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+            <button
+              onClick={() => setSelectedEventFilter('all')}
+              className={`flex-shrink-0 flex flex-col items-start p-4 rounded-xl border min-w-[160px] transition-all ${
+                selectedEventFilter === 'all' 
+                  ? 'bg-primary text-white border-primary shadow-md' 
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+              }`}
+            >
+              <span className="font-semibold mb-1">All Events</span>
+              <span className={`text-sm ${selectedEventFilter === 'all' ? 'text-primary-foreground/80' : 'text-gray-500'}`}>
+                {profiles.length} Total
+              </span>
+            </button>
+            {events.map(event => {
+              const count = profiles.filter(p => {
+                const profileGuests = guests.filter(g => g.email?.toLowerCase() === p.contact_email?.toLowerCase());
+                return profileGuests.some(g => g.event_id === event.id);
+              }).length;
+              
+              const isSelected = selectedEventFilter === event.id;
+              
+              return (
+                <button
+                  key={event.id}
+                  onClick={() => setSelectedEventFilter(event.id)}
+                  className={`flex-shrink-0 flex flex-col items-start p-4 rounded-xl border min-w-[160px] max-w-[250px] transition-all ${
+                    isSelected 
+                      ? 'bg-primary text-white border-primary shadow-md' 
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-semibold mb-1 truncate w-full text-left">{event.name}</span>
+                  <span className={`text-sm ${isSelected ? 'text-primary-foreground/80' : 'text-gray-500'}`}>
+                    {count} Registration{count !== 1 ? 's' : ''}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -182,16 +247,6 @@ export default function Screenings() {
                 className="w-full pl-10 pr-4 py-2 border-0 bg-gray-50 rounded-lg focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </div>
-            <select 
-              value={selectedEventFilter}
-              onChange={(e) => setSelectedEventFilter(e.target.value)}
-              className="w-full sm:w-auto px-4 py-2 bg-gray-50 text-gray-600 rounded-lg border-0 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-            >
-              <option value="all">All Events</option>
-              {events.map(event => (
-                <option key={event.id} value={event.id}>{event.name}</option>
-              ))}
-            </select>
           </div>
 
           {selectedProfiles.size > 0 && (
@@ -460,6 +515,15 @@ export default function Screenings() {
                             </button>
                           </>
                         )}
+                        
+                        <div className="w-full h-[1px] bg-gray-100 my-1"></div>
+                        
+                        <button 
+                          onClick={() => handleDeleteProfile(profile.id)}
+                          className="w-full px-4 py-2 bg-gray-50 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 border border-gray-200 hover:border-red-200"
+                        >
+                          <Trash2 className="h-4 w-4" /> Delete
+                        </button>
                       </div>
                       
                     </div>

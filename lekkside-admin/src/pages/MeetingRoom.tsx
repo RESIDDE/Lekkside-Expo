@@ -9,6 +9,7 @@ import { SettingsMenu } from '../integrations/livekit/lib/SettingsMenu';
 import { ModerationPanel } from '../integrations/livekit/lib/ModerationPanel';
 import { ReactionsOverlay } from '../integrations/livekit/lib/ReactionsOverlay';
 import { ReactionControls } from '../integrations/livekit/lib/ReactionControls';
+import { RaisedHandsList } from '../integrations/livekit/lib/RaisedHandsList';
 import { ConnectionDetails } from '../integrations/livekit/lib/types';
 import { ModeratorProvider, useModerator } from '../integrations/livekit/lib/ModeratorContext';
 import {
@@ -334,6 +335,7 @@ function VideoConferenceComponent(props: {
         <RecordingIndicator />
         <ModerationPanel />
         <ReactionsOverlay />
+        <RaisedHandsList />
         <ReactionControls />
       </RoomContext.Provider>
     </div>

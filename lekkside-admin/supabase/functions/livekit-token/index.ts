@@ -65,6 +65,7 @@ serve(async (req) => {
       canPublish: true,
       canPublishData: true,
       canSubscribe: true,
+      canUpdateOwnMetadata: true,
     };
     
     if (isModerator) {

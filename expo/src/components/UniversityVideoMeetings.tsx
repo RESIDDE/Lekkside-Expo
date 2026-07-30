@@ -32,12 +32,23 @@ export function UniversityVideoMeetings({ videoEnabled }: { videoEnabled?: boole
         setIsLive(data.is_live || false);
         if (data.last_meeting_room_id) {
           setLastMeetingRoomId(data.last_meeting_room_id);
-          setRoomName(data.last_meeting_room_id);
+          setRoomName(prev => prev || data.last_meeting_room_id || "");
         }
         if (data.meeting_room_id) {
           setRoomName(data.meeting_room_id);
         }
       }
+      
+      // Auto-generate if still empty
+      setRoomName(prev => {
+        if (!prev) {
+          const words = ['expo', 'connect', 'global', 'summit', 'insight', 'future', 'edu', 'talent'];
+          const randomWord = words[Math.floor(Math.random() * words.length)];
+          const randomChars = Math.random().toString(36).substring(2, 6);
+          return `${randomWord}-${randomChars}`;
+        }
+        return prev;
+      });
     }
     fetchStatus();
   }, []);
@@ -76,6 +87,12 @@ export function UniversityVideoMeetings({ videoEnabled }: { videoEnabled?: boole
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      if (!roomName.trim()) {
+        alert("Please enter or generate a room name first.");
+        setIsUpdating(false);
+        return;
+      }
+
       const newStatus = !isLive;
       const { error } = await supabase
         .from('profiles')
@@ -90,9 +107,9 @@ export function UniversityVideoMeetings({ videoEnabled }: { videoEnabled?: boole
       if (newStatus && roomName) {
         await saveLastRoom(roomName);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error toggling broadcast:", err);
-      alert("Failed to update broadcast status.");
+      alert("Failed to update broadcast status. Error: " + (err.message || JSON.stringify(err)));
     } finally {
       setIsUpdating(false);
     }
