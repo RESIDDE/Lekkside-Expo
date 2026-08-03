@@ -618,7 +618,8 @@ export default function Auth() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
+                  disabled
+                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create Account
                 </TabsTrigger>
