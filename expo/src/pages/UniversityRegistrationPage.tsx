@@ -10,9 +10,7 @@ import {
   Loader2, 
   Key, 
   Eye, 
-  EyeOff, 
-  CheckCircle2,
-  GraduationCap
+  EyeOff
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -47,7 +45,7 @@ export function UniversityRegistrationPage() {
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim()
       });
