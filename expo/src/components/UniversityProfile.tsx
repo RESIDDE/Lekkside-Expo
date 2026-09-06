@@ -21,6 +21,7 @@ export function UniversityProfile({ user }: { user: any }) {
     description: '',
     website_url: '',
     brochure_url: '',
+    institution_type: 'University',
     programs: [] as string[],
     degree_levels: [] as string[],
     tuition_category: '',
@@ -47,7 +48,7 @@ export function UniversityProfile({ user }: { user: any }) {
     async function fetchProfile() {
       const { data } = await supabase
         .from('profiles')
-        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, brochure_url, description, website_url, programs, degree_levels, tuition_category, has_scholarship')
+        .select('university_name, full_name, location, contact_email, contact_phone, logo_url, banner_url, brochure_url, description, website_url, institution_type, programs, degree_levels, tuition_category, has_scholarship')
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -63,6 +64,7 @@ export function UniversityProfile({ user }: { user: any }) {
           brochure_url: data.brochure_url || '',
           description: data.description || '',
           website_url: data.website_url || '',
+          institution_type: data.institution_type || 'University',
           programs: data.programs || [],
           degree_levels: data.degree_levels || [],
           tuition_category: data.tuition_category || '',
@@ -180,6 +182,7 @@ export function UniversityProfile({ user }: { user: any }) {
         brochure_url: finalBrochureUrl,
         description: formData.description,
         website_url: formData.website_url,
+        institution_type: formData.institution_type,
         programs: formData.programs,
         degree_levels: formData.degree_levels,
         tuition_category: formData.tuition_category,
@@ -258,18 +261,39 @@ export function UniversityProfile({ user }: { user: any }) {
           {/* Section: Basic Information */}
           <div className="space-y-8">
             <h3 className="text-xl font-bold text-white mb-6">Basic Information</h3>
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                University / Institution Name
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.university_name}
-                onChange={(e) => setFormData({...formData, university_name: e.target.value})}
-                placeholder="e.g. Stanford University"
-                className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  University / Institution Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.university_name}
+                  onChange={(e) => setFormData({...formData, university_name: e.target.value})}
+                  placeholder="e.g. Stanford University"
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all placeholder-gray-600 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  Institution Tag / Type
+                </label>
+                <select
+                  value={formData.institution_type}
+                  onChange={(e) => setFormData({...formData, institution_type: e.target.value})}
+                  className="w-full rounded-[1.25rem] bg-black border border-gray-800 px-5 py-4 text-white focus:ring-2 focus:ring-white/20 focus:border-gray-600 outline-none transition-all font-medium appearance-none"
+                >
+                  <option value="University">University</option>
+                  <option value="College">College</option>
+                  <option value="High School">High School</option>
+                  <option value="Embassy">Embassy</option>
+                  <option value="Language School">Language School</option>
+                  <option value="Pathway Provider">Pathway Provider</option>
+                  <option value="Education Organisation">Education Organisation</option>
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

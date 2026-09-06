@@ -16,7 +16,8 @@ import {
   Building2,
   X,
   Scale,
-  ArrowRight
+  ArrowRight,
+  Copy
 } from 'lucide-react';
 
 interface University {
@@ -41,6 +42,7 @@ const PROGRAM_OPTIONS = ['Engineering', 'Business', 'Arts & Humanities', 'Comput
 const DEGREE_OPTIONS = ["Bachelor's", "Master's", 'PhD', 'Diploma', 'Certificate'];
 const TUITION_OPTIONS = ['< $10,000', '$10,000 - $20,000', '$20,000 - $30,000', '> $30,000'];
 const COUNTRY_OPTIONS = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Nigeria', 'Germany'];
+const INSTITUTION_TYPES = ['University', 'College', 'High School', 'Embassy', 'Language School', 'Pathway Provider', 'Education Organisation'];
 
 export default function Universities() {
   const [loading, setLoading] = useState(true);
@@ -53,6 +55,7 @@ export default function Universities() {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [selectedDegrees, setSelectedDegrees] = useState<string[]>([]);
   const [selectedTuitions, setSelectedTuitions] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [requireScholarship, setRequireScholarship] = useState(false);
   const [selectedBoothId, setSelectedBoothId] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -196,10 +199,32 @@ export default function Universities() {
     }
   };
 
+  const handleUpdateInstitutionType = async (id: string, newType: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ institution_type: newType })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setUniversities(prev => 
+        prev.map(u => u.id === id ? { ...u, institution_type: newType } : u)
+      );
+    } catch (err) {
+      console.error('Error updating institution type:', err);
+      alert('Failed to update institution tag.');
+    }
+  };
+
   const filteredUniversities = useMemo(() => {
     return universities.filter(uni => {
       // Search
       if (searchQuery && !uni.university_name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      // Institution Type Filter
+      if (selectedTypes.length > 0 && !selectedTypes.includes(uni.institution_type)) {
         return false;
       }
       // Country Filter
@@ -235,6 +260,25 @@ export default function Universities() {
 
   const FilterSection = () => (
     <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <Building2 className="w-4 h-4" /> Institution Tag / Type
+        </h3>
+        <div className="space-y-2">
+          {INSTITUTION_TYPES.map(type => (
+            <label key={type} className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={selectedTypes.includes(type)}
+                onChange={() => toggleFilter(setSelectedTypes, type)}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-gray-600">{type}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <MapPin className="w-4 h-4" /> Country
@@ -326,6 +370,15 @@ export default function Universities() {
     </div>
   );
 
+  const copyUniversityRegistrationLink = () => {
+    const origin = window.location.origin.includes('8080') || window.location.origin.includes('5173')
+      ? 'http://localhost:5173'
+      : window.location.origin;
+    const registrationLink = `${origin}/register-university`;
+    navigator.clipboard.writeText(registrationLink);
+    alert(`University Registration Link copied to clipboard:\n${registrationLink}`);
+  };
+
   return (
     <AppLayout>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -338,20 +391,29 @@ export default function Universities() {
             <p className="text-sm text-gray-500 mt-1">Browse, filter, and manage exhibitors</p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-700">Global Video Rooms:</span>
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={handleToggleGlobalVideo}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-                globalVideoEnabled ? 'bg-green-500' : 'bg-gray-300'
-              }`}
+              onClick={copyUniversityRegistrationLink}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-xl text-xs font-bold transition-all shadow-sm"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                  globalVideoEnabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
+              <Copy className="w-3.5 h-3.5" />
+              Copy Registration Link
             </button>
+            <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+              <span className="text-xs font-semibold text-gray-700">Global Video:</span>
+              <button
+                onClick={handleToggleGlobalVideo}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                  globalVideoEnabled ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                    globalVideoEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
         
@@ -470,15 +532,28 @@ export default function Universities() {
                       )}
                     </div>
 
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1 group-hover:text-primary transition-colors">
-                      {uni.university_name}
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-primary transition-colors">
+                        {uni.university_name}
+                      </h3>
+                      <div className="relative inline-flex items-center">
+                        <select
+                          value={uni.institution_type}
+                          onChange={(e) => handleUpdateInstitutionType(uni.id, e.target.value)}
+                          className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 hover:bg-blue-100 transition-colors appearance-none pr-5 relative"
+                          title="Click to edit institution tag"
+                        >
+                          {INSTITUTION_TYPES.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                        <span className="pointer-events-none absolute right-2 text-blue-500 text-[10px]">▼</span>
+                      </div>
+                    </div>
                     
                     <div className="flex items-center text-gray-500 text-sm mb-4">
-                      <Building2 className="w-3.5 h-3.5 mr-1" />
-                      <span className="mr-3">{uni.institution_type}</span>
                       <MapPin className="w-3.5 h-3.5 mr-1" />
-                      {uni.country}
+                      {uni.location || uni.country}
                     </div>
 
                     {/* Tags */}
@@ -614,6 +689,12 @@ export default function Universities() {
                         </div>
                         
                         <div className="space-y-3 flex-1">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Institution Tag</p>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80 inline-block">
+                              {uni.institution_type}
+                            </span>
+                          </div>
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Tuition</p>
                             <p className="text-sm font-medium text-gray-900">{uni.tuitionCategory}</p>

@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
-import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, ShieldCheck, Scan } from "lucide-react";
+import { Search, Users, UserCheck, Clock, Calendar, MapPin, LayoutGrid, ListChecks, ArrowLeft, Loader2, ShieldCheck, Scan, X } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,56 +45,107 @@ export default function CheckInOnly() {
   const checkIn = useCheckIn();
   const undoCheckIn = useUndoCheckIn();
 
-  // Prepare guests with full name for fuzzy search
-  const guestsWithFullName = useMemo(() => {
-    return guests.map(guest => ({
-      ...guest,
-      fullName: `${guest.first_name || ''} ${guest.last_name || ''}`.trim(),
-      reverseName: `${guest.last_name || ''} ${guest.first_name || ''}`.trim(),
-      ticketCode: `LEKK-${guest.id.slice(0, 8).toUpperCase()}`,
-    }));
+  // Prepare rich searchable guest objects with phone digit normalization & custom fields
+  const processedGuests = useMemo(() => {
+    return guests.map(guest => {
+      const firstName = (guest.first_name || '').trim();
+      const lastName = (guest.last_name || '').trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const reverseName = `${lastName} ${firstName}`.trim();
+      const email = (guest.email || '').trim().toLowerCase();
+      const rawPhone = (guest.phone || '').trim();
+      const cleanPhone = rawPhone.replace(/\D/g, ''); // digits only
+      const ticketNumber = (guest.ticket_number || '').trim();
+      const ticketCode = `LEKK-${guest.id.slice(0, 8).toUpperCase()}`;
+      const id = guest.id;
+      const notes = (guest.notes || '').trim().toLowerCase();
+
+      // Extract custom fields into a flat searchable string
+      const customFieldsObj = (guest.custom_fields as Record<string, unknown>) || {};
+      const customFieldsText = Object.values(customFieldsObj)
+        .flatMap(v => Array.isArray(v) ? v : [v])
+        .filter(Boolean)
+        .map(v => String(v).toLowerCase())
+        .join(' ');
+
+      return {
+        ...guest,
+        firstName,
+        lastName,
+        fullName,
+        reverseName,
+        email,
+        rawPhone,
+        cleanPhone,
+        ticketNumber,
+        ticketCode,
+        id,
+        notes,
+        customFieldsText,
+      };
+    });
   }, [guests]);
 
-  // Create Fuse instance for fuzzy search
+  // Fuse instance for fuzzy search (handling typos & misspellings)
   const fuse = useMemo(() => {
-    return new Fuse(guestsWithFullName, {
+    return new Fuse(processedGuests, {
       keys: [
-        { name: 'fullName', weight: 2 },
-        { name: 'reverseName', weight: 2 },
-        { name: 'first_name', weight: 1.5 },
-        { name: 'last_name', weight: 1.5 },
-        { name: 'email', weight: 1 },
-        { name: 'phone', weight: 1 },
-        { name: 'ticket_number', weight: 1 },
+        { name: 'fullName', weight: 2.5 },
+        { name: 'reverseName', weight: 2.5 },
+        { name: 'firstName', weight: 2 },
+        { name: 'lastName', weight: 2 },
+        { name: 'email', weight: 2 },
+        { name: 'rawPhone', weight: 2 },
+        { name: 'cleanPhone', weight: 2 },
+        { name: 'ticketNumber', weight: 2.5 },
         { name: 'ticketCode', weight: 3 },
+        { name: 'customFieldsText', weight: 1.5 },
       ],
-      threshold: 0.4,
+      threshold: 0.35,
       distance: 100,
       includeScore: true,
       minMatchCharLength: 2,
     });
-  }, [guestsWithFullName]);
+  }, [processedGuests]);
 
   const filteredGuests = useMemo(() => {
-    let result = guestsWithFullName;
+    let result = processedGuests;
 
-    const query = searchQuery.trim();
-    if (query) {
-      const normalizedQuery = query.replace(/\s+/g, '');
-      let searchResults = fuse.search(query);
-      
-      if (normalizedQuery !== query) {
-        const normalizedResults = fuse.search(normalizedQuery);
-        const combined = [...searchResults];
-        normalizedResults.forEach(nr => {
-          if (!combined.find(cr => cr.item.id === nr.item.id)) {
-            combined.push(nr);
-          }
-        });
-        searchResults = combined;
-      }
-      
-      result = searchResults.map(r => r.item);
+    const rawQuery = searchQuery.trim();
+    if (rawQuery) {
+      const queryLower = rawQuery.toLowerCase();
+      const queryDigits = rawQuery.replace(/\D/g, '');
+
+      // 1. Direct & substring matches across all fields
+      const directMatches = processedGuests.filter(g => {
+        if (g.fullName.toLowerCase().includes(queryLower)) return true;
+        if (g.reverseName.toLowerCase().includes(queryLower)) return true;
+        if (g.firstName.toLowerCase().includes(queryLower)) return true;
+        if (g.lastName.toLowerCase().includes(queryLower)) return true;
+        if (g.email.includes(queryLower)) return true;
+        if (g.rawPhone.toLowerCase().includes(queryLower)) return true;
+        if (queryDigits.length >= 3 && g.cleanPhone.includes(queryDigits)) return true;
+        if (g.ticketNumber.toLowerCase().includes(queryLower)) return true;
+        if (g.ticketCode.toLowerCase().includes(queryLower)) return true;
+        if (g.id.toLowerCase().includes(queryLower)) return true;
+        if (g.customFieldsText.includes(queryLower)) return true;
+        if (g.notes.includes(queryLower)) return true;
+        return false;
+      });
+
+      // 2. Fuzzy search results to catch typos
+      const fuzzyResults = fuse.search(rawQuery).map(r => r.item);
+
+      // Combine direct matches first + fuzzy matches (deduplicated)
+      const resultMap = new Map<string, typeof processedGuests[0]>();
+      directMatches.forEach(g => resultMap.set(g.id, g));
+      fuzzyResults.forEach(g => {
+        if (!resultMap.has(g.id)) {
+          resultMap.set(g.id, g);
+        }
+      });
+
+      result = Array.from(resultMap.values());
     }
 
     if (activeTab === "pending") {
@@ -105,7 +155,7 @@ export default function CheckInOnly() {
     }
 
     return result;
-  }, [guestsWithFullName, searchQuery, activeTab, fuse]);
+  }, [processedGuests, searchQuery, activeTab, fuse]);
 
   const handleCheckIn = useCallback((guestId: string) => {
     checkIn.mutate(
@@ -146,14 +196,7 @@ export default function CheckInOnly() {
     });
   }, [undoCheckIn, toast]);
 
-  // Virtual list for performance
   const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: filteredGuests.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 140,
-    overscan: 10,
-  });
 
   if (stationLoading || guestsLoading) {
     return (
@@ -240,24 +283,24 @@ export default function CheckInOnly() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-10 space-y-8 max-w-5xl">
+      <main className="container mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8 max-w-5xl">
         {/* Unified Event Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-premium border border-border/40 group transition-all"
+          className="relative overflow-hidden bg-white p-5 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-premium border border-border/40 group transition-all"
         >
           <div className="absolute top-0 right-0 p-10 opacity-[0.03] grayscale pointer-events-none group-hover:scale-110 transition-transform duration-[2s]">
              <LayoutGrid className="w-64 h-64 -mr-20 -mt-20" />
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 relative z-10">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/10 text-[9px] font-semibold uppercase tracking-[0.2em]">
                  <ShieldCheck className="w-3 h-3" /> System Ready
               </div>
-              <h1 className="text-4xl font-heading font-semibold text-foreground leading-[1.1] tracking-tight">{event.name}</h1>
-              <div className="flex flex-wrap gap-6 text-sm">
+              <h1 className="text-2xl sm:text-4xl font-heading font-semibold text-foreground leading-[1.1] tracking-tight">{event.name}</h1>
+              <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
                 {event.date && (
                   <div className="flex items-center gap-3 px-1">
                     <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-muted-foreground">
@@ -284,29 +327,31 @@ export default function CheckInOnly() {
             </div>
 
             {/* Premium Stats Ring */}
-            <div className="bg-slate-50 p-6 rounded-[2rem] border border-border/20 flex items-center gap-8 shadow-sm">
-              <ProgressRing percentage={stats.percentage} size={110} strokeWidth={9} />
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
-                <div className="flex flex-col">
+            <div className="bg-slate-50 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-border/40 flex flex-col xs:flex-row items-center gap-4 sm:gap-6 shadow-sm shrink-0">
+              <ProgressRing percentage={stats.percentage} size={90} strokeWidth={8} />
+              <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 w-full xs:w-auto border-t xs:border-t-0 xs:border-l border-border/40 pt-3 xs:pt-0 xs:pl-6">
+                <div className="flex flex-col items-center xs:items-start min-w-[65px]">
                   <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                    <Users className="h-3 w-3" />
-                    <span className="text-[9px] font-semibold uppercase tracking-widest">Registrations</span>
+                    <Users className="h-3 w-3 shrink-0" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">Total</span>
                   </div>
-                  <div className="text-2xl font-semibold text-foreground tracking-tighter">{stats.total}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{stats.total}</div>
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5 text-[hsl(var(--success))] mb-1">
-                    <UserCheck className="h-3 w-3" />
-                    <span className="text-[9px] font-semibold uppercase tracking-widest">Arrived</span>
+
+                <div className="flex flex-col items-center xs:items-start min-w-[65px]">
+                  <div className="flex items-center gap-1.5 text-emerald-600 mb-1">
+                    <UserCheck className="h-3 w-3 shrink-0" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">Arrived</span>
                   </div>
-                  <div className="text-2xl font-semibold text-[hsl(var(--success))] tracking-tighter">{stats.checkedIn}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-emerald-600 tracking-tight">{stats.checkedIn}</div>
                 </div>
-                <div className="flex flex-col">
+
+                <div className="flex flex-col items-center xs:items-start min-w-[65px]">
                   <div className="flex items-center gap-1.5 text-amber-500 mb-1">
-                    <Clock className="h-3 w-3" />
-                    <span className="text-[9px] font-semibold uppercase tracking-widest">Pending</span>
+                    <Clock className="h-3 w-3 shrink-0" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">Pending</span>
                   </div>
-                  <div className="text-2xl font-semibold text-amber-500 tracking-tighter">{stats.pending}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{stats.pending}</div>
                 </div>
               </div>
             </div>
@@ -319,16 +364,26 @@ export default function CheckInOnly() {
             <div className="relative flex-1 group">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
-                placeholder="Search by name or email..."
+                placeholder="Search by name, email, phone (+234...), ticket #, university..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-16 pl-14 pr-6 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-semibold text-lg focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+                className="h-16 pl-14 pr-24 rounded-[1.5rem] bg-white border-border/40 shadow-sm font-semibold text-sm sm:text-base focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
               />
-              {filteredGuests.length > 0 && searchQuery && (
-                 <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-md">
-                   {filteredGuests.length} Results
-                 </div>
-              )}
+              {searchQuery ? (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-lg shrink-0">
+                    {filteredGuests.length} {filteredGuests.length === 1 ? 'Match' : 'Matches'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                    title="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : null}
             </div>
             
             <Button 
@@ -396,42 +451,21 @@ export default function CheckInOnly() {
             >
               <div
                 ref={parentRef}
-                className="h-[calc(100vh-500px)] min-h-[400px] overflow-auto scrollbar-hide p-6 sm:p-8"
+                className="max-h-[calc(100vh-320px)] min-h-[400px] overflow-y-auto p-3 sm:p-6 space-y-3"
               >
-                <div
-                  style={{
-                    height: `${virtualizer.getTotalSize()}px`,
-                    width: '100%',
-                    position: 'relative',
-                  }}
-                >
-                  {virtualizer.getVirtualItems().map((virtualRow) => {
-                    const guest = filteredGuests[virtualRow.index];
-                    return (
-                      <div
-                        key={guest.id}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          transform: `translateY(${virtualRow.start}px)`,
-                          padding: '8px 0',
-                        }}
-                      >
-                         <GuestCard
-                          guest={guest}
-                          onCheckIn={handleCheckIn}
-                          onUndoCheckIn={handleUndoCheckIn}
-                          isLoading={checkIn.isPending || undoCheckIn.isPending}
-                          eventName={event?.name}
-                          eventDate={event?.date}
-                          eventVenue={event?.venue}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+                {filteredGuests.map((guest, idx) => (
+                  <GuestCard
+                    key={guest.id}
+                    guest={guest}
+                    onCheckIn={handleCheckIn}
+                    onUndoCheckIn={handleUndoCheckIn}
+                    isLoading={checkIn.isPending || undoCheckIn.isPending}
+                    index={idx}
+                    eventName={event?.name}
+                    eventDate={event?.date}
+                    eventVenue={event?.venue}
+                  />
+                ))}
               </div>
               
               <div className="bg-slate-50/80 p-4 border-t border-border/40 flex items-center justify-between px-10">

@@ -124,74 +124,118 @@ export default function EventDetail() {
     "data" | "event" | null
   >(null);
 
-  // Prepare guests with full name for fuzzy search
-  const guestsWithFullName = useMemo(() => {
+  // Prepare rich searchable guest objects with phone digit normalization & custom fields
+  const processedGuests = useMemo(() => {
     if (!guests) return [];
     return guests.map((guest) => {
-      const customFieldValues = guest.custom_fields
-        ? Object.values(guest.custom_fields as Record<string, string>).join(" ")
-        : "";
+      const firstName = (guest.first_name || '').trim();
+      const lastName = (guest.last_name || '').trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const reverseName = `${lastName} ${firstName}`.trim();
+      const email = (guest.email || '').trim().toLowerCase();
+      const rawPhone = (guest.phone || '').trim();
+      const cleanPhone = rawPhone.replace(/\D/g, ''); // digits only
+      const ticketNumber = (guest.ticket_number || '').trim();
+      const ticketCode = `LEKK-${guest.id.slice(0, 8).toUpperCase()}`;
+      const id = guest.id;
+      const notes = (guest.notes || '').trim().toLowerCase();
+
+      // Extract custom fields into a flat searchable string
+      const customFieldsObj = (guest.custom_fields as Record<string, unknown>) || {};
+      const customFieldsText = Object.values(customFieldsObj)
+        .flatMap(v => Array.isArray(v) ? v : [v])
+        .filter(Boolean)
+        .map(v => String(v).toLowerCase())
+        .join(' ');
 
       return {
         ...guest,
-        fullName: `${guest.first_name || ""} ${guest.last_name || ""}`.trim(),
-        reverseName:
-          `${guest.last_name || ""} ${guest.first_name || ""}`.trim(),
-        searchableCustomFields: customFieldValues,
-        ticketCode: `LEKK-${guest.id.slice(0, 8).toUpperCase()}`,
+        firstName,
+        lastName,
+        fullName,
+        reverseName,
+        email,
+        rawPhone,
+        cleanPhone,
+        ticketNumber,
+        ticketCode,
+        id,
+        notes,
+        customFieldsText,
       };
     });
   }, [guests]);
 
+  // Fuse instance for fuzzy search
+  const fuse = useMemo(() => {
+    return new Fuse(processedGuests, {
+      keys: [
+        { name: 'fullName', weight: 2.5 },
+        { name: 'reverseName', weight: 2.5 },
+        { name: 'firstName', weight: 2 },
+        { name: 'lastName', weight: 2 },
+        { name: 'email', weight: 2 },
+        { name: 'rawPhone', weight: 2 },
+        { name: 'cleanPhone', weight: 2 },
+        { name: 'ticketNumber', weight: 2.5 },
+        { name: 'ticketCode', weight: 3 },
+        { name: 'customFieldsText', weight: 1.5 },
+      ],
+      threshold: 0.35,
+      distance: 100,
+      includeScore: true,
+      minMatchCharLength: 2,
+    });
+  }, [processedGuests]);
+
   const filteredGuests = useMemo(() => {
-    let filtered = guestsWithFullName;
+    let result = processedGuests;
 
     if (activeTab === "pending") {
-      filtered = filtered.filter((g) => !g.checked_in);
+      result = result.filter((g) => !g.checked_in);
     } else if (activeTab === "checked-in") {
-      filtered = filtered.filter((g) => g.checked_in);
+      result = result.filter((g) => g.checked_in);
     }
 
-    const query = searchQuery.trim();
-    if (query) {
-      // Normalize query: remove spaces if it looks like a ticket ID (starts with L or contains hyphens/numbers)
-      // or at least handle the "L E K K" case by stripping spaces for the ticket matching
-      const normalizedQuery = query.replace(/\s+/g, '');
-      
-      const fuseOptions = {
-        keys: [
-          { name: "fullName", weight: 2 },
-          { name: "email", weight: 1 },
-          { name: "phone", weight: 1 },
-          { name: "ticket_number", weight: 1 },
-          { name: "ticketCode", weight: 3 }, // Higher weight for exact ticket code match
-          { name: "searchableCustomFields", weight: 0.8 },
-        ],
-        threshold: 0.4,
-      };
-      
-      const fuse = new Fuse(filtered, fuseOptions);
-      
-      // Try searching with both original and normalized query if they differ
-      let searchResults = fuse.search(query);
-      
-      if (normalizedQuery !== query) {
-        const normalizedResults = fuse.search(normalizedQuery);
-        // Combine and deduplicate
-        const combined = [...searchResults];
-        normalizedResults.forEach(nr => {
-          if (!combined.find(cr => cr.item.id === nr.item.id)) {
-            combined.push(nr);
-          }
-        });
-        searchResults = combined;
-      }
+    const rawQuery = searchQuery.trim();
+    if (rawQuery) {
+      const queryLower = rawQuery.toLowerCase();
+      const queryDigits = rawQuery.replace(/\D/g, '');
 
-      filtered = searchResults.map((r) => r.item);
+      // 1. Direct & substring matches across all fields
+      const directMatches = processedGuests.filter(g => {
+        if (g.fullName.toLowerCase().includes(queryLower)) return true;
+        if (g.reverseName.toLowerCase().includes(queryLower)) return true;
+        if (g.firstName.toLowerCase().includes(queryLower)) return true;
+        if (g.lastName.toLowerCase().includes(queryLower)) return true;
+        if (g.email.includes(queryLower)) return true;
+        if (g.rawPhone.toLowerCase().includes(queryLower)) return true;
+        if (queryDigits.length >= 3 && g.cleanPhone.includes(queryDigits)) return true;
+        if (g.ticketNumber.toLowerCase().includes(queryLower)) return true;
+        if (g.ticketCode.toLowerCase().includes(queryLower)) return true;
+        if (g.id.toLowerCase().includes(queryLower)) return true;
+        if (g.customFieldsText.includes(queryLower)) return true;
+        if (g.notes.includes(queryLower)) return true;
+        return false;
+      });
+
+      // 2. Fuzzy search results to catch typos
+      const fuzzyResults = fuse.search(rawQuery).map(r => r.item);
+
+      // Combine direct matches first + fuzzy matches (deduplicated)
+      const resultMap = new Map<string, typeof processedGuests[0]>();
+      directMatches.forEach(g => resultMap.set(g.id, g));
+      fuzzyResults.forEach(g => {
+        if (!resultMap.has(g.id)) {
+          resultMap.set(g.id, g);
+        }
+      });
+
+      result = Array.from(resultMap.values());
     }
 
-    return filtered;
-  }, [guestsWithFullName, searchQuery, activeTab]);
+    return result;
+  }, [processedGuests, searchQuery, activeTab, fuse]);
 
   const handleCheckIn = useCallback(
     async (guestId: string) => {

@@ -69,20 +69,6 @@ export function LeadScanner({ boothId }: LeadScannerProps) {
           throw new Error("Student not found. Invalid badge.");
         }
 
-        // Check if student is approved
-        if (data.email) {
-           const { data: approvedProfile } = await supabase
-             .from('profiles')
-             .select('student_screenings!inner(status)')
-             .eq('contact_email', data.email)
-             .eq('student_screenings.status', 'approved')
-             .maybeSingle();
-             
-           if (!approvedProfile) {
-             throw new Error("This student's registration has not been approved yet.");
-           }
-        }
-
         setStudent(data);
       } catch (err: any) {
         setError(err.message || "Failed to load student details.");

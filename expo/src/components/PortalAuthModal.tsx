@@ -19,18 +19,26 @@ import gsap from 'gsap';
 
 interface PortalAuthModalProps {
   onClose: () => void;
+  initialRole?: 'student' | 'university';
+  initialStep?: 'login' | 'signup';
+  allowUniversityRegistration?: boolean;
 }
 
 type UserRole = 'student' | 'university';
 
-export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
-  const [role, setRole] = useState<UserRole>('student');
+export function PortalAuthModal({ 
+  onClose, 
+  initialRole = 'student', 
+  initialStep = 'login',
+  allowUniversityRegistration = false 
+}: PortalAuthModalProps) {
+  const [role, setRole] = useState<UserRole>(initialRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
   const [institutionType, setInstitutionType] = useState('University');
-  const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password' | 'reset-password-otp'>('login');
+  const [step, setStep] = useState<'login' | 'signup' | 'otp' | 'custom-otp' | 'forgot-password' | 'reset-password-otp'>(initialStep);
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -302,16 +310,16 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 opacity-0"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300"
     >
       <div 
-        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
         onClick={handleClose}
       />
       
       <div 
         ref={contentRef}
-        className="relative w-full max-w-md bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-md bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10"
       >
         <div className="relative p-8 border-b border-gray-100 bg-white">
           <button 
@@ -322,20 +330,20 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
           </button>
         
           <div className="inline-flex items-center rounded-full bg-primary/5 px-3 py-1 border border-primary/10 mb-6">
-            <span className="text-[10px] font-bold tracking-widest text-primary uppercase">Portal Registration</span>
+            <span className="text-[10px] font-bold tracking-widest text-primary uppercase">Portal Access</span>
           </div>
           
           <h2 className="text-3xl font-bold font-display mb-2 text-gray-900">
-            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create an Account' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-password-otp' ? 'New Password' : 'Verify Email'}
+            {step === 'login' ? 'Welcome Back' : step === 'signup' ? 'Create Student Account' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-password-otp' ? 'New Password' : 'Verify Email'}
           </h2>
           <p className="text-sm text-gray-500">
-            {step === 'login' ? 'Sign in to access your portal.' : step === 'signup' ? 'Join the Lekkside Expo portal to manage your experience.' : step === 'forgot-password' ? 'Enter your email to receive a password reset code.' : step === 'reset-password-otp' ? 'Enter the code sent to your email and your new password.' : 'Enter the code sent to your email.'}
+            {step === 'login' ? 'Sign in to access your student or exhibitor portal.' : step === 'signup' ? 'Join the Lekkside Expo portal as a student to register for events.' : step === 'forgot-password' ? 'Enter your email to receive a password reset code.' : step === 'reset-password-otp' ? 'Enter the code sent to your email and your new password.' : 'Enter the code sent to your email.'}
           </p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           
-          {(step === 'login' || step === 'signup') ? (
+          {allowUniversityRegistration && (step === 'login' || step === 'signup') ? (
             <div className="flex bg-gray-100 p-1 rounded-2xl mb-8">
               <button
                 type="button"
@@ -362,7 +370,17 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                 University
               </button>
             </div>
-          ) : (
+          ) : step === 'signup' ? (
+            <div className="mb-6 p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+              <GraduationCap className="w-6 h-6 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-gray-900">Student Account Registration</p>
+                <p className="text-xs text-gray-500">Create your student account to register for events and connect with universities.</p>
+              </div>
+            </div>
+          ) : null}
+
+          {(step === 'otp' || step === 'reset-password-otp') && (
             <div className="mb-6 p-4 bg-primary/5 rounded-xl border border-primary/10 text-center">
               <p className="text-sm text-gray-600 font-medium">We've sent a verification code to</p>
               <p className="text-sm font-bold text-gray-900 mt-1">{email}</p>
@@ -452,8 +470,9 @@ export function PortalAuthModal({ onClose }: PortalAuthModalProps) {
                         required
                       >
                         <option value="University">University</option>
-                        <option value="High School">High School</option>
                         <option value="College">College</option>
+                        <option value="High School">High School</option>
+                        <option value="Embassy">Embassy</option>
                         <option value="Language School">Language School</option>
                         <option value="Pathway Provider">Pathway Provider</option>
                         <option value="Education Organisation">Education Organisation</option>

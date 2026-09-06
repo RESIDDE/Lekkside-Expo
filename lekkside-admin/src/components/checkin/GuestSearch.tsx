@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 interface GuestSearchProps {
@@ -29,30 +28,28 @@ export function GuestSearch({ value, onChange }: GuestSearchProps) {
           <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
         </div>
         <Input
-          placeholder="Search by name, email, or ticket..."
+          placeholder="Search by name, email, phone (+234...), ticket #, university..."
           value={localValue}
           onChange={(e) => {
             setLocalValue(e.target.value);
             onChange(e.target.value);
           }}
-          className="pl-11 h-14 rounded-2xl bg-white border-border/50 focus-visible:ring-1 focus-visible:ring-primary/20 shadow-sm transition-all text-base font-medium"
+          className="pl-11 pr-16 h-14 rounded-2xl bg-white border-border/50 focus-visible:ring-1 focus-visible:ring-primary/20 shadow-sm transition-all text-sm font-medium placeholder:text-muted-foreground/50"
         />
         {localValue && (
           <button
+            type="button"
             onClick={() => {
               setLocalValue('');
               onChange('');
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            title="Clear search"
           >
-            Clear
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>
-      <Button variant="outline" className="h-14 px-6 rounded-2xl border-border/50 bg-white hover:bg-muted font-semibold text-muted-foreground gap-2 hidden sm:flex">
-        <SlidersHorizontal className="w-4 h-4" />
-        Filters
-      </Button>
     </motion.div>
   );
 }

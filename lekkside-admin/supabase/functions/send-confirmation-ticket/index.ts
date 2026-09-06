@@ -122,6 +122,17 @@ const handler = async (req: Request): Promise<Response> => {
                 ${customFieldsHtml}
               </table>
             </div>
+
+            <!-- Virtual Event & Portal Access Instructions -->
+            <div style="margin: 0 24px 24px 24px; padding: 20px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 14px; text-align: left;">
+              <h3 style="margin: 0 0 10px 0; color: #3730a3; font-size: 15px; font-weight: 700;">🌐 How to Join the Virtual Event & Student Portal</h3>
+              <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 13px; line-height: 1.6;">
+                <li style="margin-bottom: 8px;">Click on <strong>"Already registered for this event?"</strong> at the top of the event page.</li>
+                <li style="margin-bottom: 8px;">Enter your registered email address (<strong>${email}</strong>).</li>
+                <li>Enter the 6-digit verification code sent to your email to log in to your <strong>Student Portal</strong>, access live chats, scheduled meetings, and the Virtual Exhibition Hall!</li>
+              </ol>
+            </div>
+
             <div style="padding: 24px; background: #f9f9f9; text-align: center;">
               <div style="margin-bottom: 16px;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(confirmationNumber)}" alt="QR Code" style="width: 120px; height: 120px; padding: 10px; background: white; border-radius: 12px; border: 1px solid #e5e5e5;">
@@ -140,10 +151,10 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const plainText = `REGISTRATION CONFIRMED\n\nThank you, ${firstName}!\n\nYou're registered for: ${eventName}\n${eventDate ? `Date: ${formattedDate} at ${formattedTime}` : ""}\n${eventVenue ? `Venue: ${eventVenue}` : ""}\n\nName: ${firstName} ${lastName}\nEmail: ${email}\n${phone ? `Phone: ${phone}` : ""}\n\nConfirmation Number: ${confirmationNumber}\n\nPlease save this number for check-in.\n\nLekkside Check-in Portal`;
+    const plainText = `REGISTRATION CONFIRMED\n\nThank you, ${firstName}!\n\nYou're registered for: ${eventName}\n${eventDate ? `Date: ${formattedDate} at ${formattedTime}` : ""}\n${eventVenue ? `Venue: ${eventVenue}` : ""}\n\nName: ${firstName} ${lastName}\nEmail: ${email}\n${phone ? `Phone: ${phone}` : ""}\n\nConfirmation Number: ${confirmationNumber}\n\nHOW TO JOIN THE VIRTUAL EVENT & STUDENT PORTAL:\n1. Visit the event page and click on "Already registered for this event?".\n2. Enter your registered email address (${email}).\n3. Enter the 6-digit verification code sent to your email to log in to your Student Portal & Virtual Exhibition Hall!\n\nPlease save your confirmation number for check-in.\n\nLekkside Check-in Portal`;
 
     // Send via ZeptoMail
-try {
+    try {
       const result = await sendEmail({
         from: "Lekkside Check-in Portal <noreply@lekksideexpo.com>",
         to: email,

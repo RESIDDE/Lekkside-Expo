@@ -11,7 +11,9 @@ import {
   ShieldCheck, 
   AlertCircle, 
   Check,
-  Upload
+  Upload,
+  Mail,
+  Globe
 } from 'lucide-react';
 import { format } from 'date-fns';
 import RegistrationTicket from './RegistrationTicket';
@@ -103,14 +105,20 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   const [checkEmail, setCheckEmail] = useState('');
   const [checkStatus, setCheckStatus] = useState<'idle' | 'checking_email' | 'sending_otp' | 'otp_sent' | 'verifying_otp' | 'verified' | 'error'>('idle');
   const [checkError, setCheckError] = useState('');
+  const [checkOtp, setCheckOtp] = useState('');
+  const [checkOtpError, setCheckOtpError] = useState('');
+  const [isVerifyingCheckOtp, setIsVerifyingCheckOtp] = useState(false);
+  const [checkResendCountdown, setCheckResendCountdown] = useState(0);
   const navigate = useNavigate();
 
   const handleCheckRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     setCheckError('');
+    setCheckOtpError('');
     setCheckStatus('checking_email');
 
     try {
+      // Step 1: Verify the email is registered for this event
       const { data, error } = await supabase.rpc('check_guest_registered', {
         p_event_id: event.id,
         p_email: checkEmail.trim()
@@ -121,14 +129,104 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         throw new Error("No registration found for this email at this event.");
       }
 
-      setCheckStatus('verified');
-      handleClose();
-      navigate(`/student-dashboard?event=${event.id}&tab=exhibition-hall&guest_email=${encodeURIComponent(checkEmail.trim())}`);
+      // Step 2: Send OTP to their email for verification
+      setCheckStatus('sending_otp');
+      const { data: otpData, error: otpError } = await supabase.functions.invoke('send-otp', {
+        body: { 
+          email: checkEmail.trim(), 
+          formId: 'portal-signup',
+          eventName: event?.name 
+        }
+      });
+
+      if (otpError) throw otpError;
+      if (otpData?.error) throw new Error(otpData.error);
+
+      setCheckStatus('otp_sent');
+      setCheckResendCountdown(60);
       
     } catch (err: any) {
       console.error(err);
       setCheckError(err.message);
       setCheckStatus('error');
+    }
+  };
+
+  const handleVerifyCheckOtp = async (code: string) => {
+    if (code.length !== 6) return;
+
+    setIsVerifyingCheckOtp(true);
+    setCheckOtpError('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: { 
+          email: checkEmail.trim(), 
+          code,
+          formId: 'portal-signup'
+        }
+      });
+
+      if (error || !data?.success) {
+        setCheckOtpError(error?.message || data?.error || 'Invalid or expired code. Please try again.');
+        setIsVerifyingCheckOtp(false);
+        return;
+      }
+
+      // Auto-login using the password from verify-otp
+      if (data?.password) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: checkEmail.trim(),
+          password: data.password
+        });
+        
+        if (signInError) {
+          console.error('Auto-login error after check OTP:', signInError);
+          // Non-fatal — they're verified but not logged in
+        }
+      }
+
+      setCheckStatus('verified');
+      setIsVerifyingCheckOtp(false);
+      handleClose();
+      navigate(`/student-dashboard?event=${event.id}&tab=exhibition-hall`);
+      
+    } catch (err: any) {
+      console.error('Error verifying check OTP:', err);
+      setCheckOtpError('Failed to verify code. Please try again.');
+      setIsVerifyingCheckOtp(false);
+    }
+  };
+
+  const handleCheckOtpChange = (value: string) => {
+    const cleanValue = value.replace(/[^0-9]/g, '').slice(0, 6);
+    setCheckOtp(cleanValue);
+    setCheckOtpError('');
+    if (cleanValue.length === 6) {
+      handleVerifyCheckOtp(cleanValue);
+    }
+  };
+
+  const handleResendCheckOtp = async () => {
+    if (checkResendCountdown > 0) return;
+    setCheckOtpError('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: { 
+          email: checkEmail.trim(), 
+          formId: 'portal-signup',
+          eventName: event?.name 
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setCheckResendCountdown(60);
+    } catch (err: any) {
+      console.error(err);
+      setCheckOtpError(err.message || 'Failed to resend code.');
     }
   };
 
@@ -175,6 +273,10 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
     setCheckStatus('idle');
     setCheckError('');
     setCheckEmail('');
+    setCheckOtp('');
+    setCheckOtpError('');
+    setIsVerifyingCheckOtp(false);
+    setCheckResendCountdown(0);
   };
 
   const customFields = ((form?.custom_fields as unknown) as CustomField[]) || [];
@@ -224,6 +326,13 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
     }
   }, [resendCountdown]);
 
+  useEffect(() => {
+    if (checkResendCountdown > 0) {
+      const timer = setTimeout(() => setCheckResendCountdown(r => r - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [checkResendCountdown]);
+
   // Auto-advance if Step 0 is empty for non-student forms
   useEffect(() => {
     if (form && !isStudentRegistration && currentStep === 0 && customFields.length === 0) {
@@ -260,18 +369,21 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
 
       if (error) throw error;
       
-      setAvailableForms((data as any[]) || []);
+      const allForms = (data as any[]) || [];
+      // Filter out any university/exhibitor forms for public event registration
+      const studentForms = allForms.filter(f => 
+        !f.name.toLowerCase().includes('university') && 
+        !f.name.toLowerCase().includes('exhibitor')
+      );
+      const formsToUse = studentForms.length > 0 ? studentForms : allForms;
+      setAvailableForms(formsToUse);
       
-      if (data && data.length > 0) {
-        const defaultForm = (data as any[]).find(f => f.is_default);
-        // Only auto-select if there's a default form or ONLY one form
+      if (formsToUse.length > 0) {
+        const defaultForm = formsToUse.find(f => f.is_default);
         if (defaultForm) {
           setForm(defaultForm);
-        } else if (data.length === 1) {
-          setForm(data[0]);
         } else {
-          // Multiple forms and no default, stay on selection screen
-          setForm(null);
+          setForm(formsToUse[0]);
         }
       }
     } catch (err) {
@@ -751,13 +863,48 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   image_url={submittedCustomFields['Attendee Photo']}
                 />
                 
-                <div className="flex flex-col gap-4 pt-4 print:hidden">
+                {/* Email Notice & Virtual Event Access Instructions */}
+                <div className="p-6 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-emerald-50 rounded-3xl border border-emerald-200/80 space-y-4 text-left shadow-sm print:hidden">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0 mt-0.5">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-base">Check Your Email Inbox</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed mt-0.5">
+                        A registration confirmation email with your ticket details has been sent to <strong>{formData.email}</strong>. Please check your inbox (and spam folder).
+                      </p>
+                    </div>
+                  </div>
 
+                  <div className="pt-3 border-t border-emerald-200/60 space-y-2.5">
+                    <div className="flex items-center gap-2 text-emerald-900 text-xs font-bold uppercase tracking-wider">
+                      <Globe className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>How to Join the Virtual Event & Access Student Portal:</span>
+                    </div>
+                    <ol className="text-xs text-gray-700 space-y-2 pl-1 font-medium">
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-200/80 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+                        <span>Click on <strong className="text-gray-900 font-bold">"Already registered for this event?"</strong> at the top of the event page.</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-200/80 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+                        <span>Enter your registered email address (<strong className="text-gray-900 font-bold">{formData.email}</strong>).</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-200/80 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
+                        <span>Enter the 6-digit verification code sent to your email to log in to your <strong className="text-gray-900 font-bold">Student Portal</strong>, access live chats, meetings, and the Virtual Exhibition Hall!</span>
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4 pt-2 print:hidden">
                   <button
                     onClick={handleClose}
-                    className="w-full h-14 bg-white text-gray-900 border border-gray-100 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition-all active:scale-[0.98]"
+                    className="w-full h-14 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition-all active:scale-[0.98] shadow-sm"
                   >
-                    Return to Event
+                    Return to Event Page
                   </button>
                 </div>
               </div>
@@ -767,39 +914,99 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
               {isCheckingRegistration ? (
                 <div className="py-8 space-y-6">
                   <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold font-display mb-2">Verify Registration</h3>
-                    <p className="text-muted-foreground">Enter your email to access the Event Exhibition Hall</p>
+                    <h3 className="text-2xl font-bold font-display mb-2">
+                      {checkStatus === 'otp_sent' || checkStatus === 'verifying_otp' ? 'Enter Verification Code' : 'Verify Registration'}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {checkStatus === 'otp_sent' || checkStatus === 'verifying_otp' 
+                        ? <>A 6-digit code has been sent to <strong>{checkEmail}</strong></>
+                        : 'Enter your email to access the Event Exhibition Hall'
+                      }
+                    </p>
                   </div>
 
-                  <form onSubmit={handleCheckRegistration} className="space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  {checkStatus === 'otp_sent' || checkStatus === 'verifying_otp' ? (
+                    <div className="space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                      <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-emerald-100 rounded-lg">
+                            <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <p className="text-sm font-bold text-emerald-900">Security Verification</p>
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={checkOtp}
+                          onChange={(e) => handleCheckOtpChange(e.target.value)}
+                          className="w-full text-center text-3xl font-bold tracking-[0.5em] h-16 rounded-xl border-2 border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-gray-900"
+                          placeholder="••••••"
+                          autoFocus
+                        />
+                        <div className="flex items-center justify-between mt-4">
+                          <button
+                            type="button"
+                            disabled={checkResendCountdown > 0}
+                            onClick={handleResendCheckOtp}
+                            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 disabled:text-emerald-300 transition-colors"
+                          >
+                            {checkResendCountdown > 0 ? `Resend in ${checkResendCountdown}s` : 'Resend Code'}
+                          </button>
+                          {isVerifyingCheckOtp && <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />}
+                        </div>
+                      </div>
+
+                      {checkOtpError && (
+                        <div className="flex items-center gap-2 text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-100">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <p className="text-xs font-medium">{checkOtpError}</p>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => { setCheckStatus('idle'); setCheckOtp(''); setCheckOtpError(''); }}
+                        className="w-full text-center text-sm font-bold text-slate-500 hover:text-primary transition-colors"
+                      >
+                        Use a different email
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleCheckRegistration} className="space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Email Address</label>
                         <input
                           type="email"
                           value={checkEmail}
-                          onChange={(e) => setCheckEmail(e.target.value)}
+                          onChange={(e) => { setCheckEmail(e.target.value); setCheckError(''); setCheckStatus('idle'); }}
                           placeholder="Enter your registered email"
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                           required
                         />
                       </div>
-                      {checkError && <p className="text-rose-500 text-sm">{checkError}</p>}
+                      {checkError && (
+                        <div className="flex items-center gap-2 text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-100">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <p className="text-xs font-medium">{checkError}</p>
+                        </div>
+                      )}
                       <button
                         type="submit"
                         disabled={checkStatus === 'checking_email' || checkStatus === 'sending_otp'}
                         className="w-full h-12 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70"
                       >
                         {checkStatus === 'checking_email' || checkStatus === 'sending_otp' ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <><Loader2 className="w-5 h-5 animate-spin" /> Verifying...</>
                         ) : (
-                          'Access Event Hall'
+                          'Send Verification Code'
                         )}
                       </button>
                     </form>
+                  )}
 
                   <div className="text-center mt-6">
                     <button 
-                      onClick={() => { setIsCheckingRegistration(false); setCheckStatus('idle'); setCheckError(''); }}
+                      onClick={() => { setIsCheckingRegistration(false); setCheckStatus('idle'); setCheckError(''); setCheckOtp(''); setCheckOtpError(''); }}
                       className="text-primary font-bold hover:underline"
                     >
                       Wait, I need to register first

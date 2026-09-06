@@ -32,7 +32,7 @@ interface University {
 
 const PROGRAM_OPTIONS = ['Engineering', 'Business', 'Arts & Humanities', 'Computer Science', 'Medicine', 'Law', 'Sciences'];
 const COUNTRY_OPTIONS = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Nigeria', 'Germany'];
-const INSTITUTION_TYPES = ['University', 'High School', 'College', 'Language School', 'Pathway Provider', 'Education Organisation'];
+const INSTITUTION_TYPES = ['University', 'College', 'High School', 'Embassy', 'Language School', 'Pathway Provider', 'Education Organisation'];
 
 export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) {
   const [loading, setLoading] = useState(true);
@@ -68,37 +68,6 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
         .select('*')
         .eq('role', 'university')
         .eq('is_active', true);
-
-      if (eventId) {
-        // Find exhibition booths for this event
-        const { data: boothData } = await supabase
-          .from('exhibition_booths')
-          .select('id')
-          .eq('event_id', eventId);
-        
-        if (boothData && boothData.length > 0) {
-          const boothIds = boothData.map(b => b.id);
-          const { data: exhibitorData } = await supabase
-            .from('exhibitors')
-            .select('user_id')
-            .in('booth_id', boothIds);
-            
-          if (exhibitorData && exhibitorData.length > 0) {
-            const userIds = exhibitorData.map(e => e.user_id);
-            query = query.in('user_id', userIds);
-          } else {
-            // No exhibitors found
-            setUniversities([]);
-            setLoading(false);
-            return;
-          }
-        } else {
-          // No booths found
-          setUniversities([]);
-          setLoading(false);
-          return;
-        }
-      }
 
       const { data, error } = await query;
 
@@ -356,10 +325,14 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
 
                   {/* Info */}
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
                         {uni.university_name}
                       </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 inline-flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-blue-500" />
+                        {uni.institution_type}
+                      </span>
                       {uni.isLive && (
                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full border border-red-100/50 shadow-sm shadow-red-500/10">
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -368,10 +341,8 @@ export function UniversitiesDirectory({ eventId }: { eventId?: string | null }) 
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mb-5">
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      <span className="mr-2">{uni.institution_type}</span>
                       <MapPin className="w-4 h-4 text-gray-400" />
-                      {uni.country}
+                      {uni.location || uni.country}
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-6">

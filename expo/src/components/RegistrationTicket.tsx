@@ -162,6 +162,10 @@ export default function RegistrationTicket({
               <Clock className="h-3 w-3" />
               <span>{format(new Date(registeredAt), "MMM d, yyyy 'at' h:mm a")}</span>
             </div>
+
+            <p className="text-[10px] text-white/70 font-medium leading-relaxed pt-2 border-t border-white/10">
+              Check your email for confirmation. To join virtual sessions or access your student portal, click <strong className="text-white">"Already registered?"</strong> on the event page & verify your email.
+            </p>
           </div>
         </div>
       </div>

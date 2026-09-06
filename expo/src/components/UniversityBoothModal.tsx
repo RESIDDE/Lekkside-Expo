@@ -27,6 +27,7 @@ interface University {
   website_url: string;
   brochure_url?: string;
   contact_email?: string;
+  institution_type?: string;
 }
 
 interface UniversityBoothModalProps {
@@ -96,7 +97,8 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
           description: profile.description || '',
           website_url: profile.website_url || '',
           brochure_url: profile.brochure_url || '',
-          contact_email: profile.contact_email || ''
+          contact_email: profile.contact_email || '',
+          institution_type: profile.institution_type || 'University'
         });
       }
 
@@ -280,9 +282,15 @@ export function UniversityBoothModal({ universityId, onClose }: UniversityBoothM
               )}
             </div>
             <div className="flex-1 pb-1">
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight">
-                {university.university_name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
+                  {university.university_name}
+                </h1>
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs md:text-sm font-semibold rounded-full border border-white/30 inline-flex items-center gap-1.5 shadow-sm">
+                  <Building2 className="w-3.5 h-3.5 text-white/80" />
+                  {university.institution_type || 'University'}
+                </span>
+              </div>
               <div className="flex flex-wrap items-center gap-4 text-white/90 text-sm">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" /> {university.location || 'Location Not Provided'}

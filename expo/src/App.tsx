@@ -17,6 +17,7 @@ import { PartnersSection } from "./components/PartnersSection";
 import { PortalAuthModal } from "./components/PortalAuthModal";
 import { StudentDashboard } from "./pages/StudentDashboard";
 import { UniversityDashboard } from "./pages/UniversityDashboard";
+import { UniversityRegistrationPage } from "./pages/UniversityRegistrationPage";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { format, isAfter, isBefore, startOfToday } from "date-fns";
 import { AllEvents } from "./components/AllEvents";
@@ -73,7 +74,7 @@ function Home() {
     <div id="home" className="min-h-screen bg-background text-foreground overflow-x-hidden relative selection:bg-primary/30">
       <Navbar onOpenPortalAuth={() => setIsPortalAuthOpen(true)} />
       {isPortalAuthOpen && (
-        <PortalAuthModal onClose={() => setIsPortalAuthOpen(false)} />
+        <PortalAuthModal onClose={() => setIsPortalAuthOpen(false)} initialStep="signup" initialRole="student" />
       )}
       <RegistrationModal
         event={selectedEvent}
@@ -384,6 +385,8 @@ function App() {
         <Route path="/all-events" element={<AllEvents />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/university-dashboard" element={<UniversityDashboard />} />
+        <Route path="/register-university" element={<UniversityRegistrationPage />} />
+        <Route path="/register/university" element={<UniversityRegistrationPage />} />
       </Routes>
       <AIAssistant />
     </Router>

@@ -109,42 +109,67 @@ export function UniversityDashboard() {
         .select('id, status')
         .eq('university_id', session.user.id);
         
-      const appsSubmitted = applications?.length || 0;
-      const pendingApps = applications?.filter(app => app.status === 'pending').length || 0;
+      const appsStarted = applications?.length || 0;
+      const appsSubmitted = applications?.filter(app => app.status === 'submitted' || app.status === 'approved' || app.status === 'accepted').length || appsStarted;
+      const pendingApps = applications?.filter(app => app.status === 'pending' || app.status === 'under_review').length || 0;
 
-      // Find booth assigned to this university directly
-      const { data: assignedBooth } = await supabase
-        .from('exhibition_booths')
+      // Fetch Meetings & Appointments Data
+      const { data: meetingRequests } = await supabase
+        .from('meeting_requests')
+        .select('id, status')
+        .eq('university_id', session.user.id);
+
+      const meetingsScheduled = meetingRequests?.length || 0;
+      const meetingsCompleted = meetingRequests?.filter(m => m.status === 'accepted' || m.status === 'completed' || m.status === 'confirmed').length || 0;
+
+      // Fetch Live Conversations / Inquiries
+      const { data: chatData } = await supabase
+        .from('chat_conversations')
         .select('id')
+        .eq('university_id', session.user.id);
+
+      const totalChats = chatData?.length || 0;
+
+      // Find booths assigned to this university directly and query booth leads & event visitors
+      const { data: assignedBooths } = await supabase
+        .from('exhibition_booths')
+        .select('id, event_id')
         .eq('university_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
         
       let leads = 0;
       let visitors = 0;
       
-      if (assignedBooth) {
-        setExhibitorData({ booth_id: assignedBooth.id });
+      if (assignedBooths && assignedBooths.length > 0) {
+        setExhibitorData({ booth_id: assignedBooths[0].id });
+        const boothIds = assignedBooths.map(b => b.id);
+        const eventIds = assignedBooths.map(b => b.event_id).filter(Boolean);
+
         const { data: allLeads } = await supabase
           .from('booth_leads')
           .select('id, is_relevant, lead_score')
-          .eq('booth_id', assignedBooth.id);
+          .in('booth_id', boothIds);
           
-        const totalLeads = allLeads?.length || 0;
-        const qualifiedLeads = allLeads?.filter(l => l.is_relevant || (l.lead_score && l.lead_score >= 4)).length || 0;
+        leads = allLeads?.length || 0;
 
-        leads = qualifiedLeads;
-        visitors = totalLeads * 3; // Est visitors
+        if (eventIds.length > 0) {
+          const { count } = await supabase
+            .from('guests')
+            .select('id', { count: 'exact', head: true })
+            .in('event_id', eventIds);
+          visitors = Math.max(count || 0, leads);
+        } else {
+          visitors = leads;
+        }
       }
 
       setStats({
         visitors,
         leads,
-        meetingsScheduled: 0, // Not available
-        meetingsCompleted: 0,
-        downloads: 0,
-        appsStarted: appsSubmitted, // Default to submitted count
+        meetingsScheduled,
+        meetingsCompleted,
+        downloads: totalChats,
+        appsStarted,
         appsSubmitted,
         pendingApps
       });
@@ -661,10 +686,10 @@ export function UniversityDashboard() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
                     <div className="flex justify-between items-start mb-6 relative z-10">
                       <div className="h-14 w-14 rounded-[1.25rem] bg-black border border-gray-800 flex items-center justify-center text-emerald-400 shadow-inner">
-                        <Download className="h-6 w-6" />
+                        <MessageSquare className="h-6 w-6" />
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Document Downloads</p>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest relative z-10">Student Inquiries</p>
                     <h3 className="text-4xl font-bold text-white mt-2 tracking-tight relative z-10">{stats.downloads}</h3>
                   </div>
                 </div>

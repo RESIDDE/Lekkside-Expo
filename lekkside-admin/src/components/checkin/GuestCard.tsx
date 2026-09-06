@@ -1,7 +1,6 @@
 import { memo, useState } from 'react';
-import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, ChevronUp, MoreHorizontal, Printer } from 'lucide-react';
+import { Check, Undo2, User, Mail, Phone, Ticket, ChevronDown, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -45,27 +44,15 @@ export const GuestCard = memo(function GuestCard({
   const customFields = guest.custom_fields as Record<string, unknown> | null;
   const hasCustomFields = customFields && Object.keys(customFields).length > 0;
   const hasNotes = Boolean(guest.notes);
-  const hasExpandableContent = hasCustomFields || hasNotes;
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut" as const
-      }
-    }
+  const handleToggleExpand = () => {
+    setIsExpanded(prev => !prev);
   };
 
   const handlePrint = () => {
     setIsPrinting(true);
-    // Increased timeout to ensure React portal is fully rendered and images are ready
     setTimeout(() => {
       window.print();
-      // We don't immediately set isPrinting to false because some browsers 
-      // might unmount the portal before the print job is fully sent to the spooler
       setTimeout(() => {
         setIsPrinting(false);
       }, 500);
@@ -81,7 +68,6 @@ export const GuestCard = memo(function GuestCard({
             .print-portal-container { display: block !important; position: static !important; }
             .no-print { display: none !important; }
           }
-          /* Hide the print preview from screen if needed, but here we want the admin to see it briefly */
           .print-portal-container { background: white; }
         ` }} />
         <div className="print-container">
@@ -102,217 +88,250 @@ export const GuestCard = memo(function GuestCard({
   };
 
   return (
-    <motion.div
-      variants={itemVariants}
+    <div
       className={cn(
-        'group relative overflow-hidden transition-all duration-300',
-        'bg-white border-border/40 hover:border-primary/20 rounded-[1.5rem] border shadow-sm hover:shadow-premium',
-        guest.checked_in && 'bg-[hsl(var(--success))]/5 border-[hsl(var(--success))]/20'
+        'group relative transition-all duration-300',
+        'bg-white border-border/40 hover:border-primary/20 rounded-[1.5rem] border shadow-sm hover:shadow-md',
+        guest.checked_in && 'bg-emerald-50/30 border-emerald-200/50'
       )}
     >
       <div className="p-4 sm:p-5">
-        <div className="flex items-center gap-4">
-          {/* Status Indicator / Avatar */}
-          <div className="relative">
-            <div
-              className={cn(
-                'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500',
-                guest.checked_in 
-                  ? 'bg-[hsl(var(--success))] scale-100 shadow-lg shadow-[hsl(var(--success))]/20' 
-                  : 'bg-muted/50 group-hover:bg-primary/10'
-              )}
-            >
-              {guest.checked_in ? (
-                <Check className="w-6 h-6 text-white" />
-              ) : (
-                <User className={cn(
-                  "w-6 h-6 transition-colors duration-300",
-                  guest.checked_in ? "text-white" : "text-muted-foreground group-hover:text-primary"
-                )} />
-              )}
-            </div>
-            {guest.checked_in && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm"
-              >
-                <div className="w-2 h-2 bg-[hsl(var(--success))] rounded-full animate-pulse" />
-              </motion.div>
-            )}
-          </div>
-
-          {/* Core Info */}
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-heading font-semibold text-foreground text-sm sm:text-base tracking-tight truncate">
-                {fullName}
-              </h3>
-              {guest.ticket_type && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-                  {guest.ticket_type}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground/80">
-              {guest.email && (
-                <span className="flex items-center gap-1.5 truncate max-w-[140px] sm:max-w-[220px]">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span className="truncate">{guest.email}</span>
-                </span>
-              )}
-              {guest.phone && (
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5" />
-                  {guest.phone}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <div className="flex items-center gap-2">
-            <AnimatePresence mode="wait">
-              {guest.checked_in ? (
-                <motion.div
-                  key="undo"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onUndoCheckIn(guest.id)}
-                    disabled={isLoading}
-                    className="h-10 px-4 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground gap-2"
-                  >
-                    <Undo2 className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Undo</span>
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="checkin"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="sm"
-                        disabled={isLoading}
-                        className="h-10 px-4 rounded-xl text-xs font-semibold bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white shadow-lg shadow-[hsl(var(--success))]/10 gap-2 pr-2"
-                      >
-                        <Check className="w-3.5 h-3.5 stroke-[3px]" />
-                        <span className="hidden sm:inline">Check In</span>
-                        <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-2xl shadow-premium border-border/40 p-2 min-w-[180px]">
-                      <DropdownMenuItem 
-                        onClick={() => onCheckIn(guest.id)}
-                        className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
-                      >
-                        <Check className="w-4 h-4 text-[hsl(var(--success))]" />
-                        Check-in Only
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          onCheckIn(guest.id);
-                          handlePrint();
-                        }}
-                        className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
-                      >
-                        <Printer className="w-4 h-4 text-primary" />
-                        Check-in & Print
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrint}
-              className="h-10 w-10 rounded-xl border-border/40 text-muted-foreground hover:text-primary hover:border-primary/20"
-              title="Print Ticket"
-            >
-              <Printer className="w-4 h-4" />
-            </Button>
-            
-            {hasExpandableContent && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsExpanded(!isExpanded)}
+        {/* Header Block: Responsive Flex */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          {/* Main Info (Avatar + Name + Details) */}
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+            {/* Avatar */}
+            <div className="relative shrink-0 mt-0.5 sm:mt-0">
+              <div
                 className={cn(
-                  "h-10 w-10 rounded-xl transition-colors",
-                  isExpanded ? "bg-muted text-foreground" : "text-muted-foreground"
+                  'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300',
+                  guest.checked_in 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' 
+                    : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary'
                 )}
               >
-                <MoreHorizontal className="w-4 h-4" />
+                {guest.checked_in ? (
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3px]" />
+                ) : (
+                  <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                )}
+              </div>
+              {guest.checked_in && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                </div>
+              )}
+            </div>
+
+            {/* Attendee Name and Badges */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-heading font-bold text-slate-900 text-sm sm:text-base tracking-tight truncate max-w-[200px] xs:max-w-[280px] sm:max-w-none">
+                  {fullName}
+                </h3>
+                {guest.ticket_type && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider shrink-0">
+                    {guest.ticket_type}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                {guest.email && (
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Mail className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                    <span className="truncate max-w-[170px] xs:max-w-[240px] sm:max-w-[280px] font-medium">{guest.email}</span>
+                  </span>
+                )}
+                {guest.phone && (
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Phone className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                    <span>{guest.phone}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons Row */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="wait">
+                {guest.checked_in ? (
+                  <motion.div
+                    key="undo"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onUndoCheckIn(guest.id)}
+                      disabled={isLoading}
+                      className="h-10 px-3.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 gap-1.5"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" />
+                      <span>Undo</span>
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="checkin"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          disabled={isLoading}
+                          className="h-10 px-3.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/10 gap-1.5"
+                        >
+                          <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                          <span>Check In</span>
+                          <ChevronDown className="w-3 h-3 opacity-60 ml-0.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-2xl shadow-premium border-border/40 p-2 min-w-[180px]">
+                        <DropdownMenuItem 
+                          onClick={() => onCheckIn(guest.id)}
+                          className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
+                        >
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          Check-in Only
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            onCheckIn(guest.id);
+                            handlePrint();
+                          }}
+                          className="rounded-xl py-2.5 font-semibold text-xs gap-3 cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4 text-primary" />
+                          Check-in & Print
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePrint}
+                className="h-10 w-10 rounded-xl border-slate-200 text-slate-600 hover:text-primary hover:border-primary/30"
+                title="Print Ticket"
+              >
+                <Printer className="w-4 h-4" />
               </Button>
-            )}
+            </div>
+
+            {/* Dropdown Chevron Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleToggleExpand}
+              className={cn(
+                "h-10 px-3 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold",
+                isExpanded 
+                  ? "bg-primary/10 text-primary border border-primary/20" 
+                  : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/80"
+              )}
+              title={isExpanded ? "Hide Details" : "View Details"}
+            >
+              <span className="hidden xs:inline">{isExpanded ? "Hide" : "Details"}</span>
+              <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", isExpanded && "rotate-180")} />
+            </Button>
           </div>
         </div>
 
-        {/* Expandable Content */}
+        {/* Expandable Mobile Dropdown Box */}
         <AnimatePresence>
-          {isExpanded && hasExpandableContent && (
+          {isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="pt-5 mt-4 border-t border-border/40 space-y-4">
-                {/* Check-in Details */}
-                {guest.checked_in && guest.checked_in_at && (
-                  <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-[hsl(var(--success))]/10 border border-[hsl(var(--success))]/10 w-fit">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--success))]">
-                      Arrival: {format(new Date(guest.checked_in_at), 'MMM d, h:mm a')}
+              <div className="mt-4 p-4 sm:p-5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-4">
+                {/* Header Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200/60">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                      Attendee Information & Metadata
                     </span>
                   </div>
-                )}
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Custom Fields */}
-                  {hasCustomFields && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest pl-1">Metadata</p>
-                      <div className="space-y-1.5">
-                        {Object.entries(customFields).map(([key, value]) => {
-                          if (!value) return null;
-                          const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-                          return (
-                            <div key={key} className="flex items-center justify-between p-2 px-3 rounded-lg bg-muted/30 border border-transparent hover:border-border/30 transition-colors">
-                              <span className="text-[11px] font-semibold text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                              <span className="text-[11px] font-semibold text-foreground">{displayValue}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {hasNotes && (
-                    <div className="space-y-2">
-                       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest pl-1">Notes</p>
-                       <div className="p-3 rounded-xl bg-muted/30 border border-border/30 min-h-[60px]">
-                         <p className="text-[11px] font-medium leading-relaxed text-muted-foreground italic">
-                           "{guest.notes}"
-                         </p>
-                       </div>
-                    </div>
+                  {guest.checked_in && guest.checked_in_at && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[11px] font-semibold">
+                      <Check className="w-3.5 h-3.5 stroke-[2.5px]" />
+                      Arrival: {format(new Date(guest.checked_in_at), 'MMM d, h:mm a')}
+                    </span>
                   )}
                 </div>
+
+                {/* Grid of Clean Card Boxes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirmation Ref</span>
+                    <span className="text-xs font-mono font-bold text-slate-800 mt-0.5">LEKK-{guest.id.slice(0, 8).toUpperCase()}</span>
+                  </div>
+
+                  {guest.created_at && (
+                    <div className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Registration Date</span>
+                      <span className="text-xs font-bold text-slate-800 mt-0.5">{format(new Date(guest.created_at), 'PPP, h:mm a')}</span>
+                    </div>
+                  )}
+
+                  {guest.ticket_number && (
+                    <div className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ticket Number</span>
+                      <span className="text-xs font-bold text-slate-800 mt-0.5 break-all">{guest.ticket_number}</span>
+                    </div>
+                  )}
+
+                  {guest.email && (
+                    <div className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</span>
+                      <span className="text-xs font-bold text-slate-800 mt-0.5 break-all">{guest.email}</span>
+                    </div>
+                  )}
+
+                  {guest.phone && (
+                    <div className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phone Number</span>
+                      <span className="text-xs font-bold text-slate-800 mt-0.5 break-all">{guest.phone}</span>
+                    </div>
+                  )}
+
+                  {/* Custom Metadata Fields */}
+                  {hasCustomFields && Object.entries(customFields!).map(([key, value]) => {
+                    if (value === null || value === undefined || value === '') return null;
+                    const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+                    return (
+                      <div key={key} className="p-3 rounded-xl bg-white border border-slate-200/60 flex flex-col justify-center">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 capitalize">{key.replace(/_/g, ' ')}</span>
+                        <span className="text-xs font-bold text-slate-800 mt-0.5 break-all">{displayValue}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Special Notes */}
+                {hasNotes && (
+                  <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/60 space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Special Notes</span>
+                    <p className="text-xs font-medium text-amber-900 leading-relaxed italic">
+                      "{guest.notes}"
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -337,6 +356,6 @@ export const GuestCard = memo(function GuestCard({
           />
         </PrintPortal>
       )}
-    </motion.div>
+    </div>
   );
 });
