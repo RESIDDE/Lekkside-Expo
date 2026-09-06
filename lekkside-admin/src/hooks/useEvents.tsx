@@ -12,22 +12,17 @@ type EventInsert = TablesInsert<"events">;
 type EventUpdate = TablesUpdate<"events">;
 
 export function useEvents() {
-  const { user } = useAuth();
-
   return useQuery({
-    queryKey: ["events", user?.id],
+    queryKey: ["events"],
     queryFn: async () => {
-      if (!user) return [];
-
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .eq("created_by", user.id)
         .order("date", { ascending: true });
       if (error) throw error;
       return data as Event[];
     },
-    enabled: !!user,
+    enabled: true,
   });
 }
 

@@ -54,16 +54,20 @@ function Home() {
   }, []);
 
   const today = startOfToday();
-  const upcomingEvents = events.filter(
+  const futureEvents = events.filter(
     (e) =>
-      (e.date && isAfter(new Date(e.date), today)) ||
-      (e.date && new Date(e.date).getTime() === today.getTime()),
+      !e.date ||
+      isAfter(new Date(e.date), today) ||
+      new Date(e.date).getTime() === today.getTime() ||
+      isNaN(new Date(e.date).getTime())
   );
   
+  // Fallback to all events if no upcoming events are strictly found
+  const upcomingEvents = futureEvents.length > 0 ? futureEvents : events;
   const featuredUpcomingEvents = upcomingEvents.slice(0, 6);
   const hasMoreEvents = upcomingEvents.length > 6;
   const pastEvents = events.filter(
-    (e) => e.date && isBefore(new Date(e.date), today),
+    (e) => e.date && !isNaN(new Date(e.date).getTime()) && isBefore(new Date(e.date), today),
   );
 
   const handleRegister = (event: Event) => {

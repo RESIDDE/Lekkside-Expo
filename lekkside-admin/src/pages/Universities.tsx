@@ -371,7 +371,10 @@ export default function Universities() {
   );
 
   const copyUniversityRegistrationLink = () => {
-    const origin = window.location.origin.includes('8080') || window.location.origin.includes('5173')
+    const studentPortal = import.meta.env.VITE_STUDENT_PORTAL_URL || import.meta.env.VITE_PUBLIC_SITE_URL;
+    const origin = studentPortal 
+      ? studentPortal.replace(/\/$/, '')
+      : window.location.origin.includes('8080') || window.location.origin.includes('5173')
       ? 'http://localhost:5173'
       : window.location.origin;
     const registrationLink = `${origin}/register-university`;

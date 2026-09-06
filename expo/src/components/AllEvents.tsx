@@ -22,15 +22,23 @@ export function AllEvents() {
     async function fetchEvents() {
       try {
         setLoading(true);
-        const { data, error, count } = await supabase
+        let { data, error, count } = await supabase
           .from("events")
           .select("*", { count: "exact" })
           .gte("date", startOfToday().toISOString())
           .order("date", { ascending: true });
 
-        if (error) throw error;
+        if (error || !data || data.length === 0) {
+          const fallbackRes = await supabase
+            .from("events")
+            .select("*", { count: "exact" })
+            .order("date", { ascending: true });
+          data = fallbackRes.data || [];
+          count = fallbackRes.count || data.length;
+        }
+
         setEvents(data || []);
-        setTotalPages(Math.ceil((count || 0) / EVENTS_PER_PAGE));
+        setTotalPages(Math.max(1, Math.ceil((count || 0) / EVENTS_PER_PAGE)));
       } catch (err: any) {
         console.error("Error fetching events:", err);
       } finally {
