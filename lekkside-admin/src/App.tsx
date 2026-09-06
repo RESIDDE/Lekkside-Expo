@@ -26,6 +26,7 @@ const Screenings = lazy(() => import("./pages/Screenings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Universities = lazy(() => import("./pages/Universities"));
 const SupportInbox = lazy(() => import("./pages/SupportInbox"));
+const UniversityRegistrationPage = lazy(() => import("./pages/UniversityRegistrationPage"));
 
 // Optimized query client with caching
 const queryClient = new QueryClient({
@@ -67,9 +68,9 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/exhibitor/signup" element={<ExhibitorSignup />} />
-              <Route path="/register-university" element={<ExhibitorSignup />} />
-              <Route path="/register-institution" element={<ExhibitorSignup />} />
-              <Route path="/university-registration" element={<ExhibitorSignup />} />
+              <Route path="/register-university" element={<UniversityRegistrationPage />} />
+              <Route path="/register-institution" element={<UniversityRegistrationPage />} />
+              <Route path="/university-registration" element={<UniversityRegistrationPage />} />
               <Route
                 path="/exhibitor/dashboard/:boothId"
                 element={<ExhibitorDashboard />}
