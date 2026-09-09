@@ -591,7 +591,12 @@ const PublicForm = () => {
         </div>
         {emailStatus === 'sent' && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 rounded-3xl bg-primary/5 border border-primary/20 space-y-4">
-            <p className="text-sm font-semibold text-center text-primary">Verification code dispatched</p>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-semibold text-primary">Verification code dispatched</p>
+              <p className="text-xs text-muted-foreground">
+                Please check your email address (<span className="font-semibold text-foreground">{formData.email}</span>) for an OTP code.
+              </p>
+            </div>
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={otpCode} onChange={handleOtpChange}>
                 <InputOTPGroup className="gap-2">

@@ -618,7 +618,8 @@ export default function Auth() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg"
+                  disabled
+                  className="rounded-[1.4rem] text-[10px] font-semibold uppercase tracking-widest opacity-40 cursor-not-allowed data-[state=active]:bg-white data-[state=active]:shadow-lg"
                 >
                   Create Account
                 </TabsTrigger>
@@ -785,20 +786,10 @@ export default function Auth() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-14 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-semibold uppercase tracking-widest shadow-xl shadow-foreground/20 gap-3 transition-all active:scale-95"
-                    disabled={isSigningUp}
+                    className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-semibold uppercase tracking-widest gap-3 transition-all cursor-not-allowed opacity-50 border border-border/40"
+                    disabled={true}
                   >
-                    {isSigningUp ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Creating...
-                      </div>
-                    ) : (
-                      <>
-                        Create Account
-                        <ArrowRight className="w-5 h-5" />
-                      </>
-                    )}
+                    Create Account
                   </Button>
                 </form>
               </TabsContent>

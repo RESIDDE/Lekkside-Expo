@@ -928,11 +928,16 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                   {checkStatus === 'otp_sent' || checkStatus === 'verifying_otp' ? (
                     <div className="space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                       <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="p-2 bg-emerald-100 rounded-lg">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="p-2 bg-emerald-100 rounded-lg shrink-0 mt-0.5">
                             <ShieldCheck className="h-5 w-5 text-emerald-600" />
                           </div>
-                          <p className="text-sm font-bold text-emerald-900">Security Verification</p>
+                          <div>
+                            <p className="text-sm font-bold text-emerald-900">Security Verification</p>
+                            <p className="text-xs text-emerald-700 font-medium mt-0.5">
+                              Please check your email address (<span className="font-semibold">{checkEmail}</span>) for an OTP code.
+                            </p>
+                          </div>
                         </div>
                         <input
                           type="text"
@@ -1263,11 +1268,16 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
 
                         {emailStatus === 'sent' && (
                           <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="p-2 bg-emerald-100 rounded-lg">
+                            <div className="flex items-start gap-3 mb-2">
+                              <div className="p-2 bg-emerald-100 rounded-lg shrink-0 mt-0.5">
                                 <ShieldCheck className="h-5 w-5 text-emerald-600" />
                               </div>
-                              <p className="text-sm font-bold text-emerald-900">Enter Verification Code</p>
+                              <div>
+                                <p className="text-sm font-bold text-emerald-900">Enter Verification Code</p>
+                                <p className="text-xs text-emerald-700 font-medium mt-0.5">
+                                  Please check your email address (<span className="font-semibold">{formData.email}</span>) for an OTP code.
+                                </p>
+                              </div>
                             </div>
                             <input
                               type="text"
