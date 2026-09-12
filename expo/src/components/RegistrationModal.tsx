@@ -520,6 +520,9 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       // Auto-advance if this was step 0
       if (currentStep === 0 && customFields.length > 0) {
         setCurrentStep(1);
+      } else {
+        // Auto-submit after verification
+        executeSubmission();
       }
     } catch (err: any) {
       console.error('Error verifying OTP:', err);
@@ -549,8 +552,8 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!event || !form) return;
 
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
@@ -563,11 +566,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       return;
     }
 
-    if (formData.email.trim() && emailStatus !== 'verified') {
-      setOtpError('Please verify your email address first');
-      return;
-    }
-
     // Comprehensive custom field check before final submission
     for (const field of customFields) {
       if (field.required && !customFieldValues[field.id]) {
@@ -576,6 +574,18 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
       }
     }
 
+    if (formData.email.trim() && emailStatus !== 'verified') {
+      if (emailStatus === 'idle' || emailStatus === 'error') {
+        sendOtp();
+      }
+      return;
+    }
+
+    await executeSubmission();
+  };
+
+  const executeSubmission = async () => {
+    if (!event || !form) return;
     setSubmitting(true);
     try {
       let publicUrl = '';
@@ -1241,16 +1251,6 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                               placeholder="john@example.com"
                             />
                             
-                            {emailStatus === 'idle' && formData.email.includes('@') && formData.email.includes('.') && (
-                              <button
-                                type="button"
-                                onClick={sendOtp}
-                                className="absolute right-2 top-1.5 px-4 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
-                              >
-                                Verify Email
-                              </button>
-                            )}
-                            
                             {emailStatus === 'sending' && (
                               <div className="absolute right-4 top-3.5">
                                 <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -1351,7 +1351,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                     ) : (
                       <button
                         type="submit"
-                        disabled={submitting || (!!formData.email.trim() && emailStatus !== 'verified')}
+                        disabled={submitting}
                         className="flex-1 h-14 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
                       >
                         {submitting ? (
