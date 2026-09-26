@@ -788,7 +788,7 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   return (
     <>
     {/* OTP Popup Overlay */}
-    {(emailStatus === 'sent' || emailStatus === 'verifying') && (
+    {(emailStatus === 'sent') && (
       <div
         className="fixed inset-0 z-[200] flex items-center justify-center p-4"
         style={{ animation: 'fadeIn 0.2s ease-out' }}
