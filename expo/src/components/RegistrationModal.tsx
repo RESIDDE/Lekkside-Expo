@@ -786,6 +786,123 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   if (!event) return null;
 
   return (
+    <>
+    {/* OTP Popup Overlay */}
+    {(emailStatus === 'sent' || emailStatus === 'verifying') && (
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        style={{ animation: 'fadeIn 0.2s ease-out' }}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-md"
+          onClick={() => {
+            setEmailStatus('idle');
+            setOtpCode('');
+            setOtpError('');
+          }}
+        />
+
+        {/* Popup Card */}
+        <div
+          className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden"
+          style={{ animation: 'slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+        >
+          {/* Gradient header strip */}
+          <div className="h-2 w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400" />
+
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => {
+              setEmailStatus('idle');
+              setOtpCode('');
+              setOtpError('');
+            }}
+            className="absolute right-4 top-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+
+          <div className="p-8 space-y-6">
+            {/* Icon + headline */}
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 mx-auto bg-emerald-50 rounded-2xl flex items-center justify-center shadow-inner">
+                <ShieldCheck className="w-8 h-8 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Check Your Email</h3>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                  We sent a 6-digit code to<br />
+                  <span className="font-semibold text-gray-800">{formData.email}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* OTP digit input */}
+            <div className="space-y-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => handleOtpChange(e.target.value)}
+                className={`w-full text-center text-3xl font-bold tracking-[0.5em] h-16 rounded-2xl border-2 outline-none transition-all ${
+                  otpError
+                    ? 'border-rose-300 bg-rose-50 text-rose-700 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                    : 'border-emerald-200 bg-emerald-50/40 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
+                }`}
+                placeholder="——————"
+                autoFocus
+              />
+
+              {otpError && (
+                <div className="flex items-center gap-2 text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <p className="text-xs font-medium">{otpError}</p>
+                </div>
+              )}
+
+              {isVerifyingOtp && (
+                <div className="flex items-center justify-center gap-2 text-emerald-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-xs font-medium">Verifying…</span>
+                </div>
+              )}
+            </div>
+
+            {/* Resend + change email */}
+            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+              <button
+                type="button"
+                disabled={resendCountdown > 0}
+                onClick={sendOtp}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 disabled:text-gray-300 transition-colors"
+              >
+                {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend Code'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailStatus('idle');
+                  setOtpCode('');
+                  setOtpError('');
+                }}
+                className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Change Email
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes slideUp { from { opacity: 0; transform: translateY(24px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        `}</style>
+      </div>
+    )}
+
     <div 
       ref={modalRef}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 opacity-0"
@@ -1266,49 +1383,8 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                           </div>
                         </div>
 
-                        {emailStatus === 'sent' && (
-                          <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                            <div className="flex items-start gap-3 mb-2">
-                              <div className="p-2 bg-emerald-100 rounded-lg shrink-0 mt-0.5">
-                                <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-emerald-900">Enter Verification Code</p>
-                                <p className="text-xs text-emerald-700 font-medium mt-0.5">
-                                  Please check your email address (<span className="font-semibold">{formData.email}</span>) for an OTP code.
-                                </p>
-                              </div>
-                            </div>
-                            <input
-                              type="text"
-                              maxLength={6}
-                              value={otpCode}
-                              onChange={(e) => handleOtpChange(e.target.value)}
-                              className="w-full text-center text-3xl font-bold tracking-[0.5em] h-16 rounded-xl border-2 border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-gray-900"
-                              placeholder="••••••"
-                              autoFocus
-                            />
-                            <div className="flex items-center justify-between mt-4">
-                              <button
-                                type="button"
-                                disabled={resendCountdown > 0}
-                                onClick={sendOtp}
-                                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 disabled:text-emerald-300 transition-colors"
-                              >
-                                {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend Code'}
-                              </button>
-                              {isVerifyingOtp && <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />}
-                            </div>
-                          </div>
-                        )}
 
-                        {otpError && (
-                          <div className="flex items-center gap-2 text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-100">
-                            <AlertCircle className="h-4 w-4 shrink-0" />
-                            <p className="text-xs font-medium">{otpError}</p>
-                          </div>
-                        )}
-                        
+
                         {/* Remaining Custom Fields for Student (8+) */}
                         {isStudentRegistration && customFields.slice(8).map(renderCustomField)}
                         
@@ -1377,5 +1453,5 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         </div>
       </div>
     </div>
-  );
+  </>);
 }
