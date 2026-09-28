@@ -50,7 +50,7 @@ const COUNTRIES_LIST = [
 const EDUCATION_LEVELS = ["O'Level", "A'level", "National Diploma", "Higher National Diploma", "B.Sc. Degree", "Masters", "PhD"];
 const STUDY_LEVELS = ["Certificate", "Diploma", "B.Sc. Degree", "Masters", "PhD", "Others"];
 const BUDGET_RANGES = ["< $10,000", "$10,000 - $20,000", "$20,000 - $30,000", "$30,000 - $40,000", "$40,000+"];
-const FUNDING_SOURCES = ["Self-Funded", "Parent/Guardian", "Scholarship", "Sponsor", "Education Loan"];
+const FUNDING_SOURCES = ["Self-Funded", "Parent/Guardian", "Sponsor", "Education Loan"];
 const START_DATES = ["Immediately", "March 2026", "May 2026", "July 2026", "September 2026", "January 2027", "May 2027", "September 2027"];
 const SOURCES = ["Social Media", "Friend/Family", "Newspaper", "Radio/TV", "Email", "Web Search", "Other"];
 

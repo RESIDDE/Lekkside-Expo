@@ -13,7 +13,9 @@ import {
   Check,
   Upload,
   Mail,
-  Globe
+  Globe,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import RegistrationTicket from './RegistrationTicket';
@@ -55,7 +57,7 @@ const COUNTRIES_LIST = [
 const EDUCATION_LEVELS = ["O'Level", "A'level", "National Diploma", "Higher National Diploma", "B.Sc. Degree", "Masters", "PhD"];
 const STUDY_LEVELS = ["Certificate", "Diploma", "B.Sc. Degree", "Masters", "PhD", "Others"];
 const BUDGET_RANGES = ["< $10,000", "$10,000 - $20,000", "$20,000 - $30,000", "$30,000 - $40,000", "$40,000+"];
-const FUNDING_SOURCES = ["Self-Funded", "Parent/Guardian", "Scholarship", "Sponsor", "Education Loan"];
+const FUNDING_SOURCES = ["Self-Funded", "Parent/Guardian", "Sponsor", "Education Loan"];
 const START_DATES = ["Immediately", "March 2026", "May 2026", "July 2026", "September 2026", "January 2027", "May 2027", "September 2027"];
 const SOURCES = ["Social Media", "Friend/Family", "Newspaper", "Radio/TV", "Email", "Web Search", "Other"];
 
@@ -232,6 +234,30 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollState, setScrollState] = useState<'top' | 'middle' | 'bottom' | 'none'>('none');
+
+  const handleScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const canScroll = scrollHeight > clientHeight + 4;
+    if (!canScroll) { setScrollState('none'); return; }
+    if (scrollTop < 8) setScrollState('top');
+    else if (scrollTop + clientHeight >= scrollHeight - 8) setScrollState('bottom');
+    else setScrollState('middle');
+  };
+
+  // Re-evaluate scroll state whenever content changes (step change, loading etc.)
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    // Small delay to let content render
+    const t = setTimeout(() => {
+      handleScroll();
+    }, 150);
+    return () => clearTimeout(t);
+  }, [submitted, loading, currentStep, isCheckingRegistration]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -916,6 +942,70 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         ref={contentRef}
         className="relative w-full max-w-2xl bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible print:bg-transparent print:border-none print:shadow-none"
       >
+        {/* Scroll hint arrow */}
+        {scrollState !== 'none' && !submitted && (
+          <>
+            {/* Gradient fade overlay hinting at more content */}
+            <div
+              className="absolute left-0 right-0 z-10 pointer-events-none print:hidden"
+              style={{
+                bottom: scrollState === 'bottom' ? 'auto' : 0,
+                top: scrollState === 'bottom' ? 0 : 'auto',
+                height: 80,
+                background: scrollState === 'bottom'
+                  ? 'linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, transparent 100%)'
+                  : 'linear-gradient(to top, rgba(255,255,255,0.95) 0%, transparent 100%)',
+              }}
+            />
+            {/* Pill button — centered, prominent */}
+            <button
+              type="button"
+              aria-label={scrollState === 'bottom' ? 'Scroll up' : 'Scroll down for more'}
+              onClick={() => {
+                const el = scrollContainerRef.current;
+                if (!el) return;
+                if (scrollState === 'bottom') {
+                  el.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  el.scrollBy({ top: 220, behavior: 'smooth' });
+                }
+              }}
+              className="absolute left-1/2 z-20 flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-bold shadow-xl shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/50 hover:scale-105 active:scale-95 transition-all print:hidden"
+              style={{
+                bottom: scrollState === 'bottom' ? 'auto' : 20,
+                top: scrollState === 'bottom' ? 20 : 'auto',
+                transform: 'translateX(-50%)',
+                animation: 'scrollHintFadeIn 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+              }}
+            >
+              {scrollState === 'bottom' ? (
+                <>
+                  <ChevronUp className="h-4 w-4" style={{ animation: 'scrollHintBounceUp 1.6s ease-in-out infinite' }} />
+                  Scroll up
+                </>
+              ) : (
+                <>
+                  Scroll down for more
+                  <ChevronDown className="h-4 w-4" style={{ animation: 'scrollHintBounce 1.6s ease-in-out infinite' }} />
+                </>
+              )}
+            </button>
+          </>
+        )}
+        <style>{`
+          @keyframes scrollHintFadeIn {
+            from { opacity: 0; transform: translateX(-50%) scale(0.88); }
+            to   { opacity: 1; transform: translateX(-50%) scale(1); }
+          }
+          @keyframes scrollHintBounce {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(3px); }
+          }
+          @keyframes scrollHintBounceUp {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-3px); }
+          }
+        `}</style>
         {/* Header (Hidden when submitted) */}
         {!submitted && (
           <>
@@ -965,7 +1055,11 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
         )}
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto ${submitted ? 'p-4 md:p-8' : 'p-8 md:p-10'} custom-scrollbar print:overflow-visible print:p-0`}>
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className={`flex-1 overflow-y-auto ${submitted ? 'p-4 md:p-8' : 'p-8 md:p-10'} custom-scrollbar print:overflow-visible print:p-0 relative`}
+        >
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
